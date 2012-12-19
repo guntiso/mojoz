@@ -65,7 +65,7 @@ object Schema {
     Entity(table.name, table.comment, xsdCols)
   }
   def entities = loadFromFile map toEntity
-  def endities(scriptFileName: String) =
+  def entities(scriptFileName: String) =
     loadFromFile(scriptFileName) map toEntity
   def xsdType(col: DbCol) = (col.name, col.dbType) match {
     case ("id", _) => new XsdType("long")
