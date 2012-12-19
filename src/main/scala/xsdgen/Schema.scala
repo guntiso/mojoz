@@ -5,6 +5,17 @@ import scala.io.Source
 case class DbTable(name: String, comment: String, cols: Seq[DbCol])
 case class DbCol(name: String, dbType: String, comment: String)
 
+case class XsdType(name: String, length: Option[Int],
+  totalDigits: Option[Int], fractionDigits: Option[Int]) {
+  def this(name: String) = this(name, None, None, None)
+  def this(name: String, length: Int) =
+    this(name, Some(length), None, None)
+  def this(name: String, totalDigits: Int, fractionDigits: Int) =
+    this(name, None, Some(totalDigits), Some(fractionDigits))
+}
+case class XsdCol(name: String, xsdType: XsdType, comment: String)
+case class Entity(name: String, comment: String, cols: Seq[XsdCol])
+
 object Schema {
   val scriptFileName = "..\\db\\schema.sql"
   def loadFromFile: List[DbTable] = loadFromFile(scriptFileName)
@@ -47,5 +58,46 @@ object Schema {
     })
     flush()
     tables.reverse
+  }
+  def toEntity(table: DbTable) = {
+    val xsdCols = table.cols.map(col =>
+      XsdCol(col.name, xsdType(col), col.comment))
+    Entity(table.name, table.comment, xsdCols)
+  }
+  def entities = loadFromFile map toEntity
+  def endities(scriptFileName: String) =
+    loadFromFile(scriptFileName) map toEntity
+  def xsdType(col: DbCol) = (col.name, col.dbType) match {
+    case ("id", _) => new XsdType("long")
+    case (_, t) => t.split("[\\s\\'\\(\\)\\,]+").toList match {
+      case "date" :: tail => new XsdType("date")
+      case "timestamp" :: tail => new XsdType("dateTime")
+      case "varchar2" :: len :: Nil => new XsdType("string", len.toInt)
+      case "char" :: tail => new XsdType("boolean")
+      case "numeric" :: len :: Nil =>
+        new XsdType("integer", None, Some(len.toInt), None)
+      case "numeric" :: len :: "0" :: Nil =>
+        new XsdType("integer", None, Some(len.toInt), None)
+      case "numeric" :: len :: frac :: Nil =>
+        new XsdType("decimal", len.toInt, frac.toInt)
+      case "blob" :: Nil => new XsdType("base64Binary")
+      case x => throw new RuntimeException("Unexpected db type: " + col.dbType)
+    }
+  }
+  def dbNameToXsdName(dbName: String) = {
+    dbName.split("_").map(_.toLowerCase match {
+      case "usr" => "user"
+      case "grp" => "group"
+      case "rle" => "role"
+      case x => x
+    }).map(_.capitalize) mkString
+  }
+  def xsdNameToDbName(xsdName: String) = {
+    ElementName.get(xsdName).split("\\-").map(_.toLowerCase match {
+      case "user" => "usr"
+      case "group" => "grp"
+      case "role" => "rle"
+      case x => x
+    }).mkString("_")
   }
 }

@@ -30,71 +30,60 @@ object XsdGen {
     }
     xsdTypeDef((new Yaml).loadAs(io, classOf[YamlXsdTypeDef]))
   }
-  def xsdName(name: String) = dbNameToXsdName(name)
-  def dbNameToXsdName(dbName: String) = {
-    // TODO special cases
-    dbName.split("_") map (_.capitalize) mkString
-  }
-  def xsdNameToDbName(dbName: String) = {
-    // TODO special cases
-    ElementName.get(dbName).replace('-', '_')
+  private def xsdName(name: String) = Schema.dbNameToXsdName(name)
+  private def xsdNameToDbName(xsdName: String) = Schema.xsdNameToDbName(xsdName)
+  private def annotation(comment: String) =
+    if (comment != null && comment.trim.length > 0)
+      <xs:annotation>
+        <xs:documentation>{ comment }</xs:documentation>
+      </xs:annotation>
+  private def createElement(elName: String, col: XsdCol) = {
+    val colcomment = annotation(col.comment)
+    col.xsdType match {
+      case XsdType(typeName, None, None, None) =>
+        <xs:element name={ elName } type={ "xs:" + typeName } minOccurs="0">{
+          colcomment
+        }</xs:element>
+      case XsdType(typeName, Some(length), None, None) =>
+        <xs:element name={ elName } minOccurs="0">
+          { colcomment }
+          <xs:simpleType>
+            <xs:restriction base={ "xs:" + typeName }>
+              <xs:length value={ length.toString }/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+      case XsdType(typeName, _, Some(totalDigits), fractionDigitsOption) =>
+        <xs:element name={ elName } minOccurs="0">
+          { colcomment }
+          <xs:simpleType>
+            <xs:restriction base={ "xs:" + typeName }>
+              <xs:totalDigits value={ totalDigits.toString }/>
+              {
+                if (fractionDigitsOption != None)
+                  <xs:fractionDigits value={ fractionDigitsOption.get.toString }/>
+              }
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+    }
   }
   def createSchema = {
     // FIXME BOOLEAN
     val typeDef = loadTypeDef(resource)
-    val md = EntityMetadata.getMetadata
-    val tableMd = md.table(typeDef.name)
-    def annotation(comments: String) = {
-      if (comments != null)
-        <xs:annotation>
-          <xs:documentation>{ comments }</xs:documentation>
-        </xs:annotation>
-    }
+    val md = Schema.entities.map(e => (e.name, e)).toMap
+    val tableMd = md(typeDef.name)
+    val cols = tableMd.cols.map(c => (c.name, c)).toMap
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="kps.ldz.lv">
       <xs:complexType name={ xsdName(typeDef.name) }>
-        { annotation(tableMd.comments) }
+        { annotation(tableMd.comment) }
         <xs:sequence>
           { // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
             // TODO when no restriction:  type="xs:string"
-            val cols = tableMd.cols
             typeDef.fields.map(f => {
-              val dbFieldName = xsdNameToDbName(f.name)
+              val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
               val col = cols(dbFieldName)
-              val xsdType =
-                JdbcToXsdTypeMapper.map(col.sqlType, col.size, col.decimalDigits)
-              val colComments = {
-                annotation(
-                  if (col.comments != null) col.comments
-                  else "Sorry, comments missing")
-              }
-              {
-                (xsdType.xsdTypeName, xsdType.length,
-                  xsdType.totalDigits, xsdType.fractionDigits) match {
-                    case (typeName, null, null, null) =>
-                      <xs:element name={ xsdName(f.name) } type={ "xs:" + typeName }>{
-                        colComments
-                      }</xs:element>
-                    case (typeName, len, null, null) =>
-                      <xs:element name={ xsdName(f.name) }>
-                        { colComments }
-                        <xs:simpleType>
-                          <xs:restriction base={ "xs:" + typeName }>
-                            <xs:length value={ len.toString }/>
-                          </xs:restriction>
-                        </xs:simpleType>
-                      </xs:element>
-                    case (typeName, length, totalDigits, fractionDigits) =>
-                      <xs:element name={ xsdName(f.name) }>
-                        { colComments }
-                        <xs:simpleType>
-                          <xs:restriction base={ "xs:" + typeName }>
-                            <xs:totalDigits value={ totalDigits.toString }/>
-                            <xs:fractionDigits value={ fractionDigits.toString }/>
-                          </xs:restriction>
-                        </xs:simpleType>
-                      </xs:element>
-                  }
-              }
+              createElement(xsdName(f.name), col)
             })
           }
         </xs:sequence>
