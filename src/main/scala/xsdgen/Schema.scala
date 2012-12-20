@@ -69,6 +69,7 @@ object Schema {
     loadFromFile(scriptFileName) map toEntity
   def xsdType(col: DbCol) = (col.name, col.dbType) match {
     case ("id", _) => new XsdType("long")
+    case (name, _) if name endsWith "_id" => new XsdType("long")
     case (_, t) => t.split("[\\s\\'\\(\\)\\,]+").toList match {
       case "date" :: tail => new XsdType("date")
       case "timestamp" :: tail => new XsdType("dateTime")
