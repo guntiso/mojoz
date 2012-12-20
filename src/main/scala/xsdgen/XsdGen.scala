@@ -81,6 +81,21 @@ object XsdGen {
   def createComplexType(typeDef: XsdTypeDef) = {
     val tableMd = md(typeDef.name)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap
+    def getCol(colName: String) = try {
+      colName.split("\\.").toList.reverse match {
+        case name :: table :: path =>
+          val cols = md(table).cols.map(c => (c.name, c)).toMap // TODO optimize
+          cols(name)
+        case name :: Nil => cols(name)
+        case Nil => throw new RuntimeException("Impossible!")
+      }
+    } catch {
+      case ex: Exception =>
+        // TODO print filename, lineNr, colNr, too!
+        throw new RuntimeException(
+          "Problem finding column (typeDef: " + typeDef.name
+            + ", column: " + colName + ")", ex)
+    }
     <xs:complexType name={ xsdName(typeDef.name) }>
       { annotation(tableMd.comment) }
       <xs:sequence>
@@ -88,7 +103,7 @@ object XsdGen {
           // TODO when no restriction:  type="xs:string"
           typeDef.fields.map(f => {
             val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
-            val col = cols(dbFieldName)
+            val col = getCol(dbFieldName)
             createElement(xsdName(f.name), col)
           })
         }

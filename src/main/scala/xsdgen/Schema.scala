@@ -86,7 +86,7 @@ object Schema {
     }
   }
   def dbNameToXsdName(dbName: String) = {
-    dbName.split("_").map(_.toLowerCase match {
+    dbName.split("[_\\.]+").map(_.toLowerCase match {
       case "usr" => "user"
       case "grp" => "group"
       case "rle" => "role"
