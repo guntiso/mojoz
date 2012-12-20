@@ -12,6 +12,7 @@ import scala.io.Source
 
 case class XsdTypeDef(
   name: String,
+  table: String,
   fields: Seq[XsdTypeDef])
 
 object XsdGen {
@@ -28,14 +29,18 @@ object XsdGen {
   def loadTypeDef(typeDef: String) = {
     case class YamlXsdTypeDef(
       @BeanProperty var name: String,
+      @BeanProperty var table: String,
       @BeanProperty var fields: ArrayList[YamlXsdTypeDef]) {
-      def this() = this(null, null)
-      def this(name: String) = this(name, null)
+      def this() = this(null, null, null)
+      def this(name: String) = this(name, null, null)
+      def this(name: String, table: String) = this(name, table, null)
     }
+    def mapF(fields: ArrayList[YamlXsdTypeDef]) =
+      if (fields == null) null else fields.map(f => xsdTypeDef(f)).toList
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
-      case YamlXsdTypeDef(name, null) => XsdTypeDef(name, null)
-      case YamlXsdTypeDef(name, fields) =>
-        XsdTypeDef(name, fields.map(f => xsdTypeDef(f)).toList)
+      case YamlXsdTypeDef(name, null, f) => XsdTypeDef(name, name, mapF(f))
+      case YamlXsdTypeDef(null, table, f) => XsdTypeDef(table, table, mapF(f))
+      case YamlXsdTypeDef(name, table, f) => XsdTypeDef(name, table, mapF(f))
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
@@ -79,7 +84,7 @@ object XsdGen {
   }
   private val md = Schema.entities.map(e => (e.name, e)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableMd = md(typeDef.name)
+    val tableMd = md(typeDef.table)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap
     def getCol(colName: String) = try {
       colName.split("\\.").toList.reverse match {
