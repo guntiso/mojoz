@@ -2,21 +2,30 @@ package xsdgen
 
 import java.io.InputStream
 import java.util.ArrayList
-
 import scala.Array.canBuildFrom
 import scala.collection.JavaConversions.asScalaBuffer
 import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
-
 import org.yaml.snakeyaml.Yaml
+import java.io.File
+import scala.io.Source
 
 case class XsdTypeDef(
   name: String,
   fields: Seq[XsdTypeDef])
 
 object XsdGen {
-  def resource = XsdGen.getClass.getResourceAsStream("/views/company.yaml")
-  def loadTypeDef(io: InputStream) = {
+  def recursiveListFiles(f: File): Array[File] = {
+    val these = f.listFiles
+    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+  }
+  def typedefFiles = recursiveListFiles(new File("../views"))
+  val typedefStrings = typedefFiles.map(f =>
+    Source.fromFile(f).mkString).map(s =>
+    s.split("\\-\\-\\-").toSeq).flatMap(x =>
+    x).map(_.trim).filter(_.length > 0) toSeq
+  val typedefs = typedefStrings map loadTypeDef
+  def loadTypeDef(typeDef: String) = {
     case class YamlXsdTypeDef(
       @BeanProperty var name: String,
       @BeanProperty var fields: ArrayList[YamlXsdTypeDef]) {
@@ -28,7 +37,7 @@ object XsdGen {
       case YamlXsdTypeDef(name, fields) =>
         XsdTypeDef(name, fields.map(f => xsdTypeDef(f)).toList)
     }
-    xsdTypeDef((new Yaml).loadAs(io, classOf[YamlXsdTypeDef]))
+    xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
   private def xsdName(name: String) = Schema.dbNameToXsdName(name)
   private def xsdNameToDbName(xsdName: String) = Schema.xsdNameToDbName(xsdName)
@@ -68,26 +77,27 @@ object XsdGen {
         </xs:element>
     }
   }
-  def createSchema = {
-    // FIXME BOOLEAN
-    val typeDef = loadTypeDef(resource)
-    val md = Schema.entities.map(e => (e.name, e)).toMap
+  private val md = Schema.entities.map(e => (e.name, e)).toMap
+  def createComplexType(typeDef: XsdTypeDef) = {
     val tableMd = md(typeDef.name)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap
+    <xs:complexType name={ xsdName(typeDef.name) }>
+      { annotation(tableMd.comment) }
+      <xs:sequence>
+        { // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
+          // TODO when no restriction:  type="xs:string"
+          typeDef.fields.map(f => {
+            val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
+            val col = cols(dbFieldName)
+            createElement(xsdName(f.name), col)
+          })
+        }
+      </xs:sequence>
+    </xs:complexType>
+  }
+  def createSchema = {
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="kps.ldz.lv">
-      <xs:complexType name={ xsdName(typeDef.name) }>
-        { annotation(tableMd.comment) }
-        <xs:sequence>
-          { // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
-            // TODO when no restriction:  type="xs:string"
-            typeDef.fields.map(f => {
-              val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
-              val col = cols(dbFieldName)
-              createElement(xsdName(f.name), col)
-            })
-          }
-        </xs:sequence>
-      </xs:complexType>
+      { typedefs map createComplexType }
     </xs:schema>
   }
   def createSchemaString = new PrettyPrinter(200, 2).format(createSchema)
