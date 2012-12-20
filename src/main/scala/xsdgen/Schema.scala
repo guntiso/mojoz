@@ -99,6 +99,9 @@ object Schema {
       case "group" => "grp"
       case "role" => "rle"
       case x => x
-    }).mkString("_")
+    }).mkString("_") match {
+      case x if x endsWith "_2" => x.replace("_2", "2") // XXX dirty fix phone_2
+      case x => x
+    }
   }
 }
