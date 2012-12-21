@@ -67,6 +67,11 @@ object Schema {
   def entities = loadFromFile map toEntity
   def entities(scriptFileName: String) =
     loadFromFile(scriptFileName) map toEntity
+  // TODO min-value, max-value?
+  def integerOrSubtype(len: Int) =
+    if (len > 18) new XsdType("integer", None, Some(len.toInt), None)
+    else if (len > 9) new XsdType("long", None, Some(len.toInt), None)
+    else new XsdType("int", None, Some(len.toInt), None)
   def xsdType(col: DbCol) = (col.name, col.dbType) match {
     case ("id", _) => new XsdType("long")
     case (name, _) if name endsWith "_id" => new XsdType("long")
@@ -76,9 +81,9 @@ object Schema {
       case "varchar2" :: len :: Nil => new XsdType("string", len.toInt)
       case "char" :: tail => new XsdType("boolean")
       case "numeric" :: len :: Nil =>
-        new XsdType("integer", None, Some(len.toInt), None)
+        integerOrSubtype(len.toInt)
       case "numeric" :: len :: "0" :: Nil =>
-        new XsdType("integer", None, Some(len.toInt), None)
+        integerOrSubtype(len.toInt)
       case "numeric" :: len :: frac :: Nil =>
         new XsdType("decimal", len.toInt, frac.toInt)
       case "blob" :: Nil => new XsdType("base64Binary")
