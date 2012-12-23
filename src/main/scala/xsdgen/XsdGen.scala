@@ -13,6 +13,8 @@ import scala.io.Source
 case class XsdTypeDef(
   name: String,
   table: String,
+  xtnds: String,
+  comment: String,
   fields: Seq[XsdTypeDef])
 
 object XsdGen {
@@ -30,17 +32,23 @@ object XsdGen {
     case class YamlXsdTypeDef(
       @BeanProperty var name: String,
       @BeanProperty var table: String,
+      @BeanProperty var `extends`: String,
+      @BeanProperty var comment: String,
       @BeanProperty var fields: ArrayList[YamlXsdTypeDef]) {
-      def this() = this(null, null, null)
-      def this(name: String) = this(name, null, null)
-      def this(name: String, table: String) = this(name, table, null)
+      def this() = this(null, null, null, null, null)
+      def this(name: String) = this(name, null, null, null, null)
     }
     def mapF(fields: ArrayList[YamlXsdTypeDef]) =
       if (fields == null) null else fields.map(f => xsdTypeDef(f)).toList
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
-      case YamlXsdTypeDef(name, null, f) => XsdTypeDef(name, name, mapF(f))
-      case YamlXsdTypeDef(null, table, f) => XsdTypeDef(table, table, mapF(f))
-      case YamlXsdTypeDef(name, table, f) => XsdTypeDef(name, table, mapF(f))
+      case YamlXsdTypeDef(name, null, null, c, f) =>
+        XsdTypeDef(name, name, null, c, mapF(f))
+      case YamlXsdTypeDef(name, null, x, c, f) =>
+        XsdTypeDef(name, null, x, c, mapF(f))
+      case YamlXsdTypeDef(null, table, null, c, f) =>
+        XsdTypeDef(table, table, null, c, mapF(f))
+      case YamlXsdTypeDef(name, table, x, c, f) =>
+        XsdTypeDef(name, table, x, c, mapF(f))
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
@@ -83,8 +91,11 @@ object XsdGen {
     }
   }
   private val md = Schema.entities.map(e => (e.name, e)).toMap
+  private val td = typedefs.map(t => (t.name, t)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableMd = md(typeDef.table)
+    val tableMd =
+      if (typeDef.xtnds == null) md(typeDef.table)
+      else md(td(typeDef.xtnds).table)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap
     def getCol(colName: String) = try {
       colName.split("\\.").toList.reverse match {
@@ -101,19 +112,27 @@ object XsdGen {
           "Problem finding column (typeDef: " + typeDef.name
             + ", column: " + colName + ")", ex)
     }
-    <xs:complexType name={ xsdName(typeDef.name) }>
-      { annotation(tableMd.comment) }
-      <xs:sequence>
-        { // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
-          // TODO when no restriction:  type="xs:string"
-          typeDef.fields.map(f => {
-            val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
-            val col = getCol(dbFieldName)
-            createElement(xsdName(f.name), col)
-          })
-        }
-      </xs:sequence>
-    </xs:complexType>
+    def createFields = {
+      // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
+      // TODO when no restriction:  type="xs:string"
+      <xs:sequence>{
+        typeDef.fields.map(f => {
+          val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
+          val col = getCol(dbFieldName)
+          createElement(xsdName(f.name), col)
+        })
+      }</xs:sequence>
+    }
+    <xs:complexType name={ xsdName(typeDef.name) }>{
+      annotation(Option(typeDef.comment) getOrElse tableMd.comment)
+    }{
+      if (typeDef.xtnds == null) createFields
+      else <xs:complexContent>
+             <xs:extension base={ "tns:" + xsdName(typeDef.xtnds) }>
+               { createFields }
+             </xs:extension>
+           </xs:complexContent>
+    }</xs:complexType>
   }
   def createSchema = {
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="kps.ldz.lv">
