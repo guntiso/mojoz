@@ -113,7 +113,7 @@ object XsdGen {
   }
   private val md = Schema.entities.map(e => (e.name, e)).toMap
   // typedef name to typedef
-  private val td = typedefs.map(t => (t.name, t)).toMap
+  val td = typedefs.map(t => (t.name, t)).toMap // TODO rename, move
   // typedef name to typedef with extended field list
   val xtd = typedefs.map(t => // TODO rename, move
     // FIXME support recursive extends!
