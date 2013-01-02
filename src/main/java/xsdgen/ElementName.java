@@ -11,6 +11,28 @@ public class ElementName {
         UPPER, DIGIT, OTHER
     }
 
+    private static Map<Class, String> elementNameCache = Collections
+            .synchronizedMap(new HashMap<Class, String>());
+
+    public static String get(Class elementClass) {
+        String name = elementNameCache.get(elementClass);
+        if (name != null) {
+            return name;
+        }
+        name = elementClass.getSimpleName();
+        if (name.indexOf("_$$_") > 0) {
+            // javassist (newer hibernate)
+            name = name.substring(0, name.indexOf("_$$_"));
+        }
+        if (name.indexOf('$') > 0) {
+            // cglib (older hibernate)
+            name = name.substring(0, name.indexOf('$'));
+        }
+        name = get(name);
+        elementNameCache.put(elementClass, name);
+        return name;
+    }
+    
     public static String get(String name) {
         StringBuilder buf = new StringBuilder(name.length() * 2);
         CharType charType;

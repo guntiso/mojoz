@@ -9,6 +9,7 @@ import scala.xml.PrettyPrinter
 import org.yaml.snakeyaml.Yaml
 import java.io.File
 import scala.io.Source
+import scala.collection.JavaConverters._
 
 case class XsdTypeDef(
   name: String,
@@ -22,12 +23,19 @@ object XsdGen {
     val these = f.listFiles
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
-  def typedefFiles = recursiveListFiles(new File("../views"))
-  val typedefStrings = typedefFiles.map(f =>
-    Source.fromFile(f).mkString).map(s =>
+  def typedefFiles = recursiveListFiles(new File("../views")).toSeq
+  val typedefResources = classOf[XsdTypeDef].getClassLoader.getResources("")
+    .asScala.toSeq.flatMap(u =>
+      Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
+    .filter(_.endsWith(".yaml")).map("/" + _)
+  def filesToStrings =
+    typedefFiles.map(f => Source.fromFile(f).mkString)
+  def resourcesToStrings = typedefResources.map(r =>
+    Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
+  val typedefStrings = resourcesToStrings.map(s =>
     s.split("\\-\\-\\-").toSeq).flatMap(x =>
     x).map(_.trim).filter(_.length > 0) toSeq
-  val typedefs = typedefStrings map loadTypeDef
+  val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
     case class YamlXsdTypeDef(
       @BeanProperty var name: String,
@@ -51,6 +59,19 @@ object XsdGen {
         XsdTypeDef(name, table, x, c, mapF(f))
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
+  }
+  private def checkTypedefs = {
+    // TODO diagnostics: m(t.xtnds) and all other!!!
+  }
+  private def loadTypeDefs = {
+    val td = typedefStrings map loadTypeDef
+    checkTypedefs
+    val m = td.map(t => (t.name, t)).toMap
+    // FIXME support recursive extends!
+    // TODO extends is also typedef, join!
+    td.map(t =>
+      if (t.table != null) t
+      else XsdTypeDef(t.name, m(t.xtnds).table, t.xtnds, t.comment, t.fields))
   }
   private def xsdName(name: String) = Schema.dbNameToXsdName(name)
   private def xsdNameToDbName(xsdName: String) = Schema.xsdNameToDbName(xsdName)
@@ -91,7 +112,14 @@ object XsdGen {
     }
   }
   private val md = Schema.entities.map(e => (e.name, e)).toMap
+  // typedef name to typedef
   private val td = typedefs.map(t => (t.name, t)).toMap
+  // typedef name to typedef with extended field list
+  val xtd = typedefs.map(t => // TODO rename, move
+    // FIXME support recursive extends!
+    if (t.xtnds == null) t
+    else XsdTypeDef(t.name, t.table, t.xtnds, t.comment,
+      td(t.xtnds).fields ++ t.fields)).map(t => (t.name, t)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
     val tableMd =
       if (typeDef.xtnds == null) md(typeDef.table)
