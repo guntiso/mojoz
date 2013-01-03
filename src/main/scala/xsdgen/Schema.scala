@@ -17,7 +17,7 @@ case class XsdCol(name: String, xsdType: XsdType, comment: String)
 case class Entity(name: String, comment: String, cols: Seq[XsdCol])
 
 object Schema {
-  val scriptFileName = "..\\db\\schema.sql"
+  val scriptFileName = "../db/schema.sql" // TODO use resources!
   def loadFromFile: List[DbTable] = loadFromFile(scriptFileName)
   def loadFromFile(scriptFileName: String) = {
     val lines = Source.fromFile(scriptFileName, "UTF-8").getLines.toList
