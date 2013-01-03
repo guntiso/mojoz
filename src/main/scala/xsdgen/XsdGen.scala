@@ -11,12 +11,18 @@ import java.io.File
 import scala.io.Source
 import scala.collection.JavaConverters._
 
+case class XsdFieldDef(
+  table: String,
+  name: String,
+  alias: String,
+  comment: String)
+
 case class XsdTypeDef(
   name: String,
   table: String,
   xtnds: String,
   comment: String,
-  fields: Seq[XsdTypeDef])
+  fields: Seq[XsdFieldDef])
 
 object XsdGen {
   def recursiveListFiles(f: File): Array[File] = {
@@ -47,7 +53,8 @@ object XsdGen {
       def this(name: String) = this(name, null, null, null, null)
     }
     def mapF(fields: ArrayList[YamlXsdTypeDef]) =
-      if (fields == null) null else fields.map(f => xsdTypeDef(f)).toList
+      if (fields == null) null else fields.map(xsdTypeDef).map(f =>
+        XsdFieldDef(f.table, f.name, null, f.comment)).toList
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
       case YamlXsdTypeDef(name, null, null, c, f) =>
         XsdTypeDef(name, name, null, c, mapF(f))
@@ -69,9 +76,23 @@ object XsdGen {
     val m = td.map(t => (t.name, t)).toMap
     // FIXME support recursive extends!
     // TODO extends is also typedef, join!
-    td.map(t =>
+    def mapExtends(t: XsdTypeDef) =
       if (t.table != null) t
-      else XsdTypeDef(t.name, m(t.xtnds).table, t.xtnds, t.comment, t.fields))
+      else XsdTypeDef(t.name, m(t.xtnds).table, t.xtnds, t.comment, t.fields)
+    def mapField(t: XsdTypeDef, f: XsdFieldDef) =
+      if (f.name.indexOf(".") < 0)
+        XsdFieldDef(t.table, f.name, null, f.comment)
+      else {
+        val parts = f.name.split("\\.")
+        val table = parts(0)
+        val name = parts(1)
+        val alias = f.name.replace(".", "_")
+        XsdFieldDef(table, name, alias, f.comment)
+      }
+    def mapFields(t: XsdTypeDef) =
+      XsdTypeDef(t.name, t.table, t.xtnds, t.comment,
+        t.fields.map(f => mapField(t, f)))
+    td.map(mapExtends).map(mapFields)
   }
   private def xsdName(name: String) = Schema.dbNameToXsdName(name)
   private def xsdNameToDbName(xsdName: String) = Schema.xsdNameToDbName(xsdName)
@@ -145,9 +166,9 @@ object XsdGen {
       // TODO when no restriction:  type="xs:string"
       <xs:sequence>{
         typeDef.fields.map(f => {
-          val dbFieldName = xsdNameToDbName(f.name) // TODO by db name?
+          val dbFieldName = xsdNameToDbName(f.table + "." + f.name) // TODO by db name?
           val col = getCol(dbFieldName)
-          createElement(xsdName(f.name), col)
+          createElement(xsdName(Option(f.alias) getOrElse f.name), col)
         })
       }</xs:sequence>
     }
