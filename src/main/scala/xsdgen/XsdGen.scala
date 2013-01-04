@@ -83,7 +83,7 @@ object XsdGen {
     def mapExtends(t: XsdTypeDef) =
       if (t.table != null) t else t.copy(table = m(t.xtnds).table)
     def mapFields(t: XsdTypeDef) = {
-      val aliasToTable = JoinsParser.aliasToTableMap(t.joins)
+      val aliasToTable = JoinsParser(t.joins)
       def mapField(f: XsdFieldDef) =
         if (f.name.indexOf(".") < 0)
           XsdFieldDef(t.table, null, f.name, null, f.comment)
