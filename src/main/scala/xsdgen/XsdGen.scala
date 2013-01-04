@@ -13,6 +13,7 @@ import scala.collection.JavaConverters._
 
 case class XsdFieldDef(
   table: String,
+  tableAlias: String,
   name: String,
   alias: String,
   comment: String)
@@ -20,6 +21,7 @@ case class XsdFieldDef(
 case class XsdTypeDef(
   name: String,
   table: String,
+  joins: String, //tresql from clause
   xtnds: String,
   comment: String,
   fields: Seq[XsdFieldDef])
@@ -46,24 +48,26 @@ object XsdGen {
     case class YamlXsdTypeDef(
       @BeanProperty var name: String,
       @BeanProperty var table: String,
+      @BeanProperty var joins: String,
       @BeanProperty var `extends`: String,
       @BeanProperty var comment: String,
       @BeanProperty var fields: ArrayList[YamlXsdTypeDef]) {
-      def this() = this(null, null, null, null, null)
-      def this(name: String) = this(name, null, null, null, null)
+      def this() = this(null, null, null, null, null, null)
+      def this(name: String) = this(name, null, null, null, null, null)
     }
     def mapF(fields: ArrayList[YamlXsdTypeDef]) =
       if (fields == null) null else fields.map(xsdTypeDef).map(f =>
-        XsdFieldDef(f.table, f.name, null, f.comment)).toList
+        XsdFieldDef(f.table, null, f.name, null, f.comment)).toList
+    // TODO defer this analysys to later phase
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
-      case YamlXsdTypeDef(name, null, null, c, f) =>
-        XsdTypeDef(name, name, null, c, mapF(f))
-      case YamlXsdTypeDef(name, null, x, c, f) =>
-        XsdTypeDef(name, null, x, c, mapF(f))
-      case YamlXsdTypeDef(null, table, null, c, f) =>
-        XsdTypeDef(table, table, null, c, mapF(f))
-      case YamlXsdTypeDef(name, table, x, c, f) =>
-        XsdTypeDef(name, table, x, c, mapF(f))
+      case YamlXsdTypeDef(name, null, j, null, c, f) =>
+        XsdTypeDef(name, name, j, null, c, mapF(f))
+      case YamlXsdTypeDef(name, null, j, x, c, f) =>
+        XsdTypeDef(name, null, j, x, c, mapF(f))
+      case YamlXsdTypeDef(null, table, j, null, c, f) =>
+        XsdTypeDef(table, table, j, null, c, mapF(f))
+      case YamlXsdTypeDef(name, table, j, x, c, f) =>
+        XsdTypeDef(name, table, j, x, c, mapF(f))
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
@@ -77,21 +81,23 @@ object XsdGen {
     // FIXME support recursive extends!
     // TODO extends is also typedef, join!
     def mapExtends(t: XsdTypeDef) =
-      if (t.table != null) t
-      else XsdTypeDef(t.name, m(t.xtnds).table, t.xtnds, t.comment, t.fields)
-    def mapField(t: XsdTypeDef, f: XsdFieldDef) =
-      if (f.name.indexOf(".") < 0)
-        XsdFieldDef(t.table, f.name, null, f.comment)
-      else {
-        val parts = f.name.split("\\.")
-        val table = parts(0)
-        val name = parts(1)
-        val alias = f.name.replace(".", "_")
-        XsdFieldDef(table, name, alias, f.comment)
-      }
-    def mapFields(t: XsdTypeDef) =
-      XsdTypeDef(t.name, t.table, t.xtnds, t.comment,
-        t.fields.map(f => mapField(t, f)))
+      if (t.table != null) t else t.copy(table = m(t.xtnds).table)
+    def mapFields(t: XsdTypeDef) = {
+      val aliasToTable = JoinsParser.aliasToTableMap(t.joins)
+      def mapField(f: XsdFieldDef) =
+        if (f.name.indexOf(".") < 0)
+          XsdFieldDef(t.table, null, f.name, null, f.comment)
+        else {
+          val parts = f.name.split("\\.")
+          val tableOrAlias = parts(0)
+          val table = aliasToTable.getOrElse(tableOrAlias, tableOrAlias)
+          val tableAlias = if (table == tableOrAlias) null else tableOrAlias
+          val name = parts(1)
+          val alias = f.name.replace(".", "_")
+          XsdFieldDef(table, tableAlias, name, alias, f.comment)
+        }
+      t.copy(fields = t.fields.map(mapField))
+    }
     td.map(mapExtends).map(mapFields)
   }
   private def xsdName(name: String) = Schema.dbNameToXsdName(name)
@@ -139,8 +145,7 @@ object XsdGen {
   val xtd = typedefs.map(t => // TODO rename, move
     // FIXME support recursive extends!
     if (t.xtnds == null) t
-    else XsdTypeDef(t.name, t.table, t.xtnds, t.comment,
-      td(t.xtnds).fields ++ t.fields)).map(t => (t.name, t)).toMap
+    else t.copy(fields = td(t.xtnds).fields ++ t.fields)).map(t => (t.name, t)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
     val tableMd =
       if (typeDef.xtnds == null) md(typeDef.table)
