@@ -138,7 +138,6 @@ object XsdGen {
         </xs:element>
     }
   }
-  private val md = Schema.entities.map(e => (e.name, e)).toMap
   // typedef name to typedef
   val td = typedefs.map(t => (t.name, t)).toMap // TODO rename, move
   // typedef name to typedef with extended field list
@@ -147,34 +146,13 @@ object XsdGen {
     if (t.xtnds == null) t
     else t.copy(fields = td(t.xtnds).fields ++ t.fields)).map(t => (t.name, t)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableMd =
-      if (typeDef.xtnds == null) md(typeDef.table)
-      else md(td(typeDef.xtnds).table)
-    val cols = tableMd.cols.map(c => (c.name, c)).toMap
-    def getCol(colName: String) = try {
-      colName.split("\\.").toList.reverse match {
-        case name :: table :: path =>
-          val cols = md(table).cols.map(c => (c.name, c)).toMap // TODO optimize
-          cols(name)
-        case name :: Nil => cols(name)
-        case Nil => throw new RuntimeException("Impossible!")
-      }
-    } catch {
-      case ex: Exception =>
-        // TODO print filename, lineNr, colNr, too!
-        throw new RuntimeException(
-          "Problem finding column (typeDef: " + typeDef.name
-            + ", column: " + colName + ")", ex)
-    }
+    val tableMd = Schema.tableDef(typeDef)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
       <xs:sequence>{
-        typeDef.fields.map(f => {
-          val dbFieldName = xsdNameToDbName(f.table + "." + f.name) // TODO by db name?
-          val col = getCol(dbFieldName)
-          createElement(xsdName(Option(f.alias) getOrElse f.name), col)
-        })
+        typeDef.fields.map(f =>
+          createElement(xsdName(Option(f.alias) getOrElse f.name), Schema.getCol(typeDef, f)))
       }</xs:sequence>
     }
     <xs:complexType name={ xsdName(typeDef.name) }>{

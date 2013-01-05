@@ -109,4 +109,21 @@ object Schema {
       case x => x
     }
   }
+  private lazy val md = entities.map(e => (e.name, e)).toMap
+  def tableDef(typeDef: XsdTypeDef) =
+    if (typeDef.xtnds == null) md(typeDef.table) else md(XsdGen.td(typeDef.xtnds).table)
+  def getCol(typeDef: XsdTypeDef, f: XsdFieldDef) = {
+    val tableMd = tableDef(typeDef)
+    val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
+    try {
+      (if (f.table == typeDef.table) cols else md(f.table).cols.map(c => (c.name, c)).toMap)(f.name)
+    } catch {
+      case ex: Exception =>
+        // TODO print filename, lineNr, colNr, too!
+        throw new RuntimeException(
+          "Problem finding column (typeDef: " + typeDef.name
+            + ", column: " + f.table + "." + f.name +
+            (if (f.alias == null) "" else " (table alias " + f.tableAlias + ")") + ")", ex)
+    }
+  }
 }
