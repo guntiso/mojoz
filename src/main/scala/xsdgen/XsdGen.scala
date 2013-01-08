@@ -8,6 +8,7 @@ import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
 import org.yaml.snakeyaml.Yaml
 import java.io.File
+import scala.annotation.tailrec
 import scala.io.Source
 import scala.collection.JavaConverters._
 
@@ -21,7 +22,7 @@ case class XsdFieldDef(
 case class XsdTypeDef(
   name: String,
   table: String,
-  joins: String, //tresql from clause
+  joins: String, // tresql from clause
   xtnds: String,
   comment: String,
   fields: Seq[XsdFieldDef])
@@ -71,17 +72,29 @@ object XsdGen {
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
-  private def checkTypedefs = {
+  private def checkTypedefs(td: Seq[XsdTypeDef]) = {
     // TODO diagnostics: m(t.xtnds) and all other!!!
+    // check names not repeating
+    // check extends only existing
+    // check field names not repeating
+    // check field names not repeating on extends? or overwrite instead?
   }
   private def loadTypeDefs = {
     val td = typedefStrings map loadTypeDef
-    checkTypedefs
+    checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
-    // FIXME support recursive extends!
     // TODO extends is also typedef, join!
     def mapExtends(t: XsdTypeDef) =
-      if (t.table != null) t else t.copy(table = m(t.xtnds).table)
+      if (t.table != null) t else {
+        @tailrec
+        def baseTable(t: XsdTypeDef, visited: List[String]): String =
+          if (visited contains t.name)
+            sys.error("Cyclic extends: " +
+              (t.name :: visited).reverse.mkString(" -> "))
+          else if (t.table != null) t.table
+          else baseTable(m(t.xtnds), t.name :: visited)
+        t.copy(table = baseTable(t, Nil))
+      }
     def mapFields(t: XsdTypeDef) = {
       val aliasToTable = JoinsParser(t.joins)
       def mapField(f: XsdFieldDef) =
@@ -142,9 +155,16 @@ object XsdGen {
   val td = typedefs.map(t => (t.name, t)).toMap // TODO rename, move
   // typedef name to typedef with extended field list
   val xtd = typedefs.map(t => // TODO rename, move
-    // FIXME support recursive extends!
-    if (t.xtnds == null) t
-    else t.copy(fields = td(t.xtnds).fields ++ t.fields)).map(t => (t.name, t)).toMap
+    if (t.xtnds == null) t else {
+      @tailrec
+      def baseFields(t: XsdTypeDef, visited: List[String]): Seq[XsdFieldDef] =
+        if (visited contains t.name)
+          sys.error("Cyclic extends: " +
+            (t.name :: visited).reverse.mkString(" -> "))
+        else if (t.xtnds == null) t.fields
+        else baseFields(td(t.xtnds), t.name :: visited) ++ t.fields
+      t.copy(fields = baseFields(t, Nil))
+    }).map(t => (t.name, t)).toMap
   def createComplexType(typeDef: XsdTypeDef) = {
     val tableMd = Schema.tableDef(typeDef)
     def createFields = {
