@@ -96,7 +96,7 @@ object XsdGen {
         t.copy(table = baseTable(t, Nil))
       }
     def mapFields(t: XsdTypeDef) = {
-      val aliasToTable = JoinsParser(t.joins)
+      val aliasToTable = JoinsParser.aliases(t.joins)
       def mapField(f: XsdFieldDef) =
         if (f.name.indexOf(".") < 0)
           XsdFieldDef(t.table, null, f.name, null, f.comment)
