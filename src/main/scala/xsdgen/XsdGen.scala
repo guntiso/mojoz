@@ -1,16 +1,20 @@
 package xsdgen
 
-import java.io.InputStream
+import java.io.File
 import java.util.ArrayList
+
 import scala.Array.canBuildFrom
+import scala.annotation.tailrec
 import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import scala.io.Source
 import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
+
 import org.yaml.snakeyaml.Yaml
-import java.io.File
-import scala.annotation.tailrec
-import scala.io.Source
-import scala.collection.JavaConverters._
+
+import Schema.{ dbNameToXsdName => xsdName }
+import Schema.{ xsdNameToDbName => dbName }
 
 case class XsdFieldDef(
   table: String,
@@ -59,16 +63,16 @@ object XsdGen {
     def mapF(fields: ArrayList[YamlXsdTypeDef]) =
       if (fields == null) null else fields.map(xsdTypeDef).map(f =>
         XsdFieldDef(f.table, null, f.name, null, f.comment)).toList
-    // TODO defer this analysys to later phase
+    // TODO defer this analysis to later phase, it will clean up the code! 
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
       case YamlXsdTypeDef(name, null, j, null, c, f) =>
-        XsdTypeDef(name, name, j, null, c, mapF(f))
+        XsdTypeDef(name, dbName(name), j, null, c, mapF(f))
       case YamlXsdTypeDef(name, null, j, x, c, f) =>
         XsdTypeDef(name, null, j, x, c, mapF(f))
       case YamlXsdTypeDef(null, table, j, null, c, f) =>
-        XsdTypeDef(table, table, j, null, c, mapF(f))
+        XsdTypeDef(table, dbName(table), j, null, c, mapF(f))
       case YamlXsdTypeDef(name, table, j, x, c, f) =>
-        XsdTypeDef(name, table, j, x, c, mapF(f))
+        XsdTypeDef(name, dbName(table), j, x, c, mapF(f))
     }
     xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
   }
@@ -99,22 +103,20 @@ object XsdGen {
       val aliasToTable = JoinsParser.aliases(t.joins)
       def mapField(f: XsdFieldDef) =
         if (f.name.indexOf(".") < 0)
-          XsdFieldDef(t.table, null, f.name, null, f.comment)
+          XsdFieldDef(dbName(t.table), null, dbName(f.name), null, f.comment)
         else {
           val parts = f.name.split("\\.")
-          val tableOrAlias = parts(0)
-          val table = aliasToTable.getOrElse(tableOrAlias, tableOrAlias)
+          val tableOrAlias = dbName(parts(0))
+          val table = dbName(aliasToTable.getOrElse(tableOrAlias, tableOrAlias))
           val tableAlias = if (table == tableOrAlias) null else tableOrAlias
-          val name = parts(1)
-          val alias = f.name.replace(".", "_")
+          val name = dbName(parts(1))
+          val alias = dbName(f.name.replace(".", "_"))
           XsdFieldDef(table, tableAlias, name, alias, f.comment)
         }
       t.copy(fields = t.fields.map(mapField))
     }
     td.map(mapExtends).map(mapFields)
   }
-  private def xsdName(name: String) = Schema.dbNameToXsdName(name)
-  private def xsdNameToDbName(xsdName: String) = Schema.xsdNameToDbName(xsdName)
   private def annotation(comment: String) =
     if (comment != null && comment.trim.length > 0)
       <xs:annotation>

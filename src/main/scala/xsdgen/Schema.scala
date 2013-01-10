@@ -99,7 +99,7 @@ object Schema {
     }).map(_.capitalize) mkString
   }
   def xsdNameToDbName(xsdName: String) = {
-    ElementName.get(xsdName).split("\\-").map(_.toLowerCase match {
+    ElementName.get(xsdName).split("[\\-\\_]").map(_.toLowerCase match {
       case "user" => "usr"
       case "group" => "grp"
       case "role" => "rle"
@@ -115,15 +115,18 @@ object Schema {
   def getCol(typeDef: XsdTypeDef, f: XsdFieldDef) = {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
+    val colName = xsdNameToDbName(f.name)
     try {
-      (if (f.table == typeDef.table) cols else md(f.table).cols.map(c => (c.name, c)).toMap)(f.name)
+      (if (f.table == typeDef.table) cols
+      else md(f.table).cols.map(c => (c.name, c)).toMap)(colName)
     } catch {
       case ex: Exception =>
         // TODO print filename, lineNr, colNr, too!
         throw new RuntimeException(
           "Problem finding column (typeDef: " + typeDef.name
-            + ", column: " + f.table + "." + f.name +
-            (if (f.alias == null) "" else " (table alias " + f.tableAlias + ")") + ")", ex)
+            + ", column: " + f.table + "." + colName +
+            (if (f.tableAlias == null) ""
+            else " (table alias " + f.tableAlias + ")") + ")", ex)
     }
   }
 }
