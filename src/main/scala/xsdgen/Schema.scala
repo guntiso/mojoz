@@ -110,8 +110,14 @@ object Schema {
     }
   }
   private lazy val md = entities.map(e => (e.name, e)).toMap
-  def tableDef(typeDef: XsdTypeDef) =
-    if (typeDef.xtnds == null) md(typeDef.table) else md(XsdGen.td(typeDef.xtnds).table)
+  def tableDef(typeDef: XsdTypeDef): Entity =
+    // TODO get line, file info from xsd type def
+    if (typeDef.xtnds == null)
+      md.get(typeDef.table) getOrElse
+        sys.error("table not found: " + typeDef.table +
+          ", type def: " + typeDef.name)
+    else tableDef(XsdGen.td(typeDef.xtnds))
+
   def getCol(typeDef: XsdTypeDef, f: XsdFieldDef) = {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
