@@ -124,13 +124,20 @@ object XsdGen {
       </xs:annotation>
   private def createElement(elName: String, col: XsdCol) = {
     val colcomment = annotation(col.comment)
+    val required = (col.nullable, col.name) match {
+      // FIXME do not handle ids here, add ? in views instead!
+      case (_, "id") => false // XXX for inserts id is not required
+      case (nullable, _) => !nullable
+    }
+    // FIXME for refed values, depends on ref-chain nullable!
+    val minOccurs = if (required) null else "0"
     col.xsdType match {
       case XsdType(typeName, None, None, None) =>
-        <xs:element name={ elName } type={ "xs:" + typeName } minOccurs="0">{
+        <xs:element name={ elName } type={ "xs:" + typeName } minOccurs={ minOccurs }>{
           colcomment
         }</xs:element>
       case XsdType(typeName, Some(length), None, None) =>
-        <xs:element name={ elName } minOccurs="0">
+        <xs:element name={ elName } minOccurs={ minOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ "xs:" + typeName }>
@@ -139,7 +146,7 @@ object XsdGen {
           </xs:simpleType>
         </xs:element>
       case XsdType(typeName, _, Some(totalDigits), fractionDigitsOption) =>
-        <xs:element name={ elName } minOccurs="0">
+        <xs:element name={ elName } minOccurs={ minOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ "xs:" + typeName }>

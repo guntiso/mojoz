@@ -3,7 +3,11 @@ package xsdgen
 import scala.io.Source
 
 case class DbTable(name: String, comment: String, cols: Seq[DbCol])
-case class DbCol(name: String, dbType: String, comment: String)
+case class DbCol(
+  name: String,
+  dbType: String,
+  nullable: Boolean,
+  comment: String)
 
 case class XsdType(name: String, length: Option[Int],
   totalDigits: Option[Int], fractionDigits: Option[Int]) {
@@ -13,8 +17,12 @@ case class XsdType(name: String, length: Option[Int],
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
     this(name, None, Some(totalDigits), Some(fractionDigits))
 }
-case class XsdCol(name: String, xsdType: XsdType, comment: String)
 case class Entity(name: String, comment: String, cols: Seq[XsdCol])
+case class XsdCol(
+  name: String,
+  xsdType: XsdType,
+  nullable: Boolean,
+  comment: String)
 
 object Schema {
   val scriptFileName = "../db/schema.sql" // TODO use resources!
@@ -29,14 +37,14 @@ object Schema {
     def flush() =
       if (tableName != "") {
         val commentedCols = cols.reverse.map(col =>
-          DbCol(col.name, col.dbType, colComments.getOrElse(col.name, null)))
+          col.copy(comment = colComments.getOrElse(col.name, null)))
         tables = DbTable(tableName, tableComment, commentedCols) :: tables
         tableName = ""
         tableComment = ""
         cols = Nil
         colComments.clear()
       }
-    lines.foreach(_.trim.split("\\s").toList match {
+    lines.foreach(_.trim.split("[\\s]+").toList match {
       case "create" :: "table" :: dTable :: tail =>
         flush()
         tableName = dTable.replace("(", "")
@@ -52,8 +60,13 @@ object Schema {
       case _ :: Nil =>
       case colName :: tail =>
         var dType = tail.mkString(" ")
-        dType = dType.substring(0, dType.length - 1)
-        cols = DbCol(colName, dType, null) :: cols
+        dType = dType.substring(0, dType.length - 1) // remove comma
+        var nullable = true
+        if (dType.endsWith(" not null")) {
+          dType = dType.replace(" not null", "")
+          nullable = false
+        }
+        cols = DbCol(colName, dType, nullable, null) :: cols
       case _ =>
     })
     flush()
@@ -61,7 +74,7 @@ object Schema {
   }
   def toEntity(table: DbTable) = {
     val xsdCols = table.cols.map(col =>
-      XsdCol(col.name, xsdType(col), col.comment))
+      XsdCol(col.name, xsdType(col), col.nullable, col.comment))
     Entity(table.name, table.comment, xsdCols)
   }
   def entities = loadFromFile map toEntity
