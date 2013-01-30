@@ -92,6 +92,7 @@ object Schema {
       case "date" :: tail => new XsdType("date")
       case "timestamp" :: tail => new XsdType("dateTime")
       case "varchar2" :: len :: Nil => new XsdType("string", len.toInt)
+      case "varchar2" :: len :: char :: Nil => new XsdType("string", len.toInt)
       case "char" :: tail => new XsdType("boolean")
       case "numeric" :: len :: Nil =>
         integerOrSubtype(len.toInt)
