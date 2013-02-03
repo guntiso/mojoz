@@ -17,6 +17,13 @@ case class XsdType(name: String, length: Option[Int],
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
     this(name, None, Some(totalDigits), Some(fractionDigits))
 }
+case class ExTypeDef(name: String, comment: String, cols: Seq[ExColDef])
+case class ExColDef(
+  name: String,
+  xsdType: Option[XsdType],
+  nullable: Option[Boolean],
+  comment: String)
+
 case class Entity(name: String, comment: String, cols: Seq[XsdCol])
 case class XsdCol(
   name: String,
@@ -24,8 +31,60 @@ case class XsdCol(
   nullable: Boolean,
   comment: String)
 
+object SchemaConventions {
+  // TODO default comment for id col?
+  def isBooleanName(name: String) =
+    name.startsWith("is_") || name.startsWith("has_")
+  def isDateName(name: String) = name.endsWith("_date")
+  def isIdRefName(name: String) = name.endsWith("_id")
+  def isTypedName(name: String) =
+    isBooleanName(name) || isDateName(name) || isIdRefName(name)
+  def fromExternal(typeDef: ExTypeDef): Entity = {
+    Entity(typeDef.name, typeDef.comment, typeDef.cols.map(fromExternal(_)))
+  }
+  def fromExternal(col: ExColDef): XsdCol = {
+    col match {
+      case ExColDef("id", xsdType, nullable, comment) =>
+        XsdCol("id", xsdType getOrElse new XsdType("long"),
+          nullable getOrElse false, comment)
+      case ExColDef(name, xsdType, nullable, comment) if isBooleanName(name) =>
+        XsdCol(name, xsdType getOrElse new XsdType("boolean"),
+          nullable getOrElse true, comment)
+      case ExColDef(name, xsdType, nullable, comment) if isDateName(name) =>
+        XsdCol(name, xsdType getOrElse new XsdType("date"),
+          nullable getOrElse true, comment)
+      // FIXME typename not defined, len defined
+      case x =>
+        XsdCol(x.name, x.xsdType getOrElse new XsdType("string", 256),
+          x.nullable getOrElse true, x.comment)
+    }
+  }
+  def toExternal(typeDef: Entity): ExTypeDef =
+    ExTypeDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal)
+
+  def toExternal(col: XsdCol): ExColDef = {
+    val nullOpt = (col.name, col.nullable) match {
+      case ("id", false) => None
+      case (_, true) => None
+      case (_, nullable) => Some(nullable)
+    }
+    val typeOpt = (col.name, col.xsdType.name, col.xsdType.length) match {
+      case ("id", "long", _) => None
+      case (name, "long", _) if isIdRefName(name) => None
+      case (name, "boolean", _) if isBooleanName(name) => None
+      case (name, "date", _) if isDateName(name) => None
+      case (name, "string", None) if !isTypedName(name) => None
+      case (name, "string", Some(len)) if !isTypedName(name) =>
+        Some(new XsdType(null.asInstanceOf[String], len))
+      case _ => Option(col.xsdType)
+    }
+    ExColDef(col.name, typeOpt, nullOpt, col.comment)
+  }
+}
+
 object Schema {
   val scriptFileName = "../db/schema.sql" // TODO use resources!
+  val yamlFileName = "../db/schema.yaml" // TODO use resources!
   def loadFromFile: List[DbTable] = loadFromFile(scriptFileName)
   def loadFromFile(scriptFileName: String) = {
     val lines = Source.fromFile(scriptFileName, "UTF-8").getLines.toList
@@ -61,7 +120,7 @@ object Schema {
       case colName :: tail =>
         var dType = tail.mkString(" ")
         dType = dType.substring(0, dType.length - 1) // remove comma
-        var nullable = true
+        var nullable = colName != "id" // XXX
         if (dType.endsWith(" not null")) {
           dType = dType.replace(" not null", "")
           nullable = false
@@ -73,9 +132,10 @@ object Schema {
     tables.reverse
   }
   def toEntity(table: DbTable) = {
-    val xsdCols = table.cols.map(col =>
-      XsdCol(col.name, xsdType(col), col.nullable, col.comment))
-    Entity(table.name, table.comment, xsdCols)
+    val xsdCols = table.cols.map(col => ExColDef(
+      col.name, Option(xsdType(col)), Option(col.nullable), col.comment))
+    SchemaConventions.fromExternal(
+      ExTypeDef(table.name, table.comment, xsdCols))
   }
   def entities = loadFromFile map toEntity
   def entities(scriptFileName: String) =
@@ -149,4 +209,28 @@ object Schema {
             else " (table alias " + f.tableAlias + ")") + ")", ex)
     }
   }
+
+  def toYamlColDef(colDef: ExColDef) = {
+    import colDef._
+    val t = colDef.xsdType getOrElse new XsdType(null, None, None, None)
+    val td = List(
+      Some(name.padTo(20, " ").mkString),
+      Some(colDef.nullable map (b => if (b) "?" else "!") getOrElse (" ")),
+      Option(t.name),
+      t.length,
+      t.totalDigits,
+      t.fractionDigits).flatMap(x => x) mkString " "
+    // TODO max row length! Wrap comments
+    // TODO format fixed width columns for better readability
+    if (comment == null || comment == "") td else td + ": " + comment
+  }
+  def toYaml(entity: Entity): String =
+    toYaml(SchemaConventions.toExternal(entity))
+  def toYaml(entity: ExTypeDef): String =
+    List(Some(entity.name).map("name: " + _),
+      Option(entity.comment).filter(_ != "").map("comment: " + _),
+      Some("columns:"),
+      Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
+      .flatMap(x => x).mkString("\n")
+  def toYaml: String = (entities map toYaml).mkString("\n---\n\n")
 }
