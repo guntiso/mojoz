@@ -1,6 +1,8 @@
 package xsdgen
 
 import scala.io.Source
+import scala.math.max
+import scala.annotation.tailrec
 
 case class DbTable(name: String, comment: String, cols: Seq[DbCol])
 case class DbCol(
@@ -85,6 +87,7 @@ object SchemaConventions {
 object Schema {
   val scriptFileName = "../db/schema.sql" // TODO use resources!
   val yamlFileName = "../db/schema.yaml" // TODO use resources!
+  val MaxLineLength = 100
   def loadFromFile: List[DbTable] = loadFromFile(scriptFileName)
   def loadFromFile(scriptFileName: String) = {
     val lines = Source.fromFile(scriptFileName, "UTF-8").getLines.toList
@@ -209,26 +212,51 @@ object Schema {
             else " (table alias " + f.tableAlias + ")") + ")", ex)
     }
   }
-
+  private def wrapped(words: String, prefix: String, indent: String) = {
+    @tailrec
+    def _wrapped(
+      words: List[String], lines: List[String], line: String): List[String] =
+      words match {
+        case word :: tail if line.length + word.length + 1 < MaxLineLength =>
+          _wrapped(tail, lines, line + " " + word)
+        case word :: tail =>
+          _wrapped(tail, line :: lines, indent + word)
+        case Nil => (line :: lines).reverse
+      }
+    _wrapped(words.trim.split("[\\s]+").toList, Nil, prefix).mkString("\n")
+  }
   def toYamlColDef(colDef: ExColDef) = {
     import colDef._
     val t = colDef.xsdType getOrElse new XsdType(null, None, None, None)
-    val td = List(
-      Some(name.padTo(20, " ").mkString),
-      Some(colDef.nullable map (b => if (b) "?" else "!") getOrElse (" ")),
+    val typeString = List(
       Option(t.name),
       t.length,
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
-    // TODO max row length! Wrap comments
-    // TODO format fixed width columns for better readability
-    if (comment == null || comment == "") td else td + ": " + comment
+
+    val defString = List(
+      (name, 20),
+      (colDef.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
+      (typeString, 8)).foldLeft(("", 0))((r, t) => (
+        List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
+        r._2 + t._2 + 1))._1
+
+    val hasComment = (comment != null && comment.trim != "")
+    val slComment = if (hasComment) " : " + comment.trim else ""
+    if (!hasComment) defString.trim
+    else if (MaxLineLength >= defString.length + slComment.length)
+      (defString + slComment).trim
+    else {
+      val indent = " " * (2 + defString.length + 3)
+      wrapped(comment, defString + " :", indent)
+    }
   }
   def toYaml(entity: Entity): String =
     toYaml(SchemaConventions.toExternal(entity))
   def toYaml(entity: ExTypeDef): String =
-    List(Some(entity.name).map("name: " + _),
-      Option(entity.comment).filter(_ != "").map("comment: " + _),
+    List(Some(entity.name).map("table:   " + _),
+      Option(entity.comment).filter(_ != "").map(c =>
+        wrapped(c.trim, "comment:", " " * 9)),
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
