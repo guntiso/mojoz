@@ -225,6 +225,9 @@ object Schema {
       }
     _wrapped(words.trim.split("[\\s]+").toList, Nil, prefix).mkString("\n")
   }
+  def escapeYamlValue(value: String) = { // TODO escapeYamlValue properly
+    if (value contains ":") "\"" + value + "\"" else value
+  }
   def toYamlColDef(colDef: ExColDef) = {
     import colDef._
     val t = colDef.xsdType getOrElse new XsdType(null, None, None, None)
@@ -242,13 +245,14 @@ object Schema {
         r._2 + t._2 + 1))._1
 
     val hasComment = (comment != null && comment.trim != "")
-    val slComment = if (hasComment) " : " + comment.trim else ""
+    val slComment =
+      if (hasComment) " : " + escapeYamlValue(comment.trim) else ""
     if (!hasComment) defString.trim
     else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
     else {
       val indent = " " * (2 + defString.length + 3)
-      wrapped(comment, defString + " :", indent)
+      wrapped(escapeYamlValue(comment.trim), defString + " :", indent)
     }
   }
   def toYaml(entity: Entity): String =
