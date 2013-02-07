@@ -10,7 +10,12 @@ import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
 import org.yaml.snakeyaml.Yaml
 
-case class ColumnDef(
+case class YamlTypeDef(
+  table: String,
+  comment: String,
+  columns: Seq[YamlFieldDef])
+
+case class YamlFieldDef(
   name: String,
   cardinality: String,
   typeName: String,
@@ -18,12 +23,7 @@ case class ColumnDef(
   fraction: Option[Int],
   comment: String)
 
-case class TableDef(
-  table: String,
-  comment: String,
-  columns: Seq[ColumnDef])
-
-object MdParser {
+object YamlMdLoader {
   def recursiveListFiles(f: File): Array[File] = {
     val these = f.listFiles
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
@@ -31,7 +31,7 @@ object MdParser {
   // FIXME use common resources
   def typedefFiles = recursiveListFiles(new File("../db")).toSeq
     .filter(_.getName endsWith ".yaml")
-  val typedefResources = classOf[TableDef].getClassLoader.getResources("")
+  val typedefResources = classOf[YamlTypeDef].getClassLoader.getResources("")
     .asScala.toSeq.flatMap(u =>
       Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
     .filter(_.endsWith(".yaml")).map("/" + _)
@@ -42,8 +42,22 @@ object MdParser {
   val typedefStrings = filesToStrings.map(s =>
     s.split("\\-\\-\\-").toSeq).flatMap(x =>
     x).map(_.trim).filter(_.length > 0) toSeq
-  val typedefs = loadTypeDefs
-  def loadColDef(src: Any) = {
+  val yamlTypeDefs = loadYamlTypeDefs
+  private def loadYamlTypeDefs = {
+    typedefStrings map loadYamlTypeDef
+  }
+  def loadYamlTypeDef(typeDef: String) = {
+    val tdMap = mapAsScalaMap(
+      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
+    val table = tdMap.get("table").map(_.toString) getOrElse null
+    val comment = tdMap.get("comment").map(_.toString) getOrElse null
+    val colSrc = tdMap.get("columns")
+      .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
+      .getOrElse(Nil)
+    val colDefs = colSrc map loadYamlFieldDef
+    YamlTypeDef(table, comment, colDefs)
+  }
+  def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
     def colDef(nameAndType: String, comment: String) = {
       val parts = nameAndType.split("[\\s]+").toList
@@ -74,7 +88,7 @@ object MdParser {
         case _ => throw new RuntimeException(ThisFail +
           " - unexpected format: " + nameAndType.trim)
       }
-      ColumnDef(name, cardinality, typeName, length, fraction, comment)
+      YamlFieldDef(name, cardinality, typeName, length, fraction, comment)
     }
     src match {
       case nameAndType: java.lang.String =>
@@ -92,19 +106,5 @@ object MdParser {
         " - unexpected field definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
-  }
-  def loadTypeDef(typeDef: String) = {
-    val tdMap = mapAsScalaMap(
-      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
-    val table = tdMap.get("table").map(_.toString) getOrElse null
-    val comment = tdMap.get("comment").map(_.toString) getOrElse null
-    val colSrc = tdMap.get("columns")
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
-      .getOrElse(Nil)
-    val colDefs = colSrc map loadColDef
-    TableDef(table, comment, colDefs)
-  }
-  private def loadTypeDefs = {
-    typedefStrings map loadTypeDef
   }
 }
