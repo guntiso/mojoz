@@ -9,6 +9,7 @@ case class DbColumnDef(
   name: String,
   dbType: String,
   nullable: Boolean,
+  dbDefault: String,
   comment: String)
 
 object SqlMdLoader {
@@ -49,19 +50,27 @@ object SqlMdLoader {
         var dType = tail.mkString(" ")
         dType = dType.substring(0, dType.length - 1) // remove comma
         var nullable = colName != "id" // XXX
-        if (dType.endsWith(" not null")) {
+        if (dType.endsWith(" not null") || dType.contains(" not null ")) {
           dType = dType.replace(" not null", "")
           nullable = false
         }
-        cols = DbColumnDef(colName, dType, nullable, null) :: cols
+        var dDefault: String = null
+        if (dType.contains(" default ")) {
+          val Df = " default "
+          val iv = dType.indexOf(Df) + Df.length
+          // FIXME db default value
+          dDefault = dType.substring(iv, dType.indexOf(" ", iv)).trim
+          nullable = false
+        }
+        cols = DbColumnDef(colName, dType, nullable, dDefault, null) :: cols
       case _ =>
     })
     flush()
     tables.reverse
   }
   def toEntity(table: DbTableDef) = {
-    val xsdCols = table.cols.map(col => ExFieldDef(
-      col.name, Option(xsdType(col)), Option(col.nullable), col.comment))
+    val xsdCols = table.cols.map(col => ExFieldDef(col.name,
+      Option(xsdType(col)), Option(col.nullable), col.dbDefault, col.comment))
     MdConventions.fromExternal(
       ExTypeDef(table.name, table.comment, xsdCols))
   }
@@ -80,7 +89,7 @@ object SqlMdLoader {
       case "date" :: tail => new XsdType("date")
       case "timestamp" :: tail => new XsdType("dateTime")
       case "varchar2" :: len :: Nil => new XsdType("string", len.toInt)
-      case "varchar2" :: len :: char :: Nil => new XsdType("string", len.toInt)
+      case "varchar2" :: len :: "char" :: Nil => new XsdType("string", len.toInt)
       case "char" :: tail => new XsdType("boolean")
       case "numeric" :: len :: Nil =>
         integerOrSubtype(len.toInt)

@@ -16,6 +16,7 @@ case class ColumnDef(
   name: String,
   xsdType: XsdType,
   nullable: Boolean,
+  dbDefault: String,
   comment: String)
 
 object Metadata {
