@@ -195,9 +195,30 @@ object XsdGen {
            </xs:complexContent>
     }</xs:complexType>
   }
+  val listWrapper = // XXX
+    <xs:complexType name="ListWrapper">
+      <xs:sequence>
+        <xs:element type="xs:int" name="Count"/>
+        <xs:element type="xs:int" minOccurs="0" name="Limit"/>
+        <xs:element type="xs:int" minOccurs="0" name="Offset"/>
+      </xs:sequence>
+    </xs:complexType>
+  def createListWrapper(typeDef: XsdTypeDef) = // XXX
+    <xs:complexType name={ xsdName(typeDef.name.replace("_list_row", "_list_wrapper")) }>
+      <xs:complexContent>
+        <xs:extension base="tns:ListWrapper">
+          <xs:sequence>
+            <xs:element maxOccurs="unbounded" minOccurs="0" nillable="true" type={ "tns:" + xsdName(typeDef.name) } name={ xsdName(typeDef.table) }/>
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
   def createSchema = {
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0" targetNamespace="kps.ldz.lv">
-      { typedefs map createComplexType }
+      {
+        typedefs.map(createComplexType) ++ listWrapper ++
+          typedefs.filter(_.name.endsWith("_list_row")).map(createListWrapper)
+      }
     </xs:schema>
   }
   def createSchemaString = new PrettyPrinter(200, 2).format(createSchema)
