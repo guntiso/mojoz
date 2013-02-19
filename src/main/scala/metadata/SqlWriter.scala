@@ -7,19 +7,15 @@ object OracleSqlWriter {
   def createTablesStatements(tables: Seq[TableDef]) = {
     tables.map(dbTableDef).map(t => List(
       createTableStatement(t), tableComment(t), columnComments(t))
-      .mkString("\n")).mkString("\n\n")
+      .mkString("\n")).mkString("\n\n") + (if (tables.size > 0) "\n" else "")
   }
   // TODO default values
   def createTableStatement(t: DbTableDef) =
     (t.cols.map(createColumn) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
-  def primaryKey(t: DbTableDef) =
-    if (t.cols.filter(_.name == "id").size == 1)
-      Some("constraint pk_" + t.name + " primary key (id)")
-    else if (t.cols.size == 2 && t.cols.filter(_.name endsWith "_id").size == 2)
-      Some(t.cols.map(_.name).mkString(
-        "constraint pk_" + t.name + " primary key (", ", ", ")"))
-    else None // TODO?
+  def primaryKey(t: DbTableDef) = t.pk map { pk =>
+    "constraint " + pk.name + " primary key (" + pk.cols.mkString(", ") + ")"
+  }
   // TODO default
   private def createColumn(c: DbColumnDef) =
     c.name + " " + c.dbType +
@@ -33,8 +29,8 @@ object OracleSqlWriter {
   // TODO
   def foreignKeys() {}
   def dbTableDef(t: TableDef) = t match {
-    case TableDef(name, comment, cols) => DbTableDef(
-      DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef))
+    case TableDef(name, comment, cols, pk) => DbTableDef(
+      DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk)
   }
   def dbColumnDef(c: ColumnDef) = c match {
     case ColumnDef(name, xsdType, nullable, dbDefault, comment) => DbColumnDef(

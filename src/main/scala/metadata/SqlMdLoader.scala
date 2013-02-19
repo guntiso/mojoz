@@ -4,7 +4,11 @@ import scala.io.Source
 import scala.math.max
 import scala.annotation.tailrec
 
-case class DbTableDef(name: String, comment: String, cols: Seq[DbColumnDef])
+case class DbTableDef(
+  name: String,
+  comment: String,
+  cols: Seq[DbColumnDef],
+  pk: Option[DbIndex])
 case class DbColumnDef(
   name: String,
   dbType: String,
@@ -22,21 +26,29 @@ object SqlMdLoader {
     var tables: List[DbTableDef] = Nil
     var cols: List[DbColumnDef] = Nil
     var colComments = scala.collection.mutable.HashMap[String, String]()
+    var primaryKey: Option[DbIndex] = None
     def flush() =
       if (tableName != "") {
         val commentedCols = cols.reverse.map(col =>
           col.copy(comment = colComments.getOrElse(col.name, null)))
-        tables = DbTableDef(tableName, tableComment, commentedCols) :: tables
+        val tableDef =
+          DbTableDef(tableName, tableComment, commentedCols, primaryKey)
+        tables = tableDef :: tables
         tableName = ""
         tableComment = ""
         cols = Nil
         colComments.clear()
+        primaryKey = None
       }
     lines.foreach(_.trim.split("[\\s]+").toList match {
       case "create" :: "table" :: dTable :: tail =>
         flush()
         tableName = dTable.replace("(", "")
-      case "constraint" :: tail =>
+      case "constraint" :: pkName :: "primary" :: "key" :: pkCols =>
+        val cleanPkCols = pkCols.map(
+          _.replace("(", "").replace(")", "").replace(",", "").trim)
+          .filter(_ != "")
+        primaryKey = Some(DbIndex(pkName, cleanPkCols))
       case "comment" :: "on" :: "table" :: dTable :: "is" :: tail =>
         val dComment = tail.mkString(" ")
         tableComment = dComment.substring(1, dComment.length - 2)
@@ -58,8 +70,12 @@ object SqlMdLoader {
         if (dType.contains(" default ")) {
           val Df = " default "
           val iv = dType.indexOf(Df) + Df.length
+          val ive = dType.indexOf(" ", iv) match {
+            case neg if neg < iv => dType.length
+            case i => i
+          }
           // FIXME db default value
-          dDefault = dType.substring(iv, dType.indexOf(" ", iv)).trim
+          dDefault = dType.substring(iv, ive).trim
           nullable = false
         }
         cols = DbColumnDef(colName, dType, nullable, dDefault, null) :: cols
@@ -72,7 +88,7 @@ object SqlMdLoader {
     val xsdCols = table.cols.map(col => ExFieldDef(col.name,
       Option(xsdType(col)), Option(col.nullable), col.dbDefault, col.comment))
     MdConventions.fromExternal(
-      ExTypeDef(table.name, table.comment, xsdCols))
+      ExTypeDef(table.name, table.comment, xsdCols, table.pk))
   }
   val entities = loadFromFile map toEntity
   def entities(scriptFileName: String) =

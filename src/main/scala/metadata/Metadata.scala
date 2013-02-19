@@ -10,8 +10,14 @@ case class XsdType(name: String, length: Option[Int],
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
     this(name, None, Some(totalDigits), Some(fractionDigits))
 }
-
-case class TableDef(name: String, comment: String, cols: Seq[ColumnDef])
+case class DbIndex(
+  name: String,
+  cols: Seq[String])
+case class TableDef(
+  name: String,
+  comment: String,
+  cols: Seq[ColumnDef],
+  pk: Option[DbIndex])
 case class ColumnDef(
   name: String,
   xsdType: XsdType,

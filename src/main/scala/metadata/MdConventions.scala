@@ -1,6 +1,10 @@
 package metadata
 
-case class ExTypeDef(name: String, comment: String, cols: Seq[ExFieldDef])
+case class ExTypeDef(
+  name: String,
+  comment: String,
+  cols: Seq[ExFieldDef],
+  pk: Option[DbIndex])
 case class ExFieldDef(
   name: String,
   xsdType: Option[XsdType],
@@ -17,7 +21,18 @@ object MdConventions {
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
   def fromExternal(typeDef: ExTypeDef): TableDef = {
-    TableDef(typeDef.name, typeDef.comment, typeDef.cols.map(fromExternal(_)))
+    val cols = typeDef.cols.map(fromExternal(_))
+    val primaryKey = fromExternalPk(typeDef)
+    TableDef(typeDef.name, typeDef.comment, cols, primaryKey)
+  }
+  def fromExternalPk(typeDef: ExTypeDef) = {
+    val cols = typeDef.cols
+    if (typeDef.pk.isDefined) typeDef.pk
+    else if (cols.filter(_.name == "id").size == 1)
+      Some(DbIndex("pk_" + typeDef.name, List("id")))
+    else if (cols.size == 2 && cols.filter(_.name endsWith "_id").size == 2)
+      Some(DbIndex("pk_" + typeDef.name, cols.map(_.name)))
+    else None
   }
   def fromExternal(col: ExFieldDef): ColumnDef = {
     col match {
@@ -37,7 +52,26 @@ object MdConventions {
     }
   }
   def toExternal(typeDef: TableDef): ExTypeDef =
-    ExTypeDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal)
+    ExTypeDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal,
+      toExternalPk(typeDef))
+  def toExternalPk(typeDef: TableDef) = {
+    val cols = typeDef.cols
+    val DefaultPkName = "pk_" + typeDef.name
+    if (!typeDef.pk.isDefined) None
+    else if (cols.filter(_.name == "id").size == 1)
+      typeDef.pk match {
+        case Some(DbIndex(DefaultPkName, List("id"))) => None
+        case pk => pk
+      }
+    else if (cols.size == 2 && cols.filter(_.name endsWith "_id").size == 2)
+      typeDef.pk match {
+        case Some(DbIndex(DefaultPkName,
+          List(col1, col2))) if (col1, col2) == (cols(0).name, cols(1).name) =>
+          None
+        case pk => pk
+      }
+    else None
+  }
 
   def toExternal(col: ColumnDef): ExFieldDef = {
     val nullOpt = (col.name, col.nullable) match {
