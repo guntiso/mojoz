@@ -14,6 +14,7 @@ case class DbColumnDef(
   dbType: String,
   nullable: Boolean,
   dbDefault: String,
+  check: String,
   comment: String)
 
 object SqlMdLoader {
@@ -78,7 +79,8 @@ object SqlMdLoader {
           dDefault = dType.substring(iv, ive).trim
           nullable = false
         }
-        cols = DbColumnDef(colName, dType, nullable, dDefault, null) :: cols
+        cols = DbColumnDef(
+          colName, dType, nullable, dDefault, null, null) :: cols
       case _ =>
     })
     flush()

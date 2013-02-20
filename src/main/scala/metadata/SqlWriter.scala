@@ -19,8 +19,9 @@ object OracleSqlWriter {
   // TODO default
   private def createColumn(c: DbColumnDef) =
     c.name + " " + c.dbType +
+      (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
-      (if (c.dbDefault == null) "" else " default " + c.dbDefault)
+      c.check
   def tableComment(t: DbTableDef) = "comment on table " + t.name +
     " is '" + Option(t.comment).getOrElse("") + "';"
   def columnComments(t: DbTableDef) = t.cols.map(c =>
@@ -35,7 +36,7 @@ object OracleSqlWriter {
   def dbColumnDef(c: ColumnDef) = c match {
     case ColumnDef(name, xsdType, nullable, dbDefault, comment) => DbColumnDef(
       DbConventions.xsdNameToDbName(name),
-      dbType(c), nullable, dbDefault, comment)
+      dbType(c), nullable, dbDefault, check(c), comment)
   }
   def dbType(c: ColumnDef) = {
     val xt = c.xsdType
@@ -52,10 +53,17 @@ object OracleSqlWriter {
       case "date" => "date"
       case "dateTime" => "timestamp"
       case "string" => "varchar2(" + xt.length.get + " char)"
-      case "boolean" =>
-        "char check (" + dbColumnName + " in ('N','Y'))"
+      case "boolean" => "char"
       case "base64Binary" => "blob"
       case x => throw new RuntimeException("Unexpected xsd type: " + xt)
+    }
+  }
+  def check(c: ColumnDef) = {
+    val xt = c.xsdType
+    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    xt.name match {
+      case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
+      case _ => ""
     }
   }
 }
