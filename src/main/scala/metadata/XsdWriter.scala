@@ -18,15 +18,16 @@ object XsdWriter {
       case (_, "id") => false // XXX for inserts id is not required
       case (nullable, _) => !nullable
     }
+    val maxOccurs = if (col.isCollection) "unbounded" else null
     // FIXME for refed values, depends on ref-chain nullable!
     val minOccurs = if (required) null else "0"
     col.xsdType match {
       case XsdType(typeName, None, None, None) =>
-        <xs:element name={ elName } type={ "xs:" + typeName } minOccurs={ minOccurs }>{
+        <xs:element name={ elName } type={ "xs:" + typeName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>{
           colcomment
         }</xs:element>
       case XsdType(typeName, Some(length), None, None) =>
-        <xs:element name={ elName } minOccurs={ minOccurs }>
+        <xs:element name={ elName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ "xs:" + typeName }>
@@ -35,7 +36,7 @@ object XsdWriter {
           </xs:simpleType>
         </xs:element>
       case XsdType(typeName, _, Some(totalDigits), fractionDigitsOption) =>
-        <xs:element name={ elName } minOccurs={ minOccurs }>
+        <xs:element name={ elName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ "xs:" + typeName }>

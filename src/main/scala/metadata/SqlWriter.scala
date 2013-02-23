@@ -34,7 +34,7 @@ object OracleSqlWriter {
       DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk)
   }
   def dbColumnDef(c: ColumnDef) = c match {
-    case ColumnDef(name, xsdType, nullable, dbDefault, comment) => DbColumnDef(
+    case ColumnDef(name, xsdType, nullable, _, _, dbDefault, comment) => DbColumnDef(
       DbConventions.xsdNameToDbName(name),
       dbType(c), nullable, dbDefault, check(c), comment)
   }

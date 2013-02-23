@@ -22,6 +22,8 @@ case class ColumnDef(
   name: String,
   xsdType: XsdType,
   nullable: Boolean,
+  isCollection: Boolean,
+  isExpression: Boolean,
   dbDefault: String,
   comment: String)
 
@@ -41,7 +43,11 @@ object Metadata {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
-    try {
+    if (f.isExpression)
+      // XXX FIXME
+      ColumnDef(colName, new XsdType("string"),
+        true, f.isCollection, f.isExpression, null, f.comment)
+    else try {
       (if (f.table == typeDef.table) cols
       else md(f.table).cols.map(c => (c.name, c)).toMap)(colName)
     } catch {

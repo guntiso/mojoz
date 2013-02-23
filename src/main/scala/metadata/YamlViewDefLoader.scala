@@ -27,6 +27,8 @@ case class XsdFieldDef(
   tableAlias: String,
   name: String,
   alias: String,
+  isCollection: Boolean,
+  isExpression: Boolean,
   comment: String)
 
 object YamlViewDefLoader {
@@ -60,7 +62,7 @@ object YamlViewDefLoader {
     }
     def mapF(fields: ArrayList[YamlXsdTypeDef]) =
       if (fields == null) null else fields.map(xsdTypeDef).map(f =>
-        XsdFieldDef(f.table, null, f.name, null, f.comment)).toList
+        XsdFieldDef(f.table, null, f.name, null, false, false, f.comment)).toList
     // TODO defer this analysis to later phase, it will clean up the code! 
     def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
       case YamlXsdTypeDef(name, null, j, null, c, f) =>
@@ -99,9 +101,15 @@ object YamlViewDefLoader {
       }
     def mapFields(t: XsdTypeDef) = {
       val aliasToTable = JoinsParser.aliases(t.joins)
+      def mapCollection(f: XsdFieldDef) =
+        if (f.name.indexOf("*") < 0) f
+        else f.copy(name = f.name.replace("*", "").trim, isCollection = true)
+      def mapExpression(f: XsdFieldDef) =
+        if (f.name.indexOf("=") < 0) f
+        else f.copy(name = f.name.replace("=", "").trim, isExpression = true)
       def mapField(f: XsdFieldDef) =
         if (f.name.indexOf(".") < 0)
-          XsdFieldDef(dbName(t.table), null, dbName(f.name), null, f.comment)
+          f.copy(table = dbName(t.table), name = dbName(f.name))
         else {
           val parts = f.name.split("\\.")
           val tableOrAlias = dbName(parts(0))
@@ -109,9 +117,11 @@ object YamlViewDefLoader {
           val tableAlias = if (table == tableOrAlias) null else tableOrAlias
           val name = dbName(parts(1))
           val alias = dbName(f.name.replace(".", "_"))
-          XsdFieldDef(table, tableAlias, name, alias, f.comment)
+          f.copy(table = table, tableAlias = tableAlias,
+            name = name, alias = alias)
         }
-      t.copy(fields = t.fields.map(mapField))
+      t.copy(fields =
+        t.fields.map(mapCollection).map(mapExpression).map(mapField))
     }
     td.map(mapExtends).map(mapFields)
   }
