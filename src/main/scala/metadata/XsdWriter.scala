@@ -11,7 +11,7 @@ object XsdWriter {
       <xs:annotation>
         <xs:documentation>{ comment }</xs:documentation>
       </xs:annotation>
-  private def createElement(elName: String, col: ColumnDef) = {
+  private def createElement(elName: String, col: XsdFieldDef) = {
     val colcomment = annotation(col.comment)
     val required = (col.nullable, col.name) match {
       // FIXME do not handle ids here, add ? in views instead!
@@ -57,8 +57,7 @@ object XsdWriter {
       // TODO when no restriction:  type="xs:string"
       <xs:sequence>{
         typeDef.fields.map(f =>
-          createElement(xsdName(Option(f.alias) getOrElse f.name),
-            Metadata.getCol(typeDef, f)))
+          createElement(xsdName(Option(f.alias) getOrElse f.name), f))
       }</xs:sequence>
     }
     <xs:complexType name={ xsdName(typeDef.name) }>{

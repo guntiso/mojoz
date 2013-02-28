@@ -38,17 +38,17 @@ object MdConventions {
     col match {
       case ExFieldDef("id", xsdType, nullable, dbDefault, comment) =>
         ColumnDef("id", xsdType getOrElse new XsdType("long"),
-          nullable getOrElse false, false, false, dbDefault, comment)
+          nullable getOrElse false, dbDefault, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isBooleanName(name) =>
         ColumnDef(name, xsdType getOrElse new XsdType("boolean"),
-          nullable getOrElse true, false, false, dbDefault, comment)
+          nullable getOrElse true, dbDefault, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isDateName(name) =>
         ColumnDef(name, xsdType getOrElse new XsdType("date"),
-          nullable getOrElse true, false, false, dbDefault, comment)
+          nullable getOrElse true, dbDefault, comment)
       // FIXME typename not defined, len defined
       case x =>
         ColumnDef(x.name, x.xsdType getOrElse new XsdType("string", 256),
-          x.nullable getOrElse true, false, false, x.dbDefault, x.comment)
+          x.nullable getOrElse true, x.dbDefault, x.comment)
     }
   }
   def toExternal(typeDef: TableDef): ExTypeDef =

@@ -21,6 +21,8 @@ case class YamlFieldDef(
   typeName: String,
   length: Option[Int],
   fraction: Option[Int],
+  isExpression: Boolean,
+  expression: String,
   comment: String)
 
 object YamlMdLoader {
@@ -60,7 +62,11 @@ object YamlMdLoader {
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
     def colDef(nameAndType: String, comment: String) = {
-      val parts = nameAndType.split("[\\s]+").toList
+      val defAndValue = nameAndType.split("=", 2).toList
+      val isExpression = defAndValue.length > 1
+      val value = Option(if (isExpression) defAndValue(1) else null)
+        .map(_.trim).filter(_ != "") getOrElse null
+      val parts = defAndValue(0).split("[\\s]+").toList
       val name = parts(0)
       val cardinalities = parts.tail.filter(Set("?", "!", "*", "+").contains(_))
       val cardinality = cardinalities match {
@@ -88,7 +94,8 @@ object YamlMdLoader {
         case _ => throw new RuntimeException(ThisFail +
           " - unexpected format: " + nameAndType.trim)
       }
-      YamlFieldDef(name, cardinality, typeName, length, fraction, comment)
+      YamlFieldDef(name, cardinality, typeName, length, fraction,
+        isExpression, value, comment)
     }
     src match {
       case nameAndType: java.lang.String =>
@@ -106,5 +113,20 @@ object YamlMdLoader {
         " - unexpected field definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
+  }
+  def xsdType(col: YamlFieldDef) = (col.name, col.typeName) match {
+    // FIXME do properly (support lengths, check unsupported patterns, ...)
+    // FIXME TODO complex types
+    case (_, null) => null
+    case (_, "date") => new XsdType("date")
+    case (_, "dateTime") => new XsdType("dateTime")
+    case (_, "string") => new XsdType("string", col.length getOrElse 255)
+    case (_, "boolean") => new XsdType("boolean")
+    case (_, "int") => new XsdType("int")
+    case (_, "long") => new XsdType("long")
+    case (_, "decimal") =>
+      new XsdType("decimal", col.length.get, col.fraction.get)
+    case (_, "base64binary") => new XsdType("base64binary")
+    case (_, x) => new XsdType(x) // TODO ?
   }
 }

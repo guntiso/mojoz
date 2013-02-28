@@ -5,7 +5,7 @@ import java.util.ArrayList
 
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
-import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions._
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import scala.io.Source
 import scala.reflect.BeanProperty
@@ -29,6 +29,9 @@ case class XsdFieldDef(
   alias: String,
   isCollection: Boolean,
   isExpression: Boolean,
+  expression: String,
+  nullable: Boolean,
+  xsdType: XsdType,
   comment: String)
 
 object YamlViewDefLoader {
@@ -48,33 +51,66 @@ object YamlViewDefLoader {
   val typedefStrings = resourcesToStrings.map(s =>
     s.split("\\-\\-\\-").toSeq).flatMap(x =>
     x).map(_.trim).filter(_.length > 0) toSeq
+  private val rawTypeDefs = typedefStrings map loadTypeDef
+  private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
+  val nameToTableName = rawTypeDefs.map(t =>
+    // TODO repeating code xtnds visiting
+    if (t.table != null) (t.name, t.table) else {
+      @tailrec
+      def baseTable(t: XsdTypeDef, visited: List[String]): String =
+        if (visited contains t.name)
+          sys.error("Cyclic extends: " +
+            (t.name :: visited).reverse.mkString(" -> "))
+        else if (t.table != null) t.table
+        else baseTable(nameToRawTypeDef(t.xtnds), t.name :: visited)
+      (t.name, baseTable(t, Nil))
+    }).toMap
   val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
-    case class YamlXsdTypeDef(
-      @BeanProperty var name: String,
-      @BeanProperty var table: String,
-      @BeanProperty var joins: String,
-      @BeanProperty var `extends`: String,
-      @BeanProperty var comment: String,
-      @BeanProperty var fields: ArrayList[YamlXsdTypeDef]) {
-      def this() = this(null, null, null, null, null, null)
-      def this(name: String) = this(name, null, null, null, null, null)
+    val tdMap = mapAsScalaMap(
+      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
+    def get(name: String) = tdMap.get(name).map(_.toString) getOrElse null
+    val rawName = get("name")
+    val rawTable = get("table")
+    val joins = get("joins")
+    val xtnds = get("extends")
+    val comment = get("comment")
+    val fieldsSrc = tdMap.get("fields")
+      .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
+      .getOrElse(Nil)
+    val (name, table) = (rawName, rawTable, xtnds) match {
+      case (name, null, null) => (name, dbName(name))
+      case (name, null, _) => (name, null)
+      case (null, table, null) => (table, dbName(table))
+      case (name, table, _) => (name, dbName(table))
     }
-    def mapF(fields: ArrayList[YamlXsdTypeDef]) =
-      if (fields == null) null else fields.map(xsdTypeDef).map(f =>
-        XsdFieldDef(f.table, null, f.name, null, false, false, f.comment)).toList
-    // TODO defer this analysis to later phase, it will clean up the code! 
-    def xsdTypeDef(yamlTypeDef: YamlXsdTypeDef): XsdTypeDef = yamlTypeDef match {
-      case YamlXsdTypeDef(name, null, j, null, c, f) =>
-        XsdTypeDef(name, dbName(name), j, null, c, mapF(f))
-      case YamlXsdTypeDef(name, null, j, x, c, f) =>
-        XsdTypeDef(name, null, j, x, c, mapF(f))
-      case YamlXsdTypeDef(null, table, j, null, c, f) =>
-        XsdTypeDef(table, dbName(table), j, null, c, mapF(f))
-      case YamlXsdTypeDef(name, table, j, x, c, f) =>
-        XsdTypeDef(name, dbName(table), j, x, c, mapF(f))
+    val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
+    def toXsdFieldDef(yfd: YamlFieldDef) = {
+      val table = null
+      val tableAlias = null
+      // XXX add cardinality marker to support nullable override
+      val name = yfd.name + Option(yfd.cardinality).map(_ => "|").getOrElse("")
+      val alias = null
+      val isCollection = Set("*", "+").contains(yfd.cardinality)
+      val isExpression = yfd.isExpression
+      val expression = yfd.expression
+      // FIXME support nullable override! (i.e. allow not only for expression)
+      val nullable = isExpression && Set("?", "*").contains(yfd.cardinality)
+      val comment = yfd.comment
+      // FIXME COMPLEX TYPES!!!
+      val rawXsdType =
+        if (isExpression) Option(YamlMdLoader.xsdType(yfd)) else None
+      val xsdType =
+        if (isExpression)
+          MdConventions.fromExternal(
+            // XXX unnecessary complex structure used
+            ExFieldDef(name, rawXsdType, None, null, comment)).xsdType
+        else null
+      XsdFieldDef(table, tableAlias, name, alias, isCollection,
+        isExpression, expression, nullable, xsdType, comment)
     }
-    xsdTypeDef((new Yaml).loadAs(typeDef, classOf[YamlXsdTypeDef]))
+    XsdTypeDef(name, table, joins, xtnds, comment,
+      yamlFieldDefs map toXsdFieldDef)
   }
   private def checkTypedefs(td: Seq[XsdTypeDef]) = {
     // TODO diagnostics: m(t.xtnds) and all other!!!
@@ -84,11 +120,12 @@ object YamlViewDefLoader {
     // check field names not repeating on extends? or overwrite instead?
   }
   private def loadTypeDefs = {
-    val td = typedefStrings map loadTypeDef
+    val td = rawTypeDefs
     checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
     // TODO extends is also typedef, join!
     def mapExtends(t: XsdTypeDef) =
+      // TODO repeating code xtnds visiting
       if (t.table != null) t else {
         @tailrec
         def baseTable(t: XsdTypeDef, visited: List[String]): String =
@@ -101,12 +138,11 @@ object YamlViewDefLoader {
       }
     def mapFields(t: XsdTypeDef) = {
       val aliasToTable = JoinsParser.aliases(t.joins)
-      def mapCollection(f: XsdFieldDef) =
-        if (f.name.indexOf("*") < 0) f
-        else f.copy(name = f.name.replace("*", "").trim, isCollection = true)
-      def mapExpression(f: XsdFieldDef) =
-        if (f.name.indexOf("=") < 0) f
-        else f.copy(name = f.name.replace("=", "").trim, isExpression = true)
+      def hasCardinalityOverride(f: XsdFieldDef) = f.name.endsWith("|")
+      def cleanName(name: String) = name.replace("|", "")
+      val nameToCardinalityOverride = t.fields.map(f =>
+        (cleanName(f.name), hasCardinalityOverride(f))).toMap
+      def mapCleanName(f: XsdFieldDef) = f.copy(name = cleanName(f.name))
       def mapField(f: XsdFieldDef) =
         if (f.name.indexOf(".") < 0)
           f.copy(table = dbName(t.table), name = dbName(f.name))
@@ -120,8 +156,18 @@ object YamlViewDefLoader {
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias)
         }
-      t.copy(fields =
-        t.fields.map(mapCollection).map(mapExpression).map(mapField))
+      def mapColumnDef(f: XsdFieldDef, cardinalityOverride: Boolean) = {
+        if (f.isExpression) f
+        else {
+          val col = Metadata.getCol(t, f)
+          val nullable = if (cardinalityOverride) f.nullable else col.nullable
+          f.copy(nullable = nullable, xsdType = col.xsdType,
+            comment = Option(f.comment) getOrElse col.comment)
+        }
+      }
+      t.copy(fields = t.fields.map(mapCleanName)
+        .map(f => (mapField(f), nameToCardinalityOverride(f.name)))
+        .map(fo => mapColumnDef(fo._1, fo._2)))
     }
     td.map(mapExtends).map(mapFields)
   }
@@ -129,6 +175,7 @@ object YamlViewDefLoader {
   val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
   val nameToExtendedViewDef = typedefs.map(t =>
+    // TODO repeating code xtnds visiting
     if (t.xtnds == null) t else {
       @tailrec
       def baseFields(t: XsdTypeDef, visited: List[String]): Seq[XsdFieldDef] =

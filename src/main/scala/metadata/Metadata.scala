@@ -22,32 +22,25 @@ case class ColumnDef(
   name: String,
   xsdType: XsdType,
   nullable: Boolean,
-  isCollection: Boolean,
-  isExpression: Boolean,
   dbDefault: String,
   comment: String)
 
 object Metadata {
   val entities = SqlMdLoader.entities
   private lazy val md = entities.map(e => (e.name, e)).toMap
-  val nameToViewDef = YamlViewDefLoader.nameToViewDef
+  lazy val nameToViewDef = YamlViewDefLoader.nameToViewDef
+  val nameToTableName = YamlViewDefLoader.nameToTableName
   def tableDef(typeDef: XsdTypeDef): TableDef =
     // TODO get line, file info from xsd type def
-    if (typeDef.xtnds == null)
-      md.get(typeDef.table) getOrElse
-        sys.error("table not found: " + typeDef.table +
-          ", type def: " + typeDef.name)
-    else tableDef(nameToViewDef(typeDef.xtnds))
+    md.get(nameToTableName(typeDef.name)) getOrElse
+      sys.error("table not found: " + typeDef.table +
+        ", type def: " + typeDef.name)
 
   def getCol(typeDef: XsdTypeDef, f: XsdFieldDef) = {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
-    if (f.isExpression)
-      // XXX FIXME
-      ColumnDef(colName, new XsdType("string"),
-        true, f.isCollection, f.isExpression, null, f.comment)
-    else try {
+    try {
       (if (f.table == typeDef.table) cols
       else md(f.table).cols.map(c => (c.name, c)).toMap)(colName)
     } catch {
@@ -60,6 +53,7 @@ object Metadata {
             else " (table alias " + f.tableAlias + ")") + ")", ex)
     }
   }
+
   private val xtd = YamlViewDefLoader.nameToExtendedViewDef
   def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
     xtd.get(ElementName.get(viewClass)) getOrElse
