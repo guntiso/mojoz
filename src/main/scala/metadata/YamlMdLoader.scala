@@ -120,7 +120,9 @@ object YamlMdLoader {
     case (_, null) => null
     case (_, "date") => new XsdType("date")
     case (_, "dateTime") => new XsdType("dateTime")
-    case (_, "string") => new XsdType("string", col.length getOrElse 255)
+    case (_, "string") =>
+      if (col.length isDefined) new XsdType("string", col.length.get)
+      else new XsdType("string")
     case (_, "boolean") => new XsdType("boolean")
     case (_, "int") => new XsdType("int")
     case (_, "long") => new XsdType("long")

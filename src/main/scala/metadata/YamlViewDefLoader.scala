@@ -94,18 +94,24 @@ object YamlViewDefLoader {
       val isCollection = Set("*", "+").contains(yfd.cardinality)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
-      // FIXME support nullable override! (i.e. allow not only for expression)
-      val nullable = isExpression && Set("?", "*").contains(yfd.cardinality)
+      val nullable = Option(yfd.cardinality)
+        .map(c => Set("?", "*").contains(c)) getOrElse true
       val comment = yfd.comment
       // FIXME COMPLEX TYPES!!!
       val rawXsdType =
         if (isExpression) Option(YamlMdLoader.xsdType(yfd)) else None
-      val xsdType =
+      val xsdTypeFe =
         if (isExpression)
           MdConventions.fromExternal(
             // XXX unnecessary complex structure used
             ExFieldDef(name, rawXsdType, None, null, comment)).xsdType
         else null
+      // XXX undo convention
+      val xsdType =
+        if (xsdTypeFe != null && xsdTypeFe.name == "string" && rawXsdType == None)
+          new XsdType("string")
+        else xsdTypeFe
+
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
         isExpression, expression, nullable, xsdType, comment)
     }
