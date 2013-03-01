@@ -37,8 +37,10 @@ object YamlMdLoader {
     .asScala.toSeq.flatMap(u =>
       Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
     .filter(_.endsWith(".yaml")).map("/" + _)
-  def filesToStrings =
-    typedefFiles.map(f => Source.fromFile(f).mkString)
+  def filesToStrings = typedefFiles.map(f => try Source.fromFile(f)("UTF-8").mkString
+    catch {
+      case e:Exception => throw new RuntimeException("Error reading file:" + f, e)
+    })
   def resourcesToStrings = typedefResources.map(r =>
     Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
   val typedefStrings = filesToStrings.map(s =>
