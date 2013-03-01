@@ -65,7 +65,7 @@ object YamlViewDefLoader {
         else baseTable(nameToRawTypeDef(t.xtnds), t.name :: visited)
       (t.name, baseTable(t, Nil))
     }).toMap
-  val typedefs = loadTypeDefs
+  lazy val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
@@ -178,9 +178,9 @@ object YamlViewDefLoader {
     td.map(mapExtends).map(mapFields)
   }
   // typedef name to typedef
-  val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
+  lazy val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
-  val nameToExtendedViewDef = typedefs.map(t =>
+  lazy val nameToExtendedViewDef = typedefs.map(t =>
     // TODO repeating code xtnds visiting
     if (t.xtnds == null) t else {
       @tailrec

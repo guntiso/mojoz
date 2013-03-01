@@ -54,7 +54,7 @@ object Metadata {
     }
   }
 
-  private val xtd = YamlViewDefLoader.nameToExtendedViewDef
+  private lazy val xtd = YamlViewDefLoader.nameToExtendedViewDef
   def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
     xtd.get(ElementName.get(viewClass)) getOrElse
       (xtd.get(ElementName.get(viewClass).replace("-", "_")) getOrElse
