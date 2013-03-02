@@ -37,9 +37,10 @@ object YamlMdLoader {
     .asScala.toSeq.flatMap(u =>
       Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
     .filter(_.endsWith(".yaml")).map("/" + _)
-  def filesToStrings = typedefFiles.map(f => try Source.fromFile(f)("UTF-8").mkString
-    catch {
-      case e:Exception => throw new RuntimeException("Error reading file:" + f, e)
+  def filesToStrings = typedefFiles.map(f =>
+    try Source.fromFile(f)("UTF-8").mkString catch {
+      case e: Exception =>
+        throw new RuntimeException("Error reading file:" + f, e)
     })
   def resourcesToStrings = typedefResources.map(r =>
     Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
@@ -131,6 +132,7 @@ object YamlMdLoader {
     case (_, "decimal") =>
       new XsdType("decimal", col.length.get, col.fraction.get)
     case (_, "base64binary") => new XsdType("base64binary")
-    case (_, x) => new XsdType(x) // TODO ?
+    // if no known xsd type name found - let it be complex type!
+    case (_, x) => new XsdType(x, true)
   }
 }

@@ -3,12 +3,14 @@ package metadata
 import xsdgen.ElementName
 
 case class XsdType(name: String, length: Option[Int],
-  totalDigits: Option[Int], fractionDigits: Option[Int]) {
-  def this(name: String) = this(name, None, None, None)
+  totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
+  def this(name: String) = this(name, None, None, None, false)
+  def this(name: String, isComplexType: Boolean) =
+    this(name, None, None, None, isComplexType)
   def this(name: String, length: Int) =
-    this(name, Some(length), None, None)
+    this(name, Some(length), None, None, false)
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
-    this(name, None, Some(totalDigits), Some(fractionDigits))
+    this(name, None, Some(totalDigits), Some(fractionDigits), false)
 }
 case class DbIndex(
   name: String,

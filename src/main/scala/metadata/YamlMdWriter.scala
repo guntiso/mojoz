@@ -10,7 +10,7 @@ object YamlMdWriter {
   }
   def toYamlColDef(colDef: ExFieldDef) = {
     import colDef._
-    val t = colDef.xsdType getOrElse new XsdType(null, None, None, None)
+    val t = colDef.xsdType getOrElse new XsdType(null, None, None, None, false)
     val typeString = List(
       Option(t.name),
       t.length,

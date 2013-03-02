@@ -97,9 +97,9 @@ object SqlMdLoader {
     loadFromFile(scriptFileName) map toEntity
   // TODO min-value, max-value?
   def integerOrSubtype(len: Int) =
-    if (len > 18) new XsdType("integer", None, Some(len.toInt), None)
-    else if (len > 9) new XsdType("long", None, Some(len.toInt), None)
-    else new XsdType("int", None, Some(len.toInt), None)
+    if (len > 18) new XsdType("integer", None, Some(len.toInt), None, false)
+    else if (len > 9) new XsdType("long", None, Some(len.toInt), None, false)
+    else new XsdType("int", None, Some(len.toInt), None, false)
   def xsdType(col: DbColumnDef) = (col.name, col.dbType) match {
     case ("id", _) => new XsdType("long")
     case (name, _) if name endsWith "_id" => new XsdType("long")
