@@ -32,6 +32,7 @@ case class XsdFieldDef(
   expression: String,
   nullable: Boolean,
   xsdType: XsdType,
+  isI18n: Boolean,
   comment: String)
 
 object YamlViewDefLoader {
@@ -113,7 +114,7 @@ object YamlViewDefLoader {
         else xsdTypeFe
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
-        isExpression, expression, nullable, xsdType, comment)
+        isExpression, expression, nullable, xsdType, false, comment)
     }
     XsdTypeDef(name, table, joins, xtnds, comment,
       yamlFieldDefs map toXsdFieldDef)
@@ -177,6 +178,20 @@ object YamlViewDefLoader {
     }
     td.map(mapExtends).map(mapFields)
   }
+
+  private def setI18n(t: XsdTypeDef) = {
+    val fMap = t.fields.filter(!_.isExpression).filter(!_.isCollection)
+      .map(f => (f.table + "." + f.name, f)).toMap // todo or use table alias?
+    val i18n = t.fields.filter(!_.isExpression).filter(!_.isCollection)
+      .filter(!_.name.endsWith("_rus"))
+      .filter(f => !fMap.containsKey(f.table + "." + f.name + "_rus"))
+      .filter(f =>
+        Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
+      .toSet
+    if (i18n.size == 0) t
+    else t.copy(fields = t.fields.map(f =>
+      if (i18n contains f) f.copy(isI18n = true) else f))
+  }
   // typedef name to typedef
   lazy val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
@@ -191,5 +206,7 @@ object YamlViewDefLoader {
         else if (t.xtnds == null) t.fields
         else baseFields(nameToViewDef(t.xtnds), t.name :: visited) ++ t.fields
       t.copy(fields = baseFields(t, Nil))
-    }).map(t => (t.name, t)).toMap
+    })
+    .map(setI18n)
+    .map(t => (t.name, t)).toMap
 }
