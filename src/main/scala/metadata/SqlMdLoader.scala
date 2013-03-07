@@ -79,8 +79,14 @@ object SqlMdLoader {
           dDefault = dType.substring(iv, ive).trim
           nullable = false
         }
+        var check: String = null
+        if (dType.contains(" check ")) {
+          val i = dType.indexOf(" check ")
+          check = dType.substring(i).trim
+          dType = dType.substring(0, i).trim
+        }
         cols = DbColumnDef(
-          colName, dType, nullable, dDefault, null, null) :: cols
+          colName, dType, nullable, dDefault, check, null) :: cols
       case _ =>
     })
     flush()
