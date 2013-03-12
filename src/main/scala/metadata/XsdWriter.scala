@@ -93,8 +93,9 @@ object XsdWriter {
       </xs:complexContent>
     </xs:complexType>
   def createSchema = {
+    // TODO elementFormDefault="qualified">
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-      version="1.0" targetNamespace="kps.ldz.lv" elementFormDefault="qualified">
+      version="1.0" targetNamespace="kps.ldz.lv">
       {
         typedefs.map(createComplexType) ++ listWrapper ++
           typedefs.filter(_.name.endsWith("_list_row")).map(createListWrapper)
