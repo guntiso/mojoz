@@ -34,7 +34,7 @@ object XsdWriter {
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ typeName }>
-              <xs:length value={ length.toString }/>
+              <xs:maxLength value={ length.toString }/>
             </xs:restriction>
           </xs:simpleType>
         </xs:element>
