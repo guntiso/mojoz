@@ -13,11 +13,7 @@ object XsdWriter {
       </xs:annotation>
   private def createElement(elName: String, col: XsdFieldDef) = {
     val colcomment = annotation(col.comment)
-    val required = (col.nullable, col.name) match {
-      // FIXME do not handle ids here, add ? in views instead!
-      case (_, "id") => false // XXX for inserts id is not required
-      case (nullable, _) => !nullable
-    }
+    val required = !col.nullable
     val maxOccurs = if (col.isCollection) "unbounded" else null
     // FIXME for refed values, depends on ref-chain nullable!
     val minOccurs = if (required) null else "0"
