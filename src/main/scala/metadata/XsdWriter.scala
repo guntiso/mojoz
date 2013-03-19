@@ -17,16 +17,19 @@ object XsdWriter {
     val maxOccurs = if (col.isCollection) "unbounded" else null
     // FIXME for refed values, depends on ref-chain nullable!
     val minOccurs = if (required) null else "0"
+    val nillable = if (required) null else "true"
     val typeName =
       if (col.xsdType.isComplexType) "tns:" + xsdName(col.xsdType.name)
       else "xs:" + col.xsdType.name
     col.xsdType match {
       case XsdType(_, None, None, None, _) =>
-        <xs:element name={ elName } type={ typeName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>{
+        <xs:element name={ elName } type={ typeName } nillable={ nillable }
+            minOccurs={ minOccurs } maxOccurs={ maxOccurs }>{
           colcomment
         }</xs:element>
       case XsdType(_, Some(length), None, None, _) =>
-        <xs:element name={ elName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
+        <xs:element name={ elName } nillable={ nillable }
+            minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ typeName }>
@@ -35,7 +38,8 @@ object XsdWriter {
           </xs:simpleType>
         </xs:element>
       case XsdType(_, _, Some(totalDigits), fractionDigitsOption, _) =>
-        <xs:element name={ elName } minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
+        <xs:element name={ elName } nillable={ nillable }
+            minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ typeName }>
@@ -83,7 +87,9 @@ object XsdWriter {
       <xs:complexContent>
         <xs:extension base="tns:ListWrapper">
           <xs:sequence>
-            <xs:element maxOccurs="unbounded" minOccurs="0" nillable="true" type={ "tns:" + xsdName(typeDef.name) } name={ xsdName(typeDef.table) }/>
+            <xs:element maxOccurs="unbounded" minOccurs="0" nillable="true"
+                type={ "tns:" + xsdName(typeDef.name) }
+                name={ xsdName(typeDef.table) }/>
           </xs:sequence>
         </xs:extension>
       </xs:complexContent>
@@ -99,4 +105,12 @@ object XsdWriter {
     </xs:schema>
   }
   def createSchemaString = new PrettyPrinter(200, 2).format(createSchema)
+  def createBindings =
+    <jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+        xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <jaxb:globalBindings generateElementProperty="false">
+      </jaxb:globalBindings>
+    </jaxb:bindings>
+  def createBindingsString = new PrettyPrinter(200, 2).format(createBindings)
 }
