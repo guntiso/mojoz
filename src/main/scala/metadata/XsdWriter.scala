@@ -110,6 +110,7 @@ object XsdWriter {
         xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
         xmlns:xs="http://www.w3.org/2001/XMLSchema">
       <jaxb:globalBindings generateElementProperty="false">
+        <xjc:simple/>
       </jaxb:globalBindings>
     </jaxb:bindings>
   def createBindingsString = new PrettyPrinter(200, 2).format(createBindings)
