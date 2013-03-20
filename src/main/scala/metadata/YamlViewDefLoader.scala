@@ -20,19 +20,7 @@ case class XsdTypeDef(
   joins: String, // tresql from clause
   xtnds: String,
   comment: String,
-  fields: Seq[XsdFieldDef]) {
-  private[this] def derived = {
-    val jtables = JoinsParser(name, joins).map(j => j.alias -> j.table)
-    val ftables = fields.map(f => f.tableAlias -> f.table).toSet
-    val bTableAlias = ftables.filter(_._2 == table).toList match {
-      case (alias, _) :: Nil => alias
-      case l@List(_*) => jtables.headOption.map(_._1).getOrElse(
-          sys.error("""join "%s" does not starts with base table "%s"""".format(joins, table)))
-    }
-    (bTableAlias, ftables -- jtables.toSet)
-  }
-  val (tableAlias, defaultJoinTables) = derived
-}
+  fields: Seq[XsdFieldDef])
 
 case class XsdFieldDef(
   table: String,
