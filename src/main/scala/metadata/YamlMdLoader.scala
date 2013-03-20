@@ -121,6 +121,7 @@ object YamlMdLoader {
     // FIXME do properly (support lengths, check unsupported patterns, ...)
     // FIXME TODO complex types
     case (_, null) => null
+    case (_, "anySimpleType") => new XsdType("anySimpleType")
     case (_, "date") => new XsdType("date")
     case (_, "dateTime") => new XsdType("dateTime")
     case (_, "string") =>
