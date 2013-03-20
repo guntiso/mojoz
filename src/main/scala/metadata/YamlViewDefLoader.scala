@@ -144,7 +144,11 @@ object YamlViewDefLoader {
         t.copy(table = baseTable(t, Nil))
       }
     def mapFields(t: XsdTypeDef) = {
-      val aliasToTable = JoinsParser.aliases(t.joins)
+      val joins = JoinsParser(t.table, t.joins)
+      val aliasToTable =
+        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
+      val tableOrAliasToJoin =
+        joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def hasCardinalityOverride(f: XsdFieldDef) = f.name.endsWith("|")
       def cleanName(name: String) = name.replace("|", "")
       val nameToCardinalityOverride = t.fields.map(f =>
@@ -167,7 +171,15 @@ object YamlViewDefLoader {
         if (f.isExpression) f
         else {
           val col = Metadata.getCol(t, f)
-          val nullable = if (cardinalityOverride) f.nullable else col.nullable
+          val tableOrAlias = Option(f.alias) getOrElse f.table
+          // FIXME autojoins nullable?
+          val nullable =
+            if (cardinalityOverride) f.nullable
+            else tableOrAliasToJoin.get(tableOrAlias).map(_.nullable)
+              .getOrElse(Right(col.nullable)) match {
+                case Right(b) => b || col.nullable
+                case Left(s) => true // FIXME Left(nullableTableDependency)!
+              }
           f.copy(nullable = nullable, xsdType = col.xsdType,
             comment = Option(f.comment) getOrElse col.comment)
         }
