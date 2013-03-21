@@ -171,7 +171,7 @@ object YamlViewDefLoader {
         if (f.isExpression) f
         else {
           val col = Metadata.getCol(t, f)
-          val tableOrAlias = Option(f.alias) getOrElse f.table
+          val tableOrAlias = Option(f.tableAlias) getOrElse f.table
           // FIXME autojoins nullable?
           val nullable =
             if (cardinalityOverride) f.nullable
