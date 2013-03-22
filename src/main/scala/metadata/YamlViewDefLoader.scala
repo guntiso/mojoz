@@ -41,10 +41,14 @@ object YamlViewDefLoader {
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
   def typedefFiles = recursiveListFiles(new File("../views")).toSeq
-  val typedefResources = classOf[XsdTypeDef].getClassLoader.getResources("")
+  // getClass.getClassLoader.getResources("") does not work from jar :(
+  val typedefResources = ((getClass.getClassLoader.getResources("")
     .asScala.toSeq.flatMap(u =>
-      Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
-    .filter(_.endsWith(".yaml")).map("/" + _)
+      Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))) ++
+    Option(getClass.getResourceAsStream("/.view-files.txt"))
+    .map(Source.fromInputStream(_)(io.Codec("UTF-8"))
+      .getLines.toList).getOrElse(Nil))
+    .filter(_.endsWith(".yaml")).map("/" + _).toSet.toSeq
   def filesToStrings =
     typedefFiles.map(f => Source.fromFile(f).mkString)
   def resourcesToStrings = typedefResources.map(r =>

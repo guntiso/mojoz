@@ -18,10 +18,25 @@ case class DbColumnDef(
   comment: String)
 
 object SqlMdLoader {
-  val scriptFileName = "../db/schema.sql" // TODO use resources!
-  def loadFromFile: List[DbTableDef] = loadFromFile(scriptFileName)
-  def loadFromFile(scriptFileName: String) = {
-    val lines = Source.fromFile(scriptFileName, "UTF-8").getLines.toList
+  val linesFromResource: Either[Exception, List[String]] =
+    try Right(Source.fromInputStream(getClass.getResourceAsStream(
+      "/schema.sql"))(io.Codec("UTF-8")).getLines.toList) catch {
+      case e: Exception => Left(e)
+    }
+  val linesFromFile: Either[Exception, List[String]] =
+    try Right(Source.fromFile(
+      "../db/schema.sql", "UTF-8").getLines.toList) catch {
+      case e: Exception => Left(e)
+    }
+  val lines = (linesFromResource, linesFromFile) match {
+    case (Left(e1), Left(e2)) =>
+      e1.printStackTrace
+      throw e2
+    case (Right(lines), _) => lines
+    case (_, Right(lines)) => lines
+  }
+  def load = loadLines(lines)
+  def loadLines(lines: List[String]) = {
     var tableName = ""
     var tableComment = ""
     var tables: List[DbTableDef] = Nil
@@ -98,9 +113,7 @@ object SqlMdLoader {
     MdConventions.fromExternal(
       ExTypeDef(table.name, table.comment, xsdCols, table.pk))
   }
-  val entities = loadFromFile map toEntity
-  def entities(scriptFileName: String) =
-    loadFromFile(scriptFileName) map toEntity
+  val entities = load map toEntity
   // TODO min-value, max-value?
   def integerOrSubtype(len: Int) =
     if (len > 18) new XsdType("integer", None, Some(len.toInt), None, false)
