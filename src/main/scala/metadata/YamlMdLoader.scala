@@ -26,6 +26,7 @@ case class YamlFieldDef(
   comment: String)
 
 object YamlMdLoader {
+  /*
   def recursiveListFiles(f: File): Array[File] = {
     val these = f.listFiles
     these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
@@ -51,6 +52,7 @@ object YamlMdLoader {
   private def loadYamlTypeDefs = {
     typedefStrings map loadYamlTypeDef
   }
+  */
   def loadYamlTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
