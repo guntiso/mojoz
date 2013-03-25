@@ -90,9 +90,8 @@ object SqlMdLoader {
             case neg if neg < iv => dType.length
             case i => i
           }
-          // FIXME db default value
           dDefault = dType.substring(iv, ive).trim
-          nullable = false
+          dType = dType.replace(Df + dDefault, "")
         }
         var check: String = null
         if (dType.contains(" check ")) {
