@@ -199,10 +199,13 @@ object YamlViewDefLoader {
     val fMap = t.fields.filter(!_.isExpression).filter(!_.isCollection)
       .map(f => (f.table + "." + f.name, f)).toMap // todo or use table alias?
     val i18n = t.fields.filter(!_.isExpression).filter(!_.isCollection)
-      .filter(!_.name.endsWith("_rus"))
-      .filter(f => !fMap.containsKey(f.table + "." + f.name + "_rus"))
+      .filter(f => !f.name.endsWith("_eng") && !f.name.endsWith("_rus"))
       .filter(f =>
-        Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
+        !fMap.containsKey(f.table + "." + f.name + "_eng") &&
+          !fMap.containsKey(f.table + "." + f.name + "_rus"))
+      .filter(f =>
+        Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_eng") &&
+          Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
       .toSet
     if (i18n.size == 0) t
     else t.copy(fields = t.fields.map(f =>
