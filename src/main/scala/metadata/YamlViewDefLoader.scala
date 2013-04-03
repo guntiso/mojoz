@@ -207,6 +207,8 @@ object YamlViewDefLoader {
         Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_eng") &&
           Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
       .toSet
+      // XXX do not translate company name :( TODO plugin rules
+      .filter(f => f.table + "." + f.name != "company.name")
     if (i18n.size == 0) t
     else t.copy(fields = t.fields.map(f =>
       if (i18n contains f) f.copy(isI18n = true) else f))
