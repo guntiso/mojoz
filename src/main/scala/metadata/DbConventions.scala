@@ -17,11 +17,8 @@ object DbConventions {
       case "group" => "grp"
       case "role" => "rle"
       case x => x
-    }).mkString("_") match {
-      case x if x endsWith "_2" => x.replace("_2", "2") // XXX dirty fix phone_2
-      case x if x contains "_1_" => x.replace("_1_", "1") // XXX dirty fix
-      case x if x contains "_2_" => x.replace("_2_", "2") // XXX dirty fix
-      case x => x
-    }
+    }).mkString("_").replace("__", "_")
+      .replace("_1", "1") // no underscore before 1 in our database names
+      .replace("_2", "2") // no underscore before 2 in our database names
   }
 }
