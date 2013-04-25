@@ -1,5 +1,6 @@
 package metadata
 
+import java.io.File
 import scala.io.Source
 import scala.math.max
 import scala.annotation.tailrec
@@ -25,7 +26,9 @@ object SqlMdLoader {
     }
   val linesFromFile: Either[Exception, List[String]] =
     try Right(Source.fromFile(
-      "../db/schema.sql", "UTF-8").getLines.toList) catch {
+      new File(SqlMdLoader.getClass.getResource("SqlMdLoader.class")
+        .getPath + "/../../../../../../../../db/schema.sql")
+        .getCanonicalPath, "UTF-8").getLines.toList) catch {
       case e: Exception => Left(e)
     }
   val lines = (linesFromResource, linesFromFile) match {
