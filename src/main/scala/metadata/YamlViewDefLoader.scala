@@ -45,7 +45,7 @@ object YamlViewDefLoader {
   val typedefResources = ((getClass.getClassLoader.getResources("")
     .asScala.toSeq.flatMap(u =>
       Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))) ++
-    Option(getClass.getResourceAsStream("/.view-files.txt"))
+    Option(getClass.getResourceAsStream("/-view-files.txt"))
     .map(Source.fromInputStream(_)(io.Codec("UTF-8"))
       .getLines.toList).getOrElse(Nil))
     .filter(_.endsWith(".yaml")).map("/" + _).toSet.toSeq
