@@ -99,6 +99,7 @@ object XsdWriter {
     </xs:schema>
   }
   def createSchemaString = new PrettyPrinter(200, 2).format(createSchema)
+    .replace("\"   >", "\">") // XXX remove strange artifact from schema
   def createBindings =
     <jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
