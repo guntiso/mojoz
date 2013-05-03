@@ -21,33 +21,27 @@ object XsdWriter {
     val typeName =
       if (col.xsdType.isComplexType) "tns:" + xsdName(col.xsdType.name)
       else "xs:" + col.xsdType.name
-    col.xsdType match {
-      case XsdType(_, None, None, None, _) =>
-        <xs:element name={ elName } type={ typeName } nillable={ nillable }
-            minOccurs={ minOccurs } maxOccurs={ maxOccurs }>{
+    val noBlankStr = required && typeName == "xs:string" &&
+      (col.xsdType.length getOrElse 1) > 0
+    val minLength = if (noBlankStr) Some(1) else None
+    val t = col.xsdType
+    (minLength, t.length, t.totalDigits, t.fractionDigits) match {
+      case (None, None, None, None) =>
+        <xs:element name={ elName } nillable={ nillable }
+            minOccurs={ minOccurs } maxOccurs={ maxOccurs } type={ typeName }>{
           colcomment
         }</xs:element>
-      case XsdType(_, Some(length), None, None, _) =>
+      case (minL, maxL, totD, frcD) =>
         <xs:element name={ elName } nillable={ nillable }
             minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ typeName }>
-              <xs:maxLength value={ length.toString }/>
-            </xs:restriction>
-          </xs:simpleType>
-        </xs:element>
-      case XsdType(_, _, Some(totalDigits), fractionDigitsOption, _) =>
-        <xs:element name={ elName } nillable={ nillable }
-            minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
-          { colcomment }
-          <xs:simpleType>
-            <xs:restriction base={ typeName }>
-              <xs:totalDigits value={ totalDigits.toString }/>
-              {
-                if (fractionDigitsOption != None)
-                  <xs:fractionDigits value={ fractionDigitsOption.get.toString }/>
-              }
+              { minL.map(n => <xs:minLength value={ n.toString }/>) orNull }
+              { if (noBlankStr) <xs:pattern value="[\s\S]*[\S][\s\S]*"/> }
+              { maxL.map(n => <xs:maxLength value={ n.toString }/>) orNull }
+              { totD.map(n => <xs:totalDigits value={ n.toString }/>) orNull }
+              { frcD.map(n => <xs:fractionDigits value={ n.toString }/>) orNull }
             </xs:restriction>
           </xs:simpleType>
         </xs:element>
