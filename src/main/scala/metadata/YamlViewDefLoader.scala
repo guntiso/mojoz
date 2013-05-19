@@ -55,7 +55,7 @@ object YamlViewDefLoader {
     Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
   val typedefStrings = resourcesToStrings.map(s =>
     s.split("\\-\\-\\-").toSeq).flatMap(x =>
-    x).map(_.trim).filter(_.length > 0) toSeq
+    x).map(_.trim).filter(_.length > 0).toSeq
   private val rawTypeDefs = typedefStrings map loadTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   val nameToTableName = rawTypeDefs.map(t =>
@@ -221,13 +221,14 @@ object YamlViewDefLoader {
     // TODO repeating code xtnds visiting
     if (t.xtnds == null) t else {
       @tailrec
-      def baseFields(t: XsdTypeDef, visited: List[String]): Seq[XsdFieldDef] =
+      def baseFields(t: XsdTypeDef, visited: List[String],
+        fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
         if (visited contains t.name)
           sys.error("Cyclic extends: " +
             (t.name :: visited).reverse.mkString(" -> "))
-        else if (t.xtnds == null) t.fields
-        else baseFields(nameToViewDef(t.xtnds), t.name :: visited) ++ t.fields
-      t.copy(fields = baseFields(t, Nil))
+        else if (t.xtnds == null) t.fields ++ fields
+        else baseFields(nameToViewDef(t.xtnds), t.name :: visited, t.fields ++ fields)
+      t.copy(fields = baseFields(t, Nil, Nil))
     })
     .map(setI18n)
     .map(t => (t.name, t)).toMap

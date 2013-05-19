@@ -9,7 +9,7 @@ object DbConventions {
       case "grp" => "group"
       case "rle" => "role"
       case x => x
-    }).map(_.capitalize) mkString
+    }).map(_.capitalize).mkString
   }
   def xsdNameToDbName(xsdName: String) = {
     ElementName.get(xsdName).split("[\\-\\_]").map(_.toLowerCase match {

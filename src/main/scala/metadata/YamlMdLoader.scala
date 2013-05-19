@@ -81,7 +81,7 @@ object YamlMdLoader {
           " - unexpected format: " + nameAndType.trim)
       }
       val sizes = parts.tail
-        .map(s => try Some(s.toInt) catch { case x => None })
+        .map(s => try Some(s.toInt) catch { case x: Exception => None })
         .flatMap(x => x)
       val (length, fraction) = sizes match {
         case Nil => (None, None)
@@ -91,8 +91,8 @@ object YamlMdLoader {
           " - unexpected format: " + nameAndType.trim)
       }
       val types = parts.tail
-        .filterNot(cardinalities contains)
-        .filterNot(sizes.map(_.toString) contains)
+        .filterNot(cardinalities.contains)
+        .filterNot(sizes.map(_.toString).contains)
       val typeName = types match {
         case Nil => null
         case t :: Nil => t
@@ -127,7 +127,7 @@ object YamlMdLoader {
     case (_, "date") => new XsdType("date")
     case (_, "dateTime") => new XsdType("dateTime")
     case (_, "string") =>
-      if (col.length isDefined) new XsdType("string", col.length.get)
+      if (col.length.isDefined) new XsdType("string", col.length.get)
       else new XsdType("string")
     case (_, "boolean") => new XsdType("boolean")
     case (_, "int") => new XsdType("int")

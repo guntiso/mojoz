@@ -37,11 +37,11 @@ object XsdWriter {
           { colcomment }
           <xs:simpleType>
             <xs:restriction base={ typeName }>
-              { minL.map(n => <xs:minLength value={ n.toString }/>) orNull }
+              { minL.map(n => <xs:minLength value={ n.toString }/>).orNull }
               { if (noBlankStr) <xs:pattern value="[\s\S]*[\S][\s\S]*"/> }
-              { maxL.map(n => <xs:maxLength value={ n.toString }/>) orNull }
-              { totD.map(n => <xs:totalDigits value={ n.toString }/>) orNull }
-              { frcD.map(n => <xs:fractionDigits value={ n.toString }/>) orNull }
+              { maxL.map(n => <xs:maxLength value={ n.toString }/>).orNull }
+              { totD.map(n => <xs:totalDigits value={ n.toString }/>).orNull }
+              { frcD.map(n => <xs:fractionDigits value={ n.toString }/>).orNull }
             </xs:restriction>
           </xs:simpleType>
         </xs:element>

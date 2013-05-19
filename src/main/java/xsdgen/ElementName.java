@@ -11,10 +11,10 @@ public class ElementName {
         UPPER, DIGIT, OTHER
     }
 
-    private static Map<Class, String> elementNameCache = Collections
-            .synchronizedMap(new HashMap<Class, String>());
+    private static Map<Class<?>, String> elementNameCache = Collections
+            .synchronizedMap(new HashMap<Class<?>, String>());
 
-    public static String get(Class elementClass) {
+    public static String get(Class<?> elementClass) {
         String name = elementNameCache.get(elementClass);
         if (name != null) {
             return name;
