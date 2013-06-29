@@ -59,7 +59,10 @@ object SqlMdLoader {
         colComments.clear()
         primaryKey = None
       }
-    lines.foreach(_.trim.split("[\\s]+").toList match {
+    lines.map(_.trim).mkString("\r\n").split("\\;\\r\\n").flatMap {
+      case x if x startsWith "comment" => x :: Nil
+      case x => x.split("\\r\\n")
+    }.foreach(_.trim.split("[\\s]+").toList match {
       case "create" :: "table" :: dTable :: tail =>
         flush()
         tableName = dTable.replace("(", "")
@@ -70,10 +73,10 @@ object SqlMdLoader {
         primaryKey = Some(DbIndex(pkName, cleanPkCols))
       case "comment" :: "on" :: "table" :: dTable :: "is" :: tail =>
         val dComment = tail.mkString(" ")
-        tableComment = dComment.substring(1, dComment.length - 2)
+        tableComment = dComment.substring(1, dComment.length - 1)
       case "comment" :: "on" :: "column" :: dTableAndCol :: "is" :: tail =>
         val dComment = tail.mkString(" ")
-        val colComment = dComment.substring(1, dComment.length - 2)
+        val colComment = dComment.substring(1, dComment.length - 1)
         val colName = dTableAndCol.split("\\.")(1)
         colComments(colName) = colComment
       case _ :: Nil =>
