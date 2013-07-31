@@ -62,6 +62,8 @@ object SqlMdLoader {
     lines.map(_.trim).mkString("\r\n").split("\\;\\r\\n").flatMap {
       case x if x startsWith "comment" => x :: Nil
       case x => x.split("\\r\\n")
+    }.map {
+      _.split("\\-\\-").toList.headOption getOrElse "" // ignore comments
     }.foreach(_.trim.split("[\\s]+").toList match {
       case "create" :: "table" :: dTable :: tail =>
         flush()
