@@ -64,7 +64,9 @@ object Metadata {
   private lazy val xtd = YamlViewDefLoader.nameToExtendedViewDef
   def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
     xtd.get(ElementName.get(viewClass)) getOrElse
-      (xtd.get(ElementName.get(viewClass).replace("-", "_")) getOrElse
+      (xtd.get(ElementName.get(viewClass)
+        .replace("ku-29", "ku29") // XXX
+        .replace("-", "_")) getOrElse
         (viewClass.getSuperclass match {
           case c: Class[_] =>
             try getViewDef(c.asInstanceOf[Class[_ <: AnyRef]]) catch {
