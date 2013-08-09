@@ -167,7 +167,10 @@ object YamlViewDefLoader {
           val table = dbName(aliasToTable.getOrElse(tableOrAlias, tableOrAlias))
           val tableAlias = if (table == tableOrAlias) null else tableOrAlias
           val name = dbName(parts(1))
-          val alias = dbName(f.name.replace(".", "_"))
+          def maybeNoPrefix(fName: String) = // XXX TODO remove prefix properly
+            if (fName startsWith "cn.") fName.substring(3)
+            else fName
+          val alias = dbName(maybeNoPrefix(f.name).replace(".", "_"))
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias)
         }
