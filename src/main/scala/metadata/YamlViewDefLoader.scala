@@ -102,9 +102,7 @@ object YamlViewDefLoader {
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val comment = yfd.comment
-      // FIXME COMPLEX TYPES!!!
-      val rawXsdType =
-        if (isExpression) Option(YamlMdLoader.xsdType(yfd)) else None
+      val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
       val xsdTypeFe =
         if (isExpression)
           MdConventions.fromExternal(
@@ -115,7 +113,8 @@ object YamlViewDefLoader {
       val xsdType =
         if (xsdTypeFe != null && xsdTypeFe.name == "string" && rawXsdType == None)
           new XsdType("string")
-        else xsdTypeFe
+        else if (xsdTypeFe != null) xsdTypeFe
+        else rawXsdType.getOrElse(null)
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
         isExpression, expression, nullable, xsdType, false, comment)
@@ -175,7 +174,7 @@ object YamlViewDefLoader {
             name = name, alias = alias)
         }
       def mapColumnDef(f: XsdFieldDef, cardinalityOverride: Boolean) = {
-        if (f.isExpression) f
+        if (f.isExpression || f.isCollection) f
         else {
           val col = Metadata.getCol(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
