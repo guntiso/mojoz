@@ -4,7 +4,8 @@ import xsdgen.ElementName
 
 object DbConventions {
   def dbNameToXsdName(dbName: String) = {
-    dbName.split("[_\\.]+").map(_.toLowerCase match {
+    val parts = dbName.split("[_\\.]+")
+    parts.toList.map(_.toLowerCase match {
       case "usr" => "user"
       case "grp" => "group"
       case "rle" => "role"
@@ -12,7 +13,10 @@ object DbConventions {
     }).map(_.capitalize).mkString
   }
   def xsdNameToDbName(xsdName: String) = {
-    ElementName.get(xsdName).split("[\\-\\_]").map(_.toLowerCase match {
+    val parts = ElementName.get(xsdName).split("[\\-\\_]")
+    val hadPrefix = xsdName.startsWith("_")
+    val hadSuffix = xsdName.endsWith("_")
+    val clean = parts.toList.map(_.toLowerCase match {
       case "user" => "usr"
       case "group" => "grp"
       case "role" => "rle"
@@ -20,5 +24,11 @@ object DbConventions {
     }).mkString("_").replace("__", "_")
       .replace("_1", "1") // no underscore before 1 in our database names
       .replace("_2", "2") // no underscore before 2 in our database names
+    (hadPrefix, hadSuffix) match {
+      case (true, true) => "_" + clean + "_"
+      case (true, false) => "_" + clean
+      case (false, true) => clean + "_"
+      case (false, false) => clean
+    }
   }
 }
