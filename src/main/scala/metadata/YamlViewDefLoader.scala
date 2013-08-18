@@ -133,7 +133,6 @@ object YamlViewDefLoader {
     val td = rawTypeDefs
     checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
-    // TODO extends is also typedef, join!
     def mapExtends(t: XsdTypeDef) =
       // TODO repeating code xtnds visiting
       if (t.table != null) t else {
@@ -195,7 +194,14 @@ object YamlViewDefLoader {
         .map(f => (mapField(f), nameToCardinalityOverride(f.name)))
         .map(fo => mapColumnDef(fo._1, fo._2)))
     }
-    td.map(mapExtends).map(mapFields)
+    def inheritJoins(t: XsdTypeDef) = {
+      @tailrec
+      def inheritedJoins(t: XsdTypeDef): String =
+        if (t.joins != null || t.xtnds == null) t.joins
+        else inheritedJoins(m(t.xtnds))
+      if (t.xtnds == null) t else t.copy(joins = inheritedJoins(t))
+    }
+    td.map(mapExtends).map(mapFields).map(inheritJoins)
   }
 
   private val noI18n = Set("company.name", "customer.name")
