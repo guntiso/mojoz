@@ -58,18 +58,19 @@ object YamlViewDefLoader {
     x).map(_.trim).filter(_.length > 0).toSeq
   private val rawTypeDefs = typedefStrings map loadTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
-  val nameToTableName = rawTypeDefs.map(t =>
-    // TODO repeating code xtnds visiting
-    if (t.table != null) (t.name, t.table) else {
-      @tailrec
-      def baseTable(t: XsdTypeDef, visited: List[String]): String =
-        if (visited contains t.name)
-          sys.error("Cyclic extends: " +
-            (t.name :: visited).reverse.mkString(" -> "))
-        else if (t.table != null) t.table
-        else baseTable(nameToRawTypeDef(t.xtnds), t.name :: visited)
-      (t.name, baseTable(t, Nil))
-    }).toMap
+  @tailrec
+  private def baseTable(t: XsdTypeDef, up: (XsdTypeDef) => XsdTypeDef,
+    visited: List[String]): String =
+    if (visited contains t.name)
+      sys.error("Cyclic extends: " +
+        (t.name :: visited).reverse.mkString(" -> "))
+    else if (t.table != null) t.table
+    else baseTable(up(t), up, t.name :: visited)
+  val nameToTableName = rawTypeDefs.map { t =>
+    if (t.table != null) (t.name, t.table)
+    else (t.name,
+      baseTable(t, (t: XsdTypeDef) => nameToRawTypeDef(t.xtnds), Nil))
+  }.toMap
   lazy val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
@@ -134,17 +135,8 @@ object YamlViewDefLoader {
     checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
     def mapExtends(t: XsdTypeDef) =
-      // TODO repeating code xtnds visiting
-      if (t.table != null) t else {
-        @tailrec
-        def baseTable(t: XsdTypeDef, visited: List[String]): String =
-          if (visited contains t.name)
-            sys.error("Cyclic extends: " +
-              (t.name :: visited).reverse.mkString(" -> "))
-          else if (t.table != null) t.table
-          else baseTable(m(t.xtnds), t.name :: visited)
-        t.copy(table = baseTable(t, Nil))
-      }
+      if (t.table != null) t
+      else t.copy(table = baseTable(t, (t: XsdTypeDef) => m(t.xtnds), Nil))
     def mapFields(t: XsdTypeDef) = {
       val joins = JoinsParser(t.table, t.joins)
       val aliasToTable =
