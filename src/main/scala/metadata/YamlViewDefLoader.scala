@@ -59,17 +59,16 @@ object YamlViewDefLoader {
   private val rawTypeDefs = typedefStrings map loadTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   @tailrec
-  private def baseTable(t: XsdTypeDef, up: (XsdTypeDef) => XsdTypeDef,
+  private def baseTable(t: XsdTypeDef, nameToTypeDef: Map[String, XsdTypeDef],
     visited: List[String]): String =
     if (visited contains t.name)
       sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
-    else baseTable(up(t), up, t.name :: visited)
+    else baseTable(nameToTypeDef(t.xtnds), nameToTypeDef, t.name :: visited)
   val nameToTableName = rawTypeDefs.map { t =>
     if (t.table != null) (t.name, t.table)
-    else (t.name,
-      baseTable(t, (t: XsdTypeDef) => nameToRawTypeDef(t.xtnds), Nil))
+    else (t.name, baseTable(t, nameToRawTypeDef, Nil))
   }.toMap
   lazy val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
@@ -135,8 +134,7 @@ object YamlViewDefLoader {
     checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
     def mapExtends(t: XsdTypeDef) =
-      if (t.table != null) t
-      else t.copy(table = baseTable(t, (t: XsdTypeDef) => m(t.xtnds), Nil))
+      if (t.table != null) t else t.copy(table = baseTable(t, m, Nil))
     def mapFields(t: XsdTypeDef) = {
       val joins = JoinsParser(t.table, t.joins)
       val aliasToTable =
