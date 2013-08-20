@@ -148,6 +148,17 @@ object YamlViewDefLoader {
     td foreach checkRepeatingFieldNames
     // check field names not repeating on extends? or overwrite instead?
   }
+  private def checkTypedefMapping(td: Seq[XsdTypeDef]) = {
+    val m = td.map(t => (t.name, t)).toMap
+    td foreach { t =>
+      t.fields.foreach { f =>
+        if (f.xsdType.isComplexType)
+          m.get(f.xsdType.name) getOrElse sys.error("Type " + f.xsdType.name +
+            " referenced from " + t.name + " is not found")
+        else if (!f.isExpression) Metadata.getCol(t, f)
+      }
+    }
+  }
   private def loadTypeDefs = {
     val td = rawTypeDefs
     checkTypedefs(td)
@@ -244,6 +255,7 @@ object YamlViewDefLoader {
       }
     val td3 = td2.map(resolveDraftFields)
     checkTypedefs(td3)
+    checkTypedefMapping(td3)
     td3
   }
 
