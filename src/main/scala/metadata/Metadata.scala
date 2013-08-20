@@ -31,7 +31,6 @@ object Metadata {
   val entities = SqlMdLoader.entities
   private lazy val md = entities.map(e => (e.name, e)).toMap
   lazy val nameToViewDef = YamlViewDefLoader.nameToViewDef
-  val nameToTableName = YamlViewDefLoader.nameToTableName
 
   def tableDef(tableName: String): TableDef =
     md.get(tableName) getOrElse
@@ -39,7 +38,7 @@ object Metadata {
 
   def tableDef(typeDef: XsdTypeDef): TableDef =
     // TODO get line, file info from xsd type def
-    md.get(nameToTableName(typeDef.name)) getOrElse
+    md.get(typeDef.table) getOrElse
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 

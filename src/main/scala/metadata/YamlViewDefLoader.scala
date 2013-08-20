@@ -19,6 +19,7 @@ case class XsdTypeDef(
   table: String,
   joins: String, // tresql from clause
   xtnds: String,
+  draftOf: String,
   comment: String,
   fields: Seq[XsdFieldDef])
 
@@ -65,11 +66,9 @@ object YamlViewDefLoader {
       sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
-    else baseTable(nameToTypeDef(t.xtnds), nameToTypeDef, t.name :: visited)
-  val nameToTableName = rawTypeDefs.map { t =>
-    if (t.table != null) (t.name, t.table)
-    else (t.name, baseTable(t, nameToRawTypeDef, Nil))
-  }.toMap
+    else baseTable(nameToTypeDef.get(Option(t.xtnds) getOrElse t.draftOf)
+      .getOrElse(sys.error("base table not found, type: " + t.name)),
+      nameToTypeDef, t.name :: visited)
   lazy val typedefs = loadTypeDefs
   def loadTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
@@ -79,16 +78,20 @@ object YamlViewDefLoader {
     val rawTable = get("table")
     val joins = get("joins")
     val xtnds = get("extends")
+    val draftOf = get("draft-of")
     val comment = get("comment")
     val fieldsSrc = tdMap.get("fields")
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
-    val (name, table) = (rawName, rawTable, xtnds) match {
+    val xtndsOrDraft = Option(xtnds) getOrElse draftOf
+    val (name, table) = (rawName, rawTable, xtndsOrDraft) match {
       case (name, null, null) => (name, dbName(name))
       case (name, null, _) => (name, null)
       case (null, table, null) => (table, dbName(table))
       case (name, table, _) => (name, dbName(table))
     }
+    if (xtnds != null && draftOf != null) sys.error(
+      "extends and draft-of is not supported simultaneously, type: " + name)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
     def toXsdFieldDef(yfd: YamlFieldDef) = {
       val table = null
@@ -119,22 +122,55 @@ object YamlViewDefLoader {
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
         isExpression, expression, nullable, xsdType, false, comment)
     }
-    XsdTypeDef(name, table, joins, xtnds, comment,
+    XsdTypeDef(name, table, joins, xtnds, draftOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
   private def checkTypedefs(td: Seq[XsdTypeDef]) = {
-    // TODO diagnostics: m(t.xtnds) and all other!!!
-    // check names not repeating
-    // check extends only existing
-    // check field names not repeating
+    val m = td.map(t => (t.name, t)).toMap
+    if (m.size < td.size) sys.error("repeating definition of " +
+      td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
+    @tailrec
+    def checkExtends(t: XsdTypeDef, nameToTypeDef: Map[String, XsdTypeDef],
+      visited: List[String]): Boolean =
+      if (visited contains t.name) sys.error("Cyclic extends: " +
+        (t.name :: visited).reverse.mkString(" -> "))
+      else if (t.xtnds == null && t.draftOf == null) true
+      else checkExtends(nameToTypeDef.get(Option(t.xtnds) getOrElse t.draftOf)
+        .getOrElse(sys.error("Type " + t.name + " extends non-existing type " +
+          Option(t.xtnds).getOrElse(t.draftOf))),
+        nameToTypeDef, t.name :: visited)
+    td.foreach(t => checkExtends(t, m, Nil))
+    def propName(f: XsdFieldDef) = Option(f.alias) getOrElse f.name
+    def checkRepeatingFieldNames(t: XsdTypeDef) =
+      if (t.fields.map(propName).toSet.size < t.fields.size) sys.error(
+        "Type " + t.name + " defines multiple fields named " + t.fields
+          .groupBy(propName).filter(_._2.size > 1).map(_._1).mkString(", "))
+    td foreach checkRepeatingFieldNames
     // check field names not repeating on extends? or overwrite instead?
   }
   private def loadTypeDefs = {
     val td = rawTypeDefs
     checkTypedefs(td)
     val m = td.map(t => (t.name, t)).toMap
-    def mapExtends(t: XsdTypeDef) =
-      if (t.table != null) t else t.copy(table = baseTable(t, m, Nil))
+    def draftName(n: String) = n + "_draft"
+    // TODO missing details drafts
+    val missingDrafts = td
+      .filter(_.draftOf != null)
+      .map(t => m(t.draftOf))
+      .map(t => Option(t.xtnds)) // TODO missing parent draft hierarchy
+      .flatMap(x => x)
+      .map(n => XsdTypeDef(draftName(n), m(n).table, null, null, n, null, Nil))
+      .filter(t => !m.containsKey(t.name))
+      .toSet
+
+    val td1 = (td ++ missingDrafts)
+    val m1 = td1.map(t => (t.name, t)).toMap
+    def mapDraftExtends(t: XsdTypeDef) =
+      // TODO missing parent draft hierarchy
+      if (t.draftOf == null || m1(t.draftOf).xtnds == null) t
+      else t.copy(xtnds = draftName(m1(t.draftOf).xtnds))
+    def mapTableExtends(t: XsdTypeDef) =
+      if (t.table != null) t else t.copy(table = baseTable(t, m1, Nil))
     def mapFields(t: XsdTypeDef) = {
       val joins = JoinsParser(t.table, t.joins)
       val aliasToTable =
@@ -187,11 +223,28 @@ object YamlViewDefLoader {
     def inheritJoins(t: XsdTypeDef) = {
       @tailrec
       def inheritedJoins(t: XsdTypeDef): String =
-        if (t.joins != null || t.xtnds == null) t.joins
-        else inheritedJoins(m(t.xtnds))
-      if (t.xtnds == null) t else t.copy(joins = inheritedJoins(t))
+        if (t.joins != null || t.xtnds == null && t.draftOf == null) t.joins
+        else inheritedJoins(m1(Option(t.xtnds) getOrElse t.draftOf))
+      if (t.xtnds == null && t.draftOf == null) t
+      else t.copy(joins = inheritedJoins(t))
     }
-    td.map(mapExtends).map(mapFields).map(inheritJoins)
+    val td2 = td1
+      .map(mapDraftExtends)
+      .map(mapTableExtends)
+      .map(mapFields)
+      .map(inheritJoins)
+    val m2 = td2.map(t => (t.name, t)).toMap
+    def resolveDraftFields(t: XsdTypeDef) =
+      if (t.draftOf == null) t else {
+        @tailrec
+        def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
+          if (t.draftOf == null) t.fields.map(_.copy(nullable = true)) ++ fields
+          else baseFields(m2(t.draftOf), t.fields ++ fields)
+        t.copy(fields = baseFields(t, Nil))
+      }
+    val td3 = td2.map(resolveDraftFields)
+    checkTypedefs(td3)
+    td3
   }
 
   private val noI18n = Set("company.name", "customer.name")
@@ -217,17 +270,12 @@ object YamlViewDefLoader {
   lazy val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
   lazy val nameToExtendedViewDef = typedefs.map(t =>
-    // TODO repeating code xtnds visiting
     if (t.xtnds == null) t else {
       @tailrec
-      def baseFields(t: XsdTypeDef, visited: List[String],
-        fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
-        if (visited contains t.name)
-          sys.error("Cyclic extends: " +
-            (t.name :: visited).reverse.mkString(" -> "))
-        else if (t.xtnds == null) t.fields ++ fields
-        else baseFields(nameToViewDef(t.xtnds), t.name :: visited, t.fields ++ fields)
-      t.copy(fields = baseFields(t, Nil, Nil))
+      def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
+        if (t.xtnds == null) t.fields ++ fields
+        else baseFields(nameToViewDef(t.xtnds), t.fields ++ fields)
+      t.copy(fields = baseFields(t, Nil))
     })
     .map(setI18n)
     .map(t => (t.name, t)).toMap
