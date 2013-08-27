@@ -66,14 +66,14 @@ object YamlViewDefLoader {
   private val rawTypeDefs = typedefStrings map loadRawTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   @tailrec
-  private def baseTable(t: XsdTypeDef, nameToTypeDef: Map[String, XsdTypeDef],
+  private def baseTable(t: XsdTypeDef,
+    nameToTypeDef: collection.Map[String, XsdTypeDef],
     visited: List[String]): String =
     if (visited contains t.name)
       sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
-    else baseTable(nameToTypeDef.get(
-      Option(t.xtnds).orElse(Option(t.detailsOf)).getOrElse(t.draftOf))
+    else baseTable(nameToTypeDef.get(t.xtnds)
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
   lazy val typedefs = buildTypeDefs(rawTypeDefs)
@@ -172,27 +172,27 @@ object YamlViewDefLoader {
       }
     }
   }
+  def draftName(n: String) = n + "_draft"
+  def detailsName(n: String) = n + "_details"
   private def buildTypeDefs(rawTypeDefs: Seq[XsdTypeDef]) = {
-    val td = rawTypeDefs
-    checkTypedefs(td)
-    val mInitial = td.map(t => (t.name, t)).toMap
-    val m = scala.collection.mutable.Map() ++= mInitial
-    def draftName(n: String) = n + "_draft"
-    def detailsName(n: String) = n + "_details"
+    checkTypedefs(rawTypeDefs)
+    val rawTypesMap = rawTypeDefs.map(t => (t.name, t)).toMap
+    val resolvedTypes = new collection.mutable.ArrayBuffer[XsdTypeDef]()
+    val resolvedTypesMap = collection.mutable.Map[String, XsdTypeDef]()
 
     def inheritTable(t: XsdTypeDef) =
-      if (t.table != null) t else t.copy(table = baseTable(t, mInitial, Nil))
+      if (t.table != null) t
+      else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
 
     def inheritJoins(t: XsdTypeDef) = {
       @tailrec
       def inheritedJoins(t: XsdTypeDef): String =
-        if (t.joins != null ||
-          t.xtnds == null && t.detailsOf == null && t.draftOf == null) t.joins
-        else inheritedJoins(m(
-          Option(t.xtnds).orElse(Option(t.detailsOf)) getOrElse t.draftOf))
-      if (t.xtnds == null && t.detailsOf == null && t.draftOf == null) t
+        if (t.joins != null || t.xtnds == null) t.joins
+        else inheritedJoins(m(t.xtnds))
+      if (t.xtnds == null) t
       else t.copy(joins = inheritedJoins(t))
     }
+
     def resolveFieldNamesAndTypes(t: XsdTypeDef) = {
       val joins = JoinsParser(t.table, t.joins)
       val aliasToTable =
@@ -249,7 +249,6 @@ object YamlViewDefLoader {
           .exists(_.isForcedCardinality)
       }
       def canReuseComplexFieldsForDraft(t: XsdTypeDef) = {
-        // TODO stack overflow protection
         !t.fields
           .filter(_.isComplexType)
           .exists(f => !canReuseAsDraft(m(f.xsdType.name)))
@@ -260,30 +259,30 @@ object YamlViewDefLoader {
         canReuseFieldsForDraft(t) &&
           (t.xtnds == null || canReuseAsDraft(m(t.xtnds)))
       def addMissingDraftOf(draftOf: XsdTypeDef) = addMissing(
-        draftOf.copy(name = draftName(draftOf.name), draftOf = draftOf.name,
-          xtnds = null, fields = Nil))
+        draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
+          xtnds = null, draftOf = draftOf.name, fields = Nil))
       def draftField(f: XsdFieldDef) =
         if (f.isComplexType) {
           val t = m(f.xsdType.name)
           def fCopy = f.copy(xsdType = f.xsdType.copy(name = draftName(t.name)))
-          if (m.contains(draftName(t.name))) fCopy
+          if (isDefined(draftName(t.name))) fCopy
           else if (canReuseAsDraft(t)) f
           else { addMissingDraftOf(t); fCopy }
         } else if (f.isForcedCardinality && !f.nullable && !f.isCollection)
           f.copy(nullable = true)
         else f
       val draftOf = m(draft.draftOf)
-      val table = Option(draft.table) getOrElse draftOf.table
-      val joins = Option(draft.joins) getOrElse draftOf.joins
-      if (canReuseAsDraft(draftOf)) draft.copy(table = table,
-        joins = joins, xtnds = draft.draftOf, draftOf = null)
+      if (canReuseAsDraft(draftOf))
+        draft.copy(xtnds = draftOf.name, draftOf = null)
       else {
         val xDraftName = Option(draftOf.xtnds).map(draftName).orNull
         val xtnds =
-          if (xDraftName == null) null
-          else if (m.contains(xDraftName)) xDraftName
+          if (draftOf.xtnds == null) null
+          else if (isDefined(xDraftName)) xDraftName
           else if (canReuseAsDraft(m(draftOf.xtnds))) draftOf.xtnds
           else { addMissingDraftOf(m(draftOf.xtnds)); xDraftName }
+        val table = Option(draft.table) getOrElse draftOf.table
+        val joins = Option(draft.joins) getOrElse draftOf.joins
         draft.copy(
           table = table, joins = joins, xtnds = xtnds, draftOf = null,
           fields = draftOf.fields.map(draftField) ++ draft.fields)
@@ -297,70 +296,77 @@ object YamlViewDefLoader {
           .filter(_.isComplexType)
           .map(_.xsdType)
           .filter(t =>
-            m.contains(detailsName(t.name)) || hasChildrenWithDetails(m(t.name)))
+            isDefined(detailsName(t.name)) || hasChildrenWithDetails(m(t.name)))
           .size > 0
       def canReuseFieldsForDetails(t: XsdTypeDef) = !hasChildrenWithDetails(t)
       def canReuseAsDetailsSuper(t: XsdTypeDef): Boolean =
         canReuseFieldsForDetails(t) &&
           (t.xtnds == null || canReuseAsDetails(m(t.xtnds)))
       def canReuseAsDetails(t: XsdTypeDef): Boolean =
-        !m.contains(detailsName(t.name)) && canReuseAsDetailsSuper(t)
+        !isDefined(detailsName(t.name)) && canReuseAsDetailsSuper(t)
       def addMissingDetailsOf(dtOf: XsdTypeDef) = addMissing(
-        dtOf.copy(name = detailsName(dtOf.name), detailsOf = dtOf.name,
-          xtnds = null, fields = Nil))
+        dtOf.copy(name = detailsName(dtOf.name), table = null, joins = null,
+          xtnds = null, detailsOf = dtOf.name, fields = Nil))
       def detailsField(f: XsdFieldDef) = if (f.isSimpleType) f else {
         val t = m(f.xsdType.name)
         def fCopy = f.copy(xsdType = f.xsdType.copy(name = detailsName(t.name)))
-        if (m.contains(detailsName(t.name))) fCopy
+        if (isDefined(detailsName(t.name))) fCopy
         else if (canReuseAsDetails(t)) f
         else { addMissingDetailsOf(t); fCopy }
       }
       val detailsOf = m(details.detailsOf)
-      val table = Option(details.table) getOrElse detailsOf.table
-      val joins = Option(details.joins) getOrElse detailsOf.joins
-      if (canReuseAsDetailsSuper(detailsOf)) details.copy(table = table,
-        joins = joins, xtnds = detailsOf.name, detailsOf = null)
+      if (canReuseAsDetailsSuper(detailsOf))
+        details.copy(xtnds = detailsOf.name, detailsOf = null)
       else {
         val xDetailsName = Option(detailsOf.xtnds).map(detailsName).orNull
         val xtnds =
           if (detailsOf.xtnds == null) null
-          else if (m.contains(xDetailsName)) xDetailsName
+          else if (isDefined(xDetailsName)) xDetailsName
           else if (canReuseAsDetails(m(detailsOf.xtnds))) detailsOf.xtnds
           else { addMissingDetailsOf(m(detailsOf.xtnds)); xDetailsName }
+        val table = Option(details.table) getOrElse (
+          if (xtnds == null) detailsOf.table else null)
+        val joins = Option(details.joins) getOrElse (
+          if (xtnds == null) detailsOf.joins else null)
         details.copy(
           table = table, joins = joins, xtnds = xtnds, detailsOf = null,
           fields = detailsOf.fields.map(detailsField) ++ details.fields)
       }
     }
 
-    val unresolvedTypes =
-      new scala.collection.mutable.Queue[XsdTypeDef]() ++= (td
-        .map(inheritTable)
-        .map(inheritJoins)
-        .map(resolveFieldNamesAndTypes))
-    m ++= unresolvedTypes.map(t => (t.name, t))
-
+    def isDefined(tName: String) = rawTypesMap.contains(tName)
+    def typeResolved(t: XsdTypeDef) = {
+      resolvedTypes += t
+      resolvedTypesMap(t.name) = t
+      t
+    }
     def addMissing(t: XsdTypeDef) = {
-      println("Adding missing type: " + t.name)
-      m(t.name) = t
-      unresolvedTypes += t
+      println("Adding missing type: " + t.name) // TODO not distinct
+      resolveType(t)
+    }
+    // TODO add stack overflow protection
+    def m(tName: String) = resolveTypeByName(tName)
+    def resolveTypeByName(tName: String): XsdTypeDef =
+      resolvedTypesMap.getOrElse(tName,
+        resolveUnresolvedType(rawTypesMap(tName)))
+    def resolveType(t: XsdTypeDef): XsdTypeDef =
+      resolvedTypesMap.getOrElse(t.name, resolveUnresolvedType(t))
+    def resolveUnresolvedType(t: XsdTypeDef): XsdTypeDef = typeResolved {
+      (t.draftOf, t.detailsOf) match {
+        case (null, null) => t
+        case (draftOf, null) => resolveDraft(t, addMissing)
+        case (null, detailsOf) => resolveDetails(t, addMissing)
+      }
     }
 
-    def resolveType(t: XsdTypeDef) = (t.draftOf, t.detailsOf) match {
-      case (null, null) => t
-      case (draftOf, null) => resolveDraft(t, addMissing)
-      case (null, detailsOf) => resolveDetails(t, addMissing)
-    }
-
-    val resolvedTypes = new scala.collection.mutable.ArrayBuffer[XsdTypeDef]()
-    while (unresolvedTypes.size > 0) {
-      val resolvedType = resolveType(unresolvedTypes.dequeue)
-      m(resolvedType.name) = resolvedType
-      resolvedTypes += resolvedType
-    }
-    checkTypedefs(resolvedTypes)
-    checkTypedefMapping(resolvedTypes)
-    resolvedTypes.toList
+    rawTypeDefs foreach resolveType
+    val result = resolvedTypes.toList
+      .map(inheritTable)
+      .map(inheritJoins)
+      .map(resolveFieldNamesAndTypes)
+    checkTypedefs(result)
+    checkTypedefMapping(result)
+    result
   }
 
   private val noI18n = Set("company.name", "customer.name")
