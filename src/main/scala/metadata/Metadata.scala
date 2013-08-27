@@ -56,7 +56,8 @@ object Metadata {
           "Problem finding column (typeDef: " + typeDef.name
             + ", column: " + f.table + "." + colName +
             (if (f.tableAlias == null) ""
-            else " (table alias " + f.tableAlias + ")") + ")", ex)
+            else " (table alias " + f.tableAlias + ")") + ")"
+            + ", joins: " + typeDef.joins, ex)
     }
   }
 
