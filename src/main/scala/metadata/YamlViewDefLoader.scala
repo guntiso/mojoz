@@ -172,7 +172,9 @@ object YamlViewDefLoader {
       }
     }
   }
-  def draftName(n: String) = n + "_draft"
+  def draftName(n: String) = // XXX
+    if (n endsWith "_details") n.replace("_details", "_draft_details")
+    else n + "_draft"
   def detailsName(n: String) = n + "_details"
   private def buildTypeDefs(rawTypeDefs: Seq[XsdTypeDef]) = {
     checkTypedefs(rawTypeDefs)
