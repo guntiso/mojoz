@@ -343,7 +343,7 @@ object YamlViewDefLoader {
       t
     }
     def addMissing(t: XsdTypeDef) = {
-      println("Adding missing type: " + t.name) // TODO not distinct
+      // println("Adding missing type: " + t.name) // TODO not distinct
       resolveType(t)
     }
     // TODO add stack overflow protection
