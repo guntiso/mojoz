@@ -59,7 +59,7 @@ object YamlViewDefLoader {
   def filesToStrings =
     typedefFiles.map(f => Source.fromFile(f).mkString)
   def resourcesToStrings = typedefResources.map(r =>
-    Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
+    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString)
   val typedefStrings = resourcesToStrings.map(s =>
     s.split("\\-\\-\\-").toSeq).flatMap(x =>
     x).map(_.trim).filter(_.length > 0).toSeq
