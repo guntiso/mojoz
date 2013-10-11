@@ -18,6 +18,7 @@ import metadata.DbConventions.{ xsdNameToDbName => dbName }
 case class XsdTypeDef(
   name: String,
   table: String,
+  tableAlias: String,
   joins: String, // tresql from clause
   xtnds: String,
   draftOf: String,
@@ -132,7 +133,7 @@ object YamlViewDefLoader {
         isExpression, expression, nullable, isForcedCardinality,
         xsdType, false, comment)
     }
-    XsdTypeDef(name, table, joins, xtnds, draftOf, detailsOf, comment,
+    XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
   private def checkTypedefs(td: Seq[XsdTypeDef]) = {
@@ -194,6 +195,13 @@ object YamlViewDefLoader {
       if (t.xtnds == null) t
       else t.copy(joins = inheritedJoins(t))
     }
+
+    def resolveBaseTableAlias(t: XsdTypeDef) = t.copy(tableAlias =
+      JoinsParser(t.table, t.joins).filter(_.table == t.table).toList match {
+        case Join(a, _, _) :: Nil => // if only one base table encountered return alias
+          Option(a) getOrElse t.table
+        case _ => "b" // default base table alias 
+      })
 
     def resolveFieldNamesAndTypes(t: XsdTypeDef) = {
       val joins = JoinsParser(t.table, t.joins)
@@ -365,6 +373,7 @@ object YamlViewDefLoader {
     val result = resolvedTypes.toList
       .map(inheritTable)
       .map(inheritJoins)
+      .map(resolveBaseTableAlias)
       .map(resolveFieldNamesAndTypes)
     checkTypedefs(result)
     checkTypedefMapping(result)
