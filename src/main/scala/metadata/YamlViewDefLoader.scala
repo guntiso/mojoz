@@ -178,7 +178,7 @@ object YamlViewDefLoader {
     else n + "_draft"
   def detailsName(n: String) = n + "_details"
   private def buildTypeDefs(rawTypeDefs: Seq[XsdTypeDef]) = {
-    checkTypedefs(rawTypeDefs)
+    //checkTypedefs(rawTypeDefs) FIXME does not allow draft names in type hierarchy
     val rawTypesMap = rawTypeDefs.map(t => (t.name, t)).toMap
     val resolvedTypes = new collection.mutable.ArrayBuffer[XsdTypeDef]()
     val resolvedTypesMap = collection.mutable.Map[String, XsdTypeDef]()
