@@ -50,8 +50,11 @@ object SqlMdLoader {
       if (tableName != "") {
         val commentedCols = cols.reverse.map(col =>
           col.copy(comment = colComments.getOrElse(col.name, null)))
+        val pkCols = primaryKey.map(_.cols) getOrElse Nil
+        val readyCols = commentedCols.map(col =>
+          if (pkCols contains col.name) col.copy(nullable = false) else col)
         val tableDef =
-          DbTableDef(tableName, tableComment, commentedCols, primaryKey)
+          DbTableDef(tableName, tableComment, readyCols, primaryKey)
         tables = tableDef :: tables
         tableName = ""
         tableComment = ""
