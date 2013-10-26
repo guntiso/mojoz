@@ -17,7 +17,7 @@ object XsdWriter {
     val maxOccurs = if (col.isCollection) "unbounded" else null
     // FIXME for refed values, depends on ref-chain nullable!
     val minOccurs = if (required) null else "0"
-    val nillable = if (required) null else "true"
+    val nillable = if (required || col.isCollection) null else "true"
     val typeName =
       if (col.xsdType.isComplexType) "tns:" + xsdName(col.xsdType.name)
       else "xs:" + col.xsdType.name
