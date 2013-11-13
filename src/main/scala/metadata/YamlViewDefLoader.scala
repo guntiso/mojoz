@@ -122,12 +122,8 @@ object YamlViewDefLoader {
             // XXX unnecessary complex structure used
             ExFieldDef(name, rawXsdType, None, null, comment)).xsdType
         else null
-      // XXX undo convention
       val xsdType =
-        if (xsdTypeFe != null && xsdTypeFe.name == "string" && rawXsdType == None)
-          new XsdType("string")
-        else if (xsdTypeFe != null) xsdTypeFe
-        else rawXsdType.getOrElse(null)
+        if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
         isExpression, expression, nullable, isForcedCardinality,
