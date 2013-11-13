@@ -35,19 +35,23 @@ object MdConventions {
     else None
   }
   def fromExternal(col: ExFieldDef): ColumnDef = {
+    def defaultType(defaultName: String) =
+      col.xsdType map { x =>
+        if (x.name == null) x.copy(name = defaultName)
+        else x
+      } getOrElse new XsdType(defaultName)
     col match {
       case ExFieldDef("id", xsdType, nullable, dbDefault, comment) =>
-        ColumnDef("id", xsdType getOrElse new XsdType("long"),
+        ColumnDef("id", defaultType("long"),
           nullable getOrElse false, dbDefault, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isBooleanName(name) =>
-        ColumnDef(name, xsdType getOrElse new XsdType("boolean"),
+        ColumnDef(name, defaultType("boolean"),
           nullable getOrElse true, dbDefault, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isDateName(name) =>
-        ColumnDef(name, xsdType getOrElse new XsdType("date"),
+        ColumnDef(name, defaultType("date"),
           nullable getOrElse true, dbDefault, comment)
-      // FIXME typename not defined, len defined
       case x =>
-        ColumnDef(x.name, x.xsdType getOrElse new XsdType("string", 256),
+        ColumnDef(x.name, defaultType("string"),
           x.nullable getOrElse true, x.dbDefault, x.comment)
     }
   }

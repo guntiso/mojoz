@@ -119,23 +119,29 @@ object YamlMdLoader {
         + "\nentry: " + x.toString)
     }
   }
-  def xsdType(col: YamlFieldDef) = (col.name, col.typeName) match {
-    // FIXME do properly (support lengths, check unsupported patterns, ...)
+
+  def xsdType(f: YamlFieldDef) = (f.typeName, f.length, f.fraction) match {
+    // FIXME do properly (check unsupported patterns, ...)
     // FIXME TODO complex types
-    case (_, null) => null
-    case (_, "anySimpleType") => new XsdType("anySimpleType")
-    case (_, "date") => new XsdType("date")
-    case (_, "dateTime") => new XsdType("dateTime")
-    case (_, "string") =>
-      if (col.length.isDefined) new XsdType("string", col.length.get)
-      else new XsdType("string")
-    case (_, "boolean") => new XsdType("boolean")
-    case (_, "int") => new XsdType("int")
-    case (_, "long") => new XsdType("long")
-    case (_, "decimal") =>
-      new XsdType("decimal", col.length.get, col.fraction.get)
-    case (_, "base64binary") => new XsdType("base64binary")
+    case (null, None, None) => null
+    case (null, Some(len), None) => new XsdType(null, len)
+    case (null, Some(len), Some(frac)) => new XsdType("decimal", len, frac)
+    case ("anySimpleType", _, _) => new XsdType("anySimpleType")
+    case ("date", _, _) => new XsdType("date")
+    case ("dateTime", _, _) => new XsdType("dateTime")
+    case ("string", None, _) => new XsdType("string")
+    case ("string", Some(len), _) => new XsdType("string", len)
+    case ("boolean", _, _) => new XsdType("boolean")
+    case ("int", None, _) => new XsdType("int")
+    case ("int", Some(len), _) => new XsdType("int", len)
+    case ("long", None, _) => new XsdType("long")
+    case ("long", Some(len), _) => new XsdType("long", len)
+    case ("decimal", None, None) => new XsdType("decimal")
+    case ("decimal", Some(len), None) => new XsdType("decimal", len, 0)
+    case ("decimal", Some(len), Some(frac)) => new XsdType("decimal", len, frac)
+    case ("base64binary", None, _) => new XsdType("base64binary")
+    case ("base64binary", Some(len), _) => new XsdType("base64binary", len)
     // if no known xsd type name found - let it be complex type!
-    case (_, x) => new XsdType(x, true)
+    case (x, _, _) => new XsdType(x, true)
   }
 }
