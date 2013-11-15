@@ -23,6 +23,7 @@ case class YamlFieldDef(
   fraction: Option[Int],
   isExpression: Boolean,
   expression: String,
+  joinToParent: String,
   comment: String)
 
 object YamlMdLoader {
@@ -67,11 +68,17 @@ object YamlMdLoader {
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
     def colDef(nameAndType: String, comment: String) = {
-      val defAndValue = nameAndType.split("=", 2).toList
-      val isExpression = defAndValue.length > 1
-      val value = Option(if (isExpression) defAndValue(1) else null)
-        .map(_.trim).filter(_ != "") getOrElse null
-      val parts = defAndValue(0).split("[\\s]+").toList
+      val (t, v) = {
+        (nameAndType.lastIndexOf("]"), nameAndType.lastIndexOf("=")) match {
+          case (_, -1) => (nameAndType, null)
+          case (a, i) if a < i =>
+            (nameAndType.substring(0, i).trim, nameAndType.substring(i + 1).trim)
+          case _ => (nameAndType, null)
+        }
+      }
+      val isExpression = v != null
+      val value = Option(v).map(_.trim).filter(_ != "") getOrElse null
+      val parts = t.split("[\\s]+").toList
       val name = parts(0)
       val cardinalities = parts.tail.filter(Set("?", "!", "*", "+").contains(_))
       val cardinality = cardinalities match {
@@ -93,14 +100,23 @@ object YamlMdLoader {
       val types = parts.tail
         .filterNot(cardinalities.contains)
         .filterNot(sizes.map(_.toString).contains)
-      val typeName = types match {
-        case Nil => null
+      val (joinToParent, typeName) = types match {
+        case Nil => (null, null)
+        case t :: Nil => (null, t)
+        case t =>
+          val xt = t.mkString(" ")
+          Option(xt).map(_.lastIndexOf("]")).getOrElse(-1) match {
+            case -1 => (null, xt)
+            case i => (xt.substring(0, i + 1), xt.substring(i + 1))
+          }
+        /*
         case t :: Nil => t
         case _ => throw new RuntimeException(ThisFail +
           " - unexpected format: " + nameAndType.trim)
+        */
       }
       YamlFieldDef(name, cardinality, typeName, length, fraction,
-        isExpression, value, comment)
+        isExpression, value, joinToParent, comment)
     }
     src match {
       case nameAndType: java.lang.String =>
