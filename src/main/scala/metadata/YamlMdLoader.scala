@@ -65,69 +65,50 @@ object YamlMdLoader {
     val colDefs = colSrc map loadYamlFieldDef
     YamlTypeDef(table, comment, colDefs)
   }
+
+  val FieldDef = {
+    val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+    val qualifiedIdent = <a>{ident}(\.{ident})?</a>.text
+    val int = "[0-9]+"
+    val s = "\\s*"
+
+    val name = qualifiedIdent
+    val quant = "[\\?\\!\\*\\+]"
+    val join = "\\[.*?\\]"
+    val typ = qualifiedIdent
+    val len = int
+    val frac = int
+    val expr = ".*"
+    val pattern =
+      <a>
+        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}=({expr})?)?
+      </a>.text.trim
+
+    ("^" + pattern + "$").r
+  }
+
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
-    def colDef(nameAndType: String, comment: String) = {
-      val (t, v) = {
-        (nameAndType.lastIndexOf("]"), nameAndType.lastIndexOf("=")) match {
-          case (_, -1) => (nameAndType, null)
-          case (a, i) if a < i =>
-            (nameAndType.substring(0, i).trim, nameAndType.substring(i + 1).trim)
-          case _ => (nameAndType, null)
-        }
-      }
-      val isExpression = v != null
-      val value = Option(v).map(_.trim).filter(_ != "") getOrElse null
-      val parts = t.split("[\\s]+").toList
-      val name = parts(0)
-      val cardinalities = parts.tail.filter(Set("?", "!", "*", "+").contains(_))
-      val cardinality = cardinalities match {
-        case Nil => null
-        case c :: Nil => c
-        case _ => throw new RuntimeException(ThisFail +
-          " - unexpected format: " + nameAndType.trim)
-      }
-      val sizes = parts.tail
-        .map(s => try Some(s.toInt) catch { case x: Exception => None })
-        .flatMap(x => x)
-      val (length, fraction) = sizes match {
-        case Nil => (None, None)
-        case length :: Nil => (Some(length), None)
-        case total :: fraction :: Nil => (Some(total), Some(fraction))
-        case x => throw new RuntimeException(ThisFail +
-          " - unexpected format: " + nameAndType.trim)
-      }
-      val types = parts.tail
-        .filterNot(cardinalities.contains)
-        .filterNot(sizes.map(_.toString).contains)
-      val (joinToParent, typeName) = types match {
-        case Nil => (null, null)
-        case t :: Nil => (null, t)
-        case t =>
-          val xt = t.mkString(" ")
-          Option(xt).map(_.lastIndexOf("]")).getOrElse(-1) match {
-            case -1 => (null, xt)
-            case i => (xt.substring(0, i + 1), xt.substring(i + 1))
-          }
-        /*
-        case t :: Nil => t
-        case _ => throw new RuntimeException(ThisFail +
-          " - unexpected format: " + nameAndType.trim)
-        */
-      }
-      YamlFieldDef(name, cardinality, typeName, length, fraction,
-        isExpression, value, joinToParent, comment)
+    def colDef(nameEtc: String, comment: String) = nameEtc match {
+      case FieldDef(name, _, cardinality, joinToParent, typ, _,
+        len, frac, isExpr, expr) =>
+        def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
+        def i(s: String) = Option(s).map(_.trim.toInt)
+        YamlFieldDef(name, t(cardinality), t(typ), i(len), i(frac),
+          isExpr != null, t(expr), t(joinToParent), comment)
+      case _ => throw new RuntimeException(ThisFail +
+        " - unexpected format: " + nameEtc.trim)
     }
     src match {
-      case nameAndType: java.lang.String =>
-        colDef(nameAndType.toString, null)
+      case nameEtc: java.lang.String =>
+        colDef(nameEtc.toString, null)
       case x: java.util.Map[_, _] =>
         val m = x.asInstanceOf[java.util.Map[_, _]]
         if (m.size == 1) {
           val entry = m.entrySet.toList(0)
-          val nameAndType = entry.getKey
+          val nameEtc = entry.getKey
           val comment = entry.getValue
-          colDef(nameAndType.toString, comment.toString)
+          colDef(nameEtc.toString, comment.toString)
         } else throw new RuntimeException(ThisFail +
           " - more than one entry for column: " + m.toMap.toString())
       case x => throw new RuntimeException(ThisFail +
