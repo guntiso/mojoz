@@ -48,7 +48,7 @@ object XsdWriter {
     }
   }
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableMd = Metadata.tableDef(typeDef)
+    val tableComment = Metadata.tableDefOption(typeDef).map(_.comment)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
@@ -58,7 +58,7 @@ object XsdWriter {
       }</xs:sequence>
     }
     <xs:complexType name={ xsdName(typeDef.name) }>{
-      annotation(Option(typeDef.comment) getOrElse tableMd.comment)
+      annotation(Option(typeDef.comment).orElse(tableComment).orNull)
     }{
       if (typeDef.xtnds == null) createFields
       else <xs:complexContent>

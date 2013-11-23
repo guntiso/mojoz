@@ -36,6 +36,9 @@ object Metadata {
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
+  def tableDefOption(typeDef: XsdTypeDef): Option[TableDef] =
+    md.get(typeDef.table)
+
   def tableDef(typeDef: XsdTypeDef): TableDef =
     // TODO get line, file info from xsd type def
     md.get(typeDef.table) getOrElse
