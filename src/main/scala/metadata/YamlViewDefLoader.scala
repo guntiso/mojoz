@@ -38,6 +38,7 @@ case class XsdFieldDef(
   isForcedCardinality: Boolean,
   xsdType: XsdType,
   joinToParent: String,
+  orderBy: String,
   isI18n: Boolean,
   comment: String) {
   val isSimpleType = xsdType == null || !xsdType.isComplexType
@@ -116,6 +117,7 @@ object YamlViewDefLoader {
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = yfd.cardinality != null
       val joinToParent = yfd.joinToParent
+      val orderBy = yfd.orderBy
       val comment = yfd.comment
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
       val xsdTypeFe =
@@ -129,7 +131,7 @@ object YamlViewDefLoader {
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection,
         isExpression, expression, nullable, isForcedCardinality,
-        xsdType, joinToParent, false, comment)
+        xsdType, joinToParent, orderBy, false, comment)
     }
     XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)

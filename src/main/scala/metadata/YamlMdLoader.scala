@@ -24,6 +24,7 @@ case class YamlFieldDef(
   isExpression: Boolean,
   expression: String,
   joinToParent: String,
+  orderBy: String,
   comment: String)
 
 object YamlMdLoader {
@@ -75,13 +76,14 @@ object YamlMdLoader {
     val name = qualifiedIdent
     val quant = "[\\?\\!\\*\\+]"
     val join = "\\[.*?\\]"
+    val order = "\\~?#(\\s*\\(.*?\\))?"
     val typ = qualifiedIdent
     val len = int
     val frac = int
     val expr = ".*"
     val pattern =
       <a>
-        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}=({expr})?)?
+        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}{order})?({s}=({expr})?)?
       </a>.text.trim
 
     ("^" + pattern + "$").r
@@ -91,11 +93,11 @@ object YamlMdLoader {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String) = nameEtc match {
       case FieldDef(name, _, cardinality, joinToParent, typ, _,
-        len, frac, isExpr, expr) =>
+        len, frac, order, _, isExpr, expr) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
         YamlFieldDef(name, t(cardinality), t(typ), i(len), i(frac),
-          isExpr != null, t(expr), t(joinToParent), comment)
+          isExpr != null, t(expr), t(joinToParent), t(order), comment)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
     }
