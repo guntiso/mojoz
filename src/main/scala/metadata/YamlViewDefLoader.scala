@@ -32,6 +32,7 @@ case class XsdFieldDef(
   name: String,
   alias: String,
   isCollection: Boolean,
+  maxOccurs: String,
   isExpression: Boolean,
   expression: String,
   nullable: Boolean,
@@ -111,6 +112,7 @@ object YamlViewDefLoader {
       val name = yfd.name
       val alias = null
       val isCollection = Set("*", "+").contains(yfd.cardinality)
+      val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
       val isExpression = yfd.isExpression
       val expression = yfd.expression
       val nullable = Option(yfd.cardinality)
@@ -129,7 +131,7 @@ object YamlViewDefLoader {
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
-      XsdFieldDef(table, tableAlias, name, alias, isCollection,
+      XsdFieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
         isExpression, expression, nullable, isForcedCardinality,
         xsdType, joinToParent, orderBy, false, comment)
     }

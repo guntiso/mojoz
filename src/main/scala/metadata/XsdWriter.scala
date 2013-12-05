@@ -14,7 +14,9 @@ object XsdWriter {
   private def createElement(elName: String, col: XsdFieldDef) = {
     val colcomment = annotation(col.comment)
     val required = !col.nullable
-    val maxOccurs = if (col.isCollection) "unbounded" else null
+    val maxOccurs = Option(col.maxOccurs) getOrElse {
+      if (col.isCollection) "unbounded" else null
+    }
     // FIXME for refed values, depends on ref-chain nullable!
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"

@@ -18,6 +18,7 @@ case class YamlTypeDef(
 case class YamlFieldDef(
   name: String,
   cardinality: String,
+  maxOccurs: Option[Int],
   typeName: String,
   length: Option[Int],
   fraction: Option[Int],
@@ -74,7 +75,7 @@ object YamlMdLoader {
     val s = "\\s*"
 
     val name = qualifiedIdent
-    val quant = "[\\?\\!\\*\\+]"
+    val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
     val typ = qualifiedIdent
@@ -92,11 +93,12 @@ object YamlMdLoader {
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String) = nameEtc match {
-      case FieldDef(name, _, cardinality, joinToParent, typ, _,
+      case FieldDef(name, _, quant, _, _, _, maxOcc, joinToParent, typ, _,
         len, frac, order, _, isExpr, expr) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
-        YamlFieldDef(name, t(cardinality), t(typ), i(len), i(frac),
+        def cardinality = Option(t(quant)).map(_.take(1)).orNull
+        YamlFieldDef(name, cardinality, i(maxOcc), t(typ), i(len), i(frac),
           isExpr != null, t(expr), t(joinToParent), t(order), comment)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
