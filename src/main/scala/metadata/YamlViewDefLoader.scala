@@ -383,6 +383,7 @@ object YamlViewDefLoader {
   }
 
   private val noI18n = Set("company.name", "customer.name")
+  private val iI8nForcedView = "customer_context_list_row"
   private def setI18n(t: XsdTypeDef) = {
     val fMap = t.fields.filter(!_.isExpression).filter(!_.isCollection)
       .map(f => (f.table + "." + f.name, f)).toMap // todo or use table alias?
@@ -396,7 +397,7 @@ object YamlViewDefLoader {
           Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
       .toSet
       // XXX do not translate company name :( TODO plugin rules
-      .filter(f => !noI18n(f.table + "." + f.name))
+      .filter(f => !noI18n(f.table + "." + f.name) || t.name == iI8nForcedView)
     if (i18n.size == 0) t
     else t.copy(fields = t.fields.map(f =>
       if (i18n contains f) f.copy(isI18n = true) else f))
