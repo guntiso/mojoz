@@ -142,6 +142,7 @@ object YamlMdLoader {
     case ("decimal", Some(len), Some(frac)) => new XsdType("decimal", len, frac)
     case ("base64binary", None, _) => new XsdType("base64binary")
     case ("base64binary", Some(len), _) => new XsdType("base64binary", len)
+    case ("anyType",_,_) => new XsdType("anyType")
     // if no known xsd type name found - let it be complex type!
     case (x, _, _) => new XsdType(x, true)
   }
