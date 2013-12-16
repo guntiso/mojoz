@@ -14,6 +14,7 @@ import scala.reflect.BeanProperty
 import org.yaml.snakeyaml.Yaml
 
 import metadata.DbConventions.{ xsdNameToDbName => dbName }
+import org.tresql.{ Env, QueryParser }
 
 case class XsdTypeDef(
   name: String,
@@ -34,6 +35,7 @@ case class XsdFieldDef(
   isCollection: Boolean,
   maxOccurs: String,
   isExpression: Boolean,
+  isFilterable: Boolean,
   expression: String,
   nullable: Boolean,
   isForcedCardinality: Boolean,
@@ -115,6 +117,18 @@ object YamlViewDefLoader {
       val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
       val isExpression = yfd.isExpression
       val expression = yfd.expression
+      // if expression consists of a call to function attached to Env, 
+      // then we consider is not filterable, otherwise consider it db function and filterable
+      val isFilterable = if (!isExpression) true
+      else if (expression == null) false
+      else QueryParser.parseExp(expression) match {
+	    case QueryParser.Fun(f, p, _) 
+	    if Env.isDefined(f) && Env.functions.flatMap(_.getClass.getMethods.filter(
+	      m => m.getName == f && m.getParameterTypes.length == p.size
+	    ).headOption) != None 
+	      => false
+	    case _ => true
+	  }
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = yfd.cardinality != null
@@ -132,7 +146,7 @@ object YamlViewDefLoader {
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
-        isExpression, expression, nullable, isForcedCardinality,
+        isExpression, isFilterable, expression, nullable, isForcedCardinality,
         xsdType, joinToParent, orderBy, false, comment)
     }
     XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
