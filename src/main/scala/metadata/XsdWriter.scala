@@ -27,13 +27,13 @@ object XsdWriter {
       (col.xsdType.length getOrElse 1) > 0
     val minLength = if (noBlankStr) Some(1) else None
     val t = col.xsdType
-    (minLength, t.length, t.totalDigits, t.fractionDigits) match {
-      case (None, None, None, None) =>
+    (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits) match {
+      case (None, None, None, None, None) =>
         <xs:element name={ elName } nillable={ nillable }
             minOccurs={ minOccurs } maxOccurs={ maxOccurs } type={ typeName }>{
           colcomment
         }</xs:element>
-      case (minL, maxL, totD, frcD) =>
+      case (minL, maxL, totD, frcD, intD) =>
         <xs:element name={ elName } nillable={ nillable }
             minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
@@ -43,6 +43,7 @@ object XsdWriter {
               { if (noBlankStr) <xs:pattern value="[\s\S]*[\S][\s\S]*"/> }
               { maxL.map(n => <xs:maxLength value={ n.toString }/>).orNull }
               { totD.map(n => <xs:totalDigits value={ n.toString }/>).orNull }
+              { intD.map(n => <xs:maxExclusive value={("1" :: List.fill(n)("0")).mkString} />).orNull }
               { frcD.map(n => <xs:fractionDigits value={ n.toString }/>).orNull }
             </xs:restriction>
           </xs:simpleType>

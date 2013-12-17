@@ -11,6 +11,8 @@ case class XsdType(name: String, length: Option[Int],
     this(name, Some(length), None, None, false)
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
     this(name, None, Some(totalDigits), Some(fractionDigits), false)
+
+  def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
 }
 case class DbIndex(
   name: String,
