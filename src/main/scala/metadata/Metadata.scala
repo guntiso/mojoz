@@ -32,7 +32,7 @@ case class ColumnDef(
 object Metadata {
   val entities = SqlMdLoader.entities
   private lazy val md = entities.map(e => (e.name, e)).toMap
-  lazy val nameToViewDef = YamlViewDefLoader.nameToViewDef
+  def nameToViewDef = YamlViewDefLoader.nameToViewDef
 
   def tableDef(tableName: String): TableDef =
     md.get(tableName) getOrElse
@@ -66,7 +66,7 @@ object Metadata {
     }
   }
 
-  private lazy val xtd = YamlViewDefLoader.nameToExtendedViewDef
+  private def xtd = YamlViewDefLoader.nameToExtendedViewDef
   def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
     xtd.get(ElementName.get(viewClass)) getOrElse
       (xtd.get(ElementName.get(viewClass)

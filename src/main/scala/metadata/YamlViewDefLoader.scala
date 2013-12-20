@@ -82,7 +82,7 @@ object YamlViewDefLoader {
     else baseTable(nameToTypeDef.get(t.xtnds)
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
-  lazy val typedefs = buildTypeDefs(rawTypeDefs)
+  val typedefs = buildTypeDefs(rawTypeDefs)
   def loadRawTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
@@ -417,9 +417,9 @@ object YamlViewDefLoader {
       if (i18n contains f) f.copy(isI18n = true) else f))
   }
   // typedef name to typedef
-  lazy val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
+  val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
-  lazy val nameToExtendedViewDef = typedefs.map(t =>
+  val nameToExtendedViewDef = typedefs.map(t =>
     if (t.xtnds == null) t else {
       @tailrec
       def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
