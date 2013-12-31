@@ -45,7 +45,7 @@ object XsdWriter {
               { totD.map(n => <xs:totalDigits value={ n.toString }/>).orNull }
               { intD.map(n => <xs:maxExclusive value={("1" :: List.fill(n)("0")).mkString} />).orNull }
               { frcD.map(n => <xs:fractionDigits value={ n.toString }/>).orNull }
-              { enum.getOrElse(Nil).map(op => <xsd:enumeration value={ op }/>) }
+              { enum.getOrElse(Nil).map(op => <xs:enumeration value={ op }/>) }
             </xs:restriction>
           </xs:simpleType>
         </xs:element>
