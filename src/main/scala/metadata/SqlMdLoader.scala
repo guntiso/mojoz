@@ -117,9 +117,22 @@ object SqlMdLoader {
     flush()
     tables.reverse
   }
+  def checkToEnum(check: String) =
+    // TODO properly, regexp at least
+    Option(check).map(_ split "[\\s'\\(\\),]+")
+      .map(_.toList.filter(_ != ""))
+      .map {
+        case "check" :: _ :: "in" :: tail => tail
+        case x => Nil
+      }.filter(_.size > 0).orNull
   def toEntity(table: DbTableDef) = {
     val xsdCols = table.cols.map(col => ExFieldDef(col.name,
-      Option(xsdType(col)), Option(col.nullable), col.dbDefault, col.comment))
+      Option(xsdType(col)), Option(col.nullable), col.dbDefault,
+      checkToEnum(col.check), col.comment))
+      .map(col =>
+        if (col.xsdType.get.name != "string" && col.enum != null)
+          col.copy(enum = null)
+        else col)
     MdConventions.fromExternal(
       ExTypeDef(table.name, table.comment, xsdCols, table.pk))
   }

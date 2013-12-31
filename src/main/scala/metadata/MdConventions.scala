@@ -10,6 +10,7 @@ case class ExFieldDef(
   xsdType: Option[XsdType],
   nullable: Option[Boolean],
   dbDefault: String,
+  enum: Seq[String],
   comment: String)
 
 object MdConventions {
@@ -41,18 +42,18 @@ object MdConventions {
         else x
       } getOrElse new XsdType(defaultName)
     col match {
-      case ExFieldDef("id", xsdType, nullable, dbDefault, comment) =>
+      case ExFieldDef("id", xsdType, nullable, dbDefault, enum, comment) =>
         ColumnDef("id", defaultType("long"),
-          nullable getOrElse false, dbDefault, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isBooleanName(name) =>
+          nullable getOrElse false, dbDefault, enum, comment)
+      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
         ColumnDef(name, defaultType("boolean"),
-          nullable getOrElse true, dbDefault, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, comment) if isDateName(name) =>
+          nullable getOrElse true, dbDefault, enum, comment)
+      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isDateName(name) =>
         ColumnDef(name, defaultType("date"),
-          nullable getOrElse true, dbDefault, comment)
+          nullable getOrElse true, dbDefault, enum, comment)
       case x =>
         ColumnDef(x.name, defaultType("string"),
-          x.nullable getOrElse true, x.dbDefault, x.comment)
+          x.nullable getOrElse true, x.dbDefault, x.enum, x.comment)
     }
   }
   def toExternal(typeDef: TableDef): ExTypeDef =
@@ -93,6 +94,6 @@ object MdConventions {
         Some(new XsdType(null.asInstanceOf[String], len))
       case _ => Option(col.xsdType)
     }
-    ExFieldDef(col.name, typeOpt, nullOpt, col.dbDefault, col.comment)
+    ExFieldDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comment)
   }
 }

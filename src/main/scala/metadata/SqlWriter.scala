@@ -34,7 +34,7 @@ object OracleSqlWriter {
       DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk)
   }
   def dbColumnDef(c: ColumnDef) = c match {
-    case ColumnDef(name, xsdType, nullable, dbDefault, comment) => DbColumnDef(
+    case ColumnDef(name, xsdType, nullable, dbDefault, enum, comment) => DbColumnDef(
       DbConventions.xsdNameToDbName(name),
       dbType(c), nullable, dbDefault, check(c), comment)
   }
@@ -63,9 +63,11 @@ object OracleSqlWriter {
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
-      // TODO check constraint for enums.
-      // TODO but do not add to col, or you will get uninformative msg from ora,
+      // TODO do not add enum to col, or you will get uninformative msg from ora,
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
+      case "string" if c.enum != null =>
+        c.enum.map("'" + _ + "'")
+        .mkString(" check (" + dbColumnName + " in (", ", ", "))")
       case _ => ""
     }
   }

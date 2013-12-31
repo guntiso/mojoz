@@ -27,13 +27,13 @@ object XsdWriter {
       (col.xsdType.length getOrElse 1) > 0
     val minLength = if (noBlankStr) Some(1) else None
     val t = col.xsdType
-    (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits) match {
-      case (None, None, None, None, None) =>
+    (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits, Option(col.enum)) match {
+      case (None, None, None, None, None, None) =>
         <xs:element name={ elName } nillable={ nillable }
             minOccurs={ minOccurs } maxOccurs={ maxOccurs } type={ typeName }>{
           colcomment
         }</xs:element>
-      case (minL, maxL, totD, frcD, intD) =>
+      case (minL, maxL, totD, frcD, intD, enum) =>
         <xs:element name={ elName } nillable={ nillable }
             minOccurs={ minOccurs } maxOccurs={ maxOccurs }>
           { colcomment }
@@ -45,6 +45,7 @@ object XsdWriter {
               { totD.map(n => <xs:totalDigits value={ n.toString }/>).orNull }
               { intD.map(n => <xs:maxExclusive value={("1" :: List.fill(n)("0")).mkString} />).orNull }
               { frcD.map(n => <xs:fractionDigits value={ n.toString }/>).orNull }
+              { enum.getOrElse(Nil).map(op => <xsd:enumeration value={ op }/>) }
             </xs:restriction>
           </xs:simpleType>
         </xs:element>

@@ -27,6 +27,7 @@ case class ColumnDef(
   xsdType: XsdType,
   nullable: Boolean,
   dbDefault: String,
+  enum: Seq[String],
   comment: String)
 
 object Metadata {

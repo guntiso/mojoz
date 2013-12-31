@@ -40,6 +40,7 @@ case class XsdFieldDef(
   nullable: Boolean,
   isForcedCardinality: Boolean,
   xsdType: XsdType,
+  enum: Seq[String],
   joinToParent: String,
   orderBy: String,
   isI18n: Boolean,
@@ -140,14 +141,14 @@ object YamlViewDefLoader {
         if (isExpression)
           MdConventions.fromExternal(
             // XXX unnecessary complex structure used
-            ExFieldDef(name, rawXsdType, None, null, comment)).xsdType
+            ExFieldDef(name, rawXsdType, None, null, null, comment)).xsdType
         else null
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
-        xsdType, joinToParent, orderBy, false, comment)
+        xsdType, null, joinToParent, orderBy, false, comment)
     }
     XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
@@ -255,7 +256,7 @@ object YamlViewDefLoader {
                 case Right(b) => b || col.nullable
                 case Left(s) => true // FIXME Left(nullableTableDependency)!
               }
-          f.copy(nullable = nullable, xsdType = col.xsdType,
+          f.copy(nullable = nullable, xsdType = col.xsdType, enum = col.enum,
             comment = Option(f.comment) getOrElse col.comment)
         }
       }
