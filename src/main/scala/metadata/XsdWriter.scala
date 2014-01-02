@@ -11,6 +11,7 @@ object XsdWriter {
       <xs:annotation>
         <xs:documentation>{ comment }</xs:documentation>
       </xs:annotation>
+  private def xsdTypeName(name: String) = xsdName(name) + "Type"
   private def createElement(elName: String, col: XsdFieldDef) = {
     val colcomment = annotation(col.comment)
     val required = !col.nullable
@@ -21,7 +22,7 @@ object XsdWriter {
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"
     val typeName =
-      if (col.xsdType.isComplexType) "tns:" + xsdName(col.xsdType.name)
+      if (col.xsdType.isComplexType) "tns:" + xsdTypeName(col.xsdType.name)
       else "xs:" + col.xsdType.name
     val noBlankStr = required && typeName == "xs:string" &&
       (col.xsdType.length getOrElse 1) > 0
@@ -61,32 +62,35 @@ object XsdWriter {
           createElement(xsdName(Option(f.alias) getOrElse f.name), f))
       }</xs:sequence>
     }
-    <xs:complexType name={ xsdName(typeDef.name) }>{
+    <xs:complexType name={ xsdTypeName(typeDef.name) }>{
       annotation(Option(typeDef.comment).orElse(tableComment).orNull)
     }{
       if (typeDef.xtnds == null) createFields
       else <xs:complexContent>
-             <xs:extension base={ "tns:" + xsdName(typeDef.xtnds) }>
+             <xs:extension base={ "tns:" + xsdTypeName(typeDef.xtnds) }>
                { createFields }
              </xs:extension>
            </xs:complexContent>
     }</xs:complexType>
   }
+  val listWrapperXsdTypeName = xsdTypeName("list_wrapper")
   val listWrapper = // XXX
-    <xs:complexType name="ListWrapper">
+    <xs:complexType name={ listWrapperXsdTypeName }>
       <xs:sequence>
         <xs:element type="xs:int" name="Count"/>
         <xs:element type="xs:int" minOccurs="0" name="Limit"/>
         <xs:element type="xs:int" minOccurs="0" name="Offset"/>
       </xs:sequence>
     </xs:complexType>
+  def listWrapperName(typeDef: XsdTypeDef) =
+    typeDef.name.replace("_list_row", "_list_wrapper")
   def createListWrapper(typeDef: XsdTypeDef) = // XXX
-    <xs:complexType name={ xsdName(typeDef.name.replace("_list_row", "_list_wrapper")) }>
+    <xs:complexType name={ xsdTypeName(listWrapperName(typeDef)) }>
       <xs:complexContent>
-        <xs:extension base="tns:ListWrapper">
+        <xs:extension base={ "tns:" + listWrapperXsdTypeName }>
           <xs:sequence>
             <xs:element maxOccurs="unbounded" minOccurs="0" nillable="true"
-                type={ "tns:" + xsdName(typeDef.name) }
+                type={ "tns:" + xsdTypeName(typeDef.name) }
                 name={ xsdName(typeDef.table) }/>
           </xs:sequence>
         </xs:extension>
@@ -111,6 +115,21 @@ object XsdWriter {
       <jaxb:globalBindings generateElementProperty="false">
         <xjc:simple/>
       </jaxb:globalBindings>
+      <jaxb:bindings schemaLocation="kpsws.xsd" node="/xs:schema">
+        {
+          val names = typedefs.map(_.name) ++ List("list_wrapper") ++
+            typedefs.filter(_.name.endsWith("_list_row")).map(listWrapperName)
+          names
+            .filter(name => xsdName(name) != xsdTypeName(name))
+            .map { name =>
+              val path = "//xs:complexType[@name='" + xsdTypeName(name) + "']"
+              val className = xsdName(name)
+              <jaxb:bindings node={ path }>
+                <jaxb:class name={ className }/>
+              </jaxb:bindings>
+            }
+        }
+      </jaxb:bindings>
     </jaxb:bindings>
   def createBindingsString = new PrettyPrinter(200, 2).format(createBindings)
 }
