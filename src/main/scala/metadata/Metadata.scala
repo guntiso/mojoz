@@ -30,8 +30,7 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-trait Metadata { this: ViewDefSource =>
-  def entities = SqlMdLoader.entities
+trait Metadata { this: TableDefSource with ViewDefSource =>
   private lazy val md = entities.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String): TableDef =

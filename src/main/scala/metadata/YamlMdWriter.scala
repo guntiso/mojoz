@@ -3,7 +3,7 @@ package metadata
 import scala.Option.option2Iterable
 import scala.annotation.tailrec
 
-trait YamlMdWriter { this: Metadata =>
+trait YamlMdWriter { this: TableDefSource =>
   val MaxLineLength = 100
   def escapeYamlValue(value: String) = { // TODO escapeYamlValue properly
     if (value contains ":") "\"" + value + "\"" else value
