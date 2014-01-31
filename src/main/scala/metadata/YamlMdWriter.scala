@@ -3,7 +3,7 @@ package metadata
 import scala.Option.option2Iterable
 import scala.annotation.tailrec
 
-object YamlMdWriter {
+trait YamlMdWriter { this: Metadata =>
   val MaxLineLength = 100
   def escapeYamlValue(value: String) = { // TODO escapeYamlValue properly
     if (value contains ":") "\"" + value + "\"" else value
@@ -44,7 +44,7 @@ object YamlMdWriter {
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYaml: String = (Metadata.entities map toYaml).mkString("\n---\n\n")
+  def toYaml: String = (entities map toYaml).mkString("\n---\n\n")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec
     def _wrapped(

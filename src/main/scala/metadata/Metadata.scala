@@ -30,10 +30,9 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-object Metadata {
-  val entities = SqlMdLoader.entities
+trait Metadata { this: ViewDefSource =>
+  def entities = SqlMdLoader.entities
   private lazy val md = entities.map(e => (e.name, e)).toMap
-  def nameToViewDef = YamlViewDefLoader.nameToViewDef
 
   def tableDef(tableName: String): TableDef =
     md.get(tableName) getOrElse
@@ -67,10 +66,9 @@ object Metadata {
     }
   }
 
-  private def xtd = YamlViewDefLoader.nameToExtendedViewDef
   def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
-    xtd.get(ElementName.get(viewClass)) getOrElse
-      (xtd.get(ElementName.get(viewClass)
+    nameToExtendedViewDef.get(ElementName.get(viewClass)) getOrElse
+      (nameToExtendedViewDef.get(ElementName.get(viewClass)
         .replace("ku-29", "ku29") // XXX
         .replace("-", "_")) getOrElse
         (viewClass.getSuperclass match {

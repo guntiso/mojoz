@@ -4,8 +4,8 @@ import scala.xml.PrettyPrinter
 
 import metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
-object ViewDefVisualizer {
-  def getType(s: String) = YamlViewDefLoader.nameToExtendedViewDef(s)
+trait ViewDefVisualizer { this: ViewDefSource =>
+  def getType(s: String) = nameToExtendedViewDef(s)
   def printComplexType(indent: String, typeDef: XsdTypeDef) {
     val nextIndent = indent + "  "
     typeDef.fields.foreach(f => {

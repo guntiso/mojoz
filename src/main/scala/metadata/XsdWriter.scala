@@ -2,10 +2,9 @@ package metadata
 
 import scala.xml.PrettyPrinter
 
-import YamlViewDefLoader.typedefs
 import metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
-object XsdWriter {
+trait XsdWriter { this: Metadata with ViewDefSource =>
   private def annotation(comment: String) =
     if (comment != null && comment.trim.length > 0)
       <xs:annotation>
@@ -53,7 +52,7 @@ object XsdWriter {
     }
   }
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableComment = Metadata.tableDefOption(typeDef).map(_.comment)
+    val tableComment = tableDefOption(typeDef).map(_.comment)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"

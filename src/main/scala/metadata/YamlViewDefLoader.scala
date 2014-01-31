@@ -49,27 +49,16 @@ case class XsdFieldDef(
   val isComplexType = xsdType != null && xsdType.isComplexType
 }
 
-object YamlViewDefLoader {
-  def recursiveListFiles(f: File): Array[File] = {
-    val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
-  }
-  def typedefFiles = recursiveListFiles(new File("../views")).toSeq
-  // getClass.getClassLoader.getResources("") does not work from jar :(
-  val typedefResources = ((getClass.getClassLoader.getResources("")
-    .asScala.toSeq.flatMap(u =>
-      Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))) ++
-    Option(getClass.getResourceAsStream("/-view-files.txt"))
-    .map(Source.fromInputStream(_)(io.Codec("UTF-8"))
-      .getLines.toList).getOrElse(Nil))
-    .filter(_.endsWith(".yaml")).map("/" + _).toSet.toSeq
-  def filesToStrings =
-    typedefFiles.map(f => Source.fromFile(f).mkString)
-  def resourcesToStrings = typedefResources.map(r =>
-    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString)
-  val typedefStrings = resourcesToStrings.map(s =>
-    s.split("\\-\\-\\-").toSeq).flatMap(x =>
-    x).map(_.trim).filter(_.length > 0).toSeq
+trait ViewDefSource {
+  val typedefs: List[XsdTypeDef]
+  // typedef name to typedef
+  val nameToViewDef: Map[String, XsdTypeDef]
+  // typedef name to typedef with extended field list
+  val nameToExtendedViewDef: Map[String, XsdTypeDef]
+}
+
+trait YamlViewDefLoader extends ViewDefSource { this: MdSource with Metadata =>
+  val typedefStrings = getMdDefs.map(_.body) // FIXME preserve filename, line
   private val rawTypeDefs = typedefStrings map loadRawTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   @tailrec
@@ -186,7 +175,7 @@ object YamlViewDefLoader {
         if (f.xsdType.isComplexType)
           m.get(f.xsdType.name) getOrElse sys.error("Type " + f.xsdType.name +
             " referenced from " + t.name + " is not found")
-        else if (!f.isExpression) Metadata.getCol(t, f)
+        else if (!f.isExpression) getCol(t, f)
       }
     }
   }
@@ -246,7 +235,7 @@ object YamlViewDefLoader {
       def resolveTypeFromDbMetadata(f: XsdFieldDef) = {
         if (f.isExpression || f.isCollection) f
         else {
-          val col = Metadata.getCol(t, f)
+          val col = getCol(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
           // FIXME autojoins nullable?
           val nullable =
@@ -408,8 +397,8 @@ object YamlViewDefLoader {
         !fMap.containsKey(f.table + "." + f.name + "_eng") &&
           !fMap.containsKey(f.table + "." + f.name + "_rus"))
       .filter(f =>
-        Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_eng") &&
-          Metadata.tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
+        tableDef(f.table).cols.exists(_.name == f.name + "_eng") &&
+          tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
       .toSet
       // XXX do not translate company name :( TODO plugin rules
       .filter(f => !noI18n(f.table + "." + f.name) || t.name == iI8nForcedView)
