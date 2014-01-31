@@ -72,7 +72,7 @@ trait YamlViewDefLoader extends ViewDefSource { this: MdSource with Metadata =>
     else baseTable(nameToTypeDef.get(t.xtnds)
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
-  val typedefs = buildTypeDefs(rawTypeDefs)
+  val typedefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
   def loadRawTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
