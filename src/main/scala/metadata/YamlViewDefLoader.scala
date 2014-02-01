@@ -60,8 +60,13 @@ trait ViewDefSource {
 trait YamlViewDefLoader extends ViewDefSource {
   this: MdSource with Metadata with I18nRules =>
 
-  val typedefStrings = getMdDefs.map(_.body) // FIXME preserve filename, line
-  private val rawTypeDefs = typedefStrings map loadRawTypeDef
+  val typedefStrings = getMdDefs
+  private val rawTypeDefs = typedefStrings map { md =>
+    try loadRawTypeDef(md.body) catch {
+      case e: Exception => throw new RuntimeException(
+        "Failed to load typedef from " + md.filename, e) // TODO line number
+    }
+  }
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   @tailrec
   private def baseTable(t: XsdTypeDef,
