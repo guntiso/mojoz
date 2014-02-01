@@ -15,8 +15,7 @@ trait MdSource {
 object MdFileSplitter {
   def split(mdDefs: Seq[MdDef]) = {
     // TODO set line numbers while splitting
-    // TODO for defs cleanup, split on two blank lines, too?
-    def split(s: String) = s.split("\\-\\-\\-").toSeq
+    def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
     mdDefs.map { d =>
       split(d.body)
         .map(_.trim)
