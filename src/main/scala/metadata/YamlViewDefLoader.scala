@@ -57,7 +57,9 @@ trait ViewDefSource {
   val nameToExtendedViewDef: Map[String, XsdTypeDef]
 }
 
-trait YamlViewDefLoader extends ViewDefSource { this: MdSource with Metadata =>
+trait YamlViewDefLoader extends ViewDefSource {
+  this: MdSource with Metadata with I18nRules =>
+
   val typedefStrings = getMdDefs.map(_.body) // FIXME preserve filename, line
   private val rawTypeDefs = typedefStrings map loadRawTypeDef
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
@@ -386,26 +388,6 @@ trait YamlViewDefLoader extends ViewDefSource { this: MdSource with Metadata =>
     result
   }
 
-  private val noI18n = Set("company.name", "customer.name")
-  private val iI8nForcedView = "customer_context_list_row"
-  private def setI18n(t: XsdTypeDef) = {
-    val fMap = t.fields.filter(!_.isExpression).filter(!_.isCollection)
-      .map(f => (f.table + "." + f.name, f)).toMap // todo or use table alias?
-    val i18n = t.fields.filter(!_.isExpression).filter(!_.isCollection)
-      .filter(f => !f.name.endsWith("_eng") && !f.name.endsWith("_rus"))
-      .filter(f =>
-        !fMap.containsKey(f.table + "." + f.name + "_eng") &&
-          !fMap.containsKey(f.table + "." + f.name + "_rus"))
-      .filter(f =>
-        tableDef(f.table).cols.exists(_.name == f.name + "_eng") &&
-          tableDef(f.table).cols.exists(_.name == f.name + "_rus"))
-      .toSet
-      // XXX do not translate company name :( TODO plugin rules
-      .filter(f => !noI18n(f.table + "." + f.name) || t.name == iI8nForcedView)
-    if (i18n.size == 0) t
-    else t.copy(fields = t.fields.map(f =>
-      if (i18n contains f) f.copy(isI18n = true) else f))
-  }
   // typedef name to typedef
   val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
