@@ -24,6 +24,7 @@ case class YamlFieldDef(
   fraction: Option[Int],
   isExpression: Boolean,
   expression: String,
+  enum: Seq[String],
   joinToParent: String,
   orderBy: String,
   comment: String)
@@ -78,13 +79,14 @@ object YamlMdLoader {
     val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
+    val enum = "\\(.*?\\)"
     val typ = qualifiedIdent
     val len = int
     val frac = int
     val expr = ".*"
     val pattern =
       <a>
-        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}{order})?({s}=({expr})?)?
+        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}{order})?({s}{enum})?({s}=({expr})?)?
       </a>.text.trim
 
     ("^" + pattern + "$").r
@@ -94,12 +96,16 @@ object YamlMdLoader {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String) = nameEtc match {
       case FieldDef(name, _, quant, _, _, _, maxOcc, joinToParent, typ, _,
-        len, frac, order, _, isExpr, expr) =>
+        len, frac, order, _, enum, isExpr, expr) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
+        def e(enum: String) = Option(enum)
+          .map(_ split "[\\s,]+")
+          .map(_.toList.filter(_ != ""))
+          .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
         YamlFieldDef(name, cardinality, i(maxOcc), t(typ), i(len), i(frac),
-          isExpr != null, t(expr), t(joinToParent), t(order), comment)
+          isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
     }
