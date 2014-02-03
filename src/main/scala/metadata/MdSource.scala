@@ -31,7 +31,8 @@ trait FilesMdSource extends MdSource {
   def filter: (File) => Boolean
   def recursiveListFiles(f: File): Array[File] = {
     val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+    these.filter(!_.isDirectory) ++
+      these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
   def typedefFiles = recursiveListFiles(new File(path)).toSeq.filter(filter)
   def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
