@@ -12,5 +12,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.11",
-  "org.tresql" %% "tresql" % "5.3-M8-SNAPSHOT"
+  "org.tresql" %% "tresql" % "5.3-M8-SNAPSHOT",
+  // test
+  "org.scalatest" % "scalatest_2.10" % "2.0.M8" % "test"
 )
