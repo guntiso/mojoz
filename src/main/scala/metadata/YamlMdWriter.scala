@@ -6,7 +6,9 @@ import scala.annotation.tailrec
 trait YamlMdWriter { this: TableDefSource =>
   val MaxLineLength = 100
   def escapeYamlValue(value: String) = { // TODO escapeYamlValue properly
-    if (value contains ":") "\"" + value + "\"" else value
+    Option(value).map(_.replace("\\", "\\\\").replace("\"", "\\\""))
+      .map(s => if (s contains ":") "\"" + s + "\"" else s)
+      .orNull
   }
   def toYamlColDef(colDef: ExFieldDef) = {
     import colDef._
