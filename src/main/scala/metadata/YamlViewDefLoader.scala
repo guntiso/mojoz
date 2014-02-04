@@ -58,9 +58,9 @@ trait ViewDefSource {
 }
 
 trait YamlViewDefLoader extends ViewDefSource {
-  this: MdSource with Metadata with I18nRules =>
+  this: RawViewDefSource with Metadata with I18nRules =>
 
-  val typedefStrings = getMdDefs
+  val typedefStrings = getRawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
     try loadRawTypeDef(md.body) catch {
       case e: Exception => throw new RuntimeException(

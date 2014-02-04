@@ -51,6 +51,9 @@ object MdConventions {
       case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isDateName(name) =>
         ColumnDef(name, defaultType("date"),
           nullable getOrElse true, dbDefault, enum, comment)
+      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isIdRefName(name) =>
+        ColumnDef(name, defaultType("long"),
+          nullable getOrElse true, dbDefault, enum, comment)
       case x =>
         ColumnDef(x.name, defaultType("string"),
           x.nullable getOrElse true, x.dbDefault, x.enum, x.comment)

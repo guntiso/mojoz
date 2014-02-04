@@ -34,7 +34,7 @@ trait ResourceSqlLinesSource extends SqlLinesSource {
 }
 
 trait TableDefSource {
-  val entities: List[TableDef]
+  val entities: Seq[TableDef]
 }
 
 trait SqlMdLoader extends TableDefSource { this: SqlLinesSource =>

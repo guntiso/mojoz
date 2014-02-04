@@ -8,11 +8,15 @@ case class MdDef(
   line: Int,
   body: String)
 
-trait MdSource {
-  def getMdDefs: Seq[MdDef]
+trait RawTableDefSource {
+  def getRawTableDefs: Seq[MdDef]
 }
 
-object MdFileSplitter {
+trait RawViewDefSource {
+  def getRawViewDefs: Seq[MdDef]
+}
+
+object MdSource {
   def split(mdDefs: Seq[MdDef]) = {
     // TODO set line numbers while splitting
     def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
@@ -24,9 +28,14 @@ object MdFileSplitter {
     }.flatMap(x => x)
       .map(x => x._1.copy(body = x._2))
   }
+  private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
+  def isTableDef(d: MdDef) = tableDefPattern.findFirstIn(d.body).isDefined
+  def isViewDef(d: MdDef) = !isTableDef(d)
+  def getTableDefs(mdDefs: Seq[MdDef]) = split(mdDefs).filter(isTableDef)
+  def getViewDefs(mdDefs: Seq[MdDef]) = split(mdDefs).filter(isViewDef)
 }
 
-trait FilesMdSource extends MdSource {
+trait FilesMdSource extends RawTableDefSource with RawViewDefSource {
   def path: String
   def filter: (File) => Boolean
   def recursiveListFiles(f: File): Array[File] = {
@@ -37,10 +46,11 @@ trait FilesMdSource extends MdSource {
   def typedefFiles = recursiveListFiles(new File(path)).toSeq.filter(filter)
   def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
     Source.fromFile(f).mkString))
-  override def getMdDefs = MdFileSplitter.split(defSets)
+  override def getRawTableDefs = MdSource.getTableDefs(defSets)
+  override def getRawViewDefs = MdSource.getViewDefs(defSets)
 }
 
-trait ResourcesMdSource extends MdSource {
+trait ResourcesMdSource extends RawTableDefSource with RawViewDefSource {
   def indexPath: String
   def nameFilter: (String) => Boolean
   def nameMap: (String) => String = "/" + _
@@ -52,5 +62,6 @@ trait ResourcesMdSource extends MdSource {
       .filter(nameFilter).map(nameMap).toSet.toSeq
   def defSets = typedefResources.map(r => MdDef(r, 0,
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
-  override def getMdDefs = MdFileSplitter.split(defSets)
+  override def getRawTableDefs = MdSource.getTableDefs(defSets)
+  override def getRawViewDefs = MdSource.getViewDefs(defSets)
 }

@@ -29,49 +29,69 @@ case class YamlFieldDef(
   orderBy: String,
   comment: String)
 
-object YamlMdLoader {
-  /*
-  def recursiveListFiles(f: File): Array[File] = {
-    val these = f.listFiles
-    these ++ these.filter(_.isDirectory).flatMap(recursiveListFiles)
+trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
+  val tableDefStrings = getRawTableDefs
+  override lazy val entities = try {
+    // TODO validate tableDefs
+    val rawTableDefs = tableDefStrings map { md =>
+      try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
+        case e: Exception => throw new RuntimeException(
+          "Failed to load typedef from " + md.filename, e) // TODO line number
+      }
+    }
+    // FIXME handle (resolve) refs and their types properly!
+    // PKs, FKs and their names? By conventions!
+    rawTableDefs
   }
-  // FIXME use common resources
-  def typedefFiles = recursiveListFiles(new File("../db")).toSeq
-    .filter(_.getName endsWith ".yaml")
-  val typedefResources = classOf[YamlTypeDef].getClassLoader.getResources("")
-    .asScala.toSeq.flatMap(u =>
-      Source.fromURL(u, "UTF-8").mkString.trim.split("\\s+"))
-    .filter(_.endsWith(".yaml")).map("/" + _)
-  def filesToStrings = typedefFiles.map(f =>
-    try Source.fromFile(f)("UTF-8").mkString catch {
-      case e: Exception =>
-        throw new RuntimeException("Error reading file:" + f, e)
-    })
-  def resourcesToStrings = typedefResources.map(r =>
-    Source.fromInputStream(getClass.getResourceAsStream(r)).mkString)
-  val typedefStrings = filesToStrings.map(s =>
-    s.split("\\-\\-\\-").toSeq).flatMap(x =>
-    x).map(_.trim).filter(_.length > 0) toSeq
-  val yamlTypeDefs = loadYamlTypeDefs
-  private def loadYamlTypeDefs = {
-    typedefStrings map loadYamlTypeDef
-  }
-  */
-  def loadYamlTypeDef(typeDef: String) = {
+  def loadYamlTableDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
-    val table = tdMap.get("table").map(_.toString) getOrElse null
+    val table = tdMap.get("table").map(_.toString)
+      .getOrElse(sys.error("Missing table name"))
     val comment = tdMap.get("comment").map(_.toString) getOrElse null
     val colSrc = tdMap.get("columns")
+      .filter(_ != null)
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
-    val colDefs = colSrc map loadYamlFieldDef
+    val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
     YamlTypeDef(table, comment, colDefs)
   }
+  def yamlTypeDefToTableDef(y: YamlTypeDef) = {
+    val name = y.table
+    val comment = y.comment
+    val cols = y.columns.map(yamlFieldDefToExFieldDef)
+    val pk = None // TODO primary key
+    // TODO rewrite fromExternal conventions API
+    val exTypeDef = ExTypeDef(name, comment, cols, pk) 
+    MdConventions.fromExternal(exTypeDef)
+  }
+  def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
+    val name = yfd.name
+    if (yfd.maxOccurs.isDefined)
+      sys.error("maxOccurs not supported for table columns")
+    val dbDefault = yfd.expression
+    val nullable = yfd.cardinality match {
+      case null => None
+      case "?" => Some(true)
+      case "!" => Some(false)
+      case x =>
+        sys.error("Unexpected cardinality for table column: " + x)
+    }
+    val enum = yfd.enum
+    if (yfd.joinToParent != null)
+      sys.error("joinToParent not supported for table columns")
+    if (yfd.orderBy != null)
+      sys.error("orderBy not supported for table columns")
+    val comment = yfd.comment
+    val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
+    ExFieldDef(name, rawXsdType, nullable, dbDefault, enum, comment)
+  }
+}
 
+object YamlMdLoader {
   val FieldDef = {
     val ident = "[_a-zA-z][_a-zA-Z0-9]*"
-    val qualifiedIdent = <a>{ident}(\.{ident})?</a>.text
+    val qualifiedIdent = <a>{ ident }(\.{ ident })?</a>.text
     val int = "[0-9]+"
     val s = "\\s*"
 
@@ -100,7 +120,7 @@ object YamlMdLoader {
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
         def e(enum: String) = Option(enum)
-          .map(_ split "[\\s,]+")
+          .map(_ split "[\\(\\)\\s,]+")
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
@@ -140,9 +160,9 @@ object YamlMdLoader {
     case ("string", Some(len), _) => new XsdType("string", len)
     case ("boolean", _, _) => new XsdType("boolean")
     case ("int", None, _) => new XsdType("int")
-    case ("int", Some(len), _) => new XsdType("int", len)
+    case ("int", Some(len), _) => new XsdType("int", None, Some(len), None, false)
     case ("long", None, _) => new XsdType("long")
-    case ("long", Some(len), _) => new XsdType("long", len)
+    case ("long", Some(len), _) => new XsdType("long", None, Some(len), None, false)
     case ("decimal", None, None) => new XsdType("decimal")
     case ("decimal", Some(len), None) => new XsdType("decimal", len, 0)
     case ("decimal", Some(len), Some(frac)) => new XsdType("decimal", len, frac)
