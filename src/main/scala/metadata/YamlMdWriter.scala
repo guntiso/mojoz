@@ -55,7 +55,7 @@ trait YamlMdWriter { this: TableDefSource =>
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYaml: String = (entities map toYaml).mkString("\n---\n\n")
+  def toYamlTableDefs: String = (entities map toYaml).mkString("\n---\n\n")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec
     def _wrapped(
