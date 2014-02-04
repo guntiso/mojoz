@@ -40,7 +40,9 @@ trait YamlMdWriter { this: TableDefSource =>
     else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
     else {
-      val indent = " " * (2 + defString.length + 3)
+      val indent =
+        if (MaxLineLength < defString.length + 20) " " * 41
+        else " " * (2 + defString.length + 3)
       wrapped(escapeYamlValue(comment.trim), defString + " :", indent)
     }
   }
