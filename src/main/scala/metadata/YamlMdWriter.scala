@@ -42,7 +42,7 @@ trait YamlMdWriter { this: TableDefSource =>
   def toYaml(entity: ExTypeDef): String =
     List(Some(entity.name).map("table:   " + _),
       Option(entity.comment).filter(_ != "").map(c =>
-        wrapped(c.trim, "comment:", " " * 9)),
+        wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
