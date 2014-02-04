@@ -18,11 +18,18 @@ trait YamlMdWriter { this: TableDefSource =>
       t.length,
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
+    val enumString = Option(colDef.enum)
+      .filter(_ != null)
+      .filter(_ != Nil)
+      .map(_.mkString("(", ", ", ")"))
+      .getOrElse("")
 
     val defString = List(
       (name, 20),
       (colDef.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
-      (typeString, 8)).foldLeft(("", 0))((r, t) => (
+      (typeString, 10),
+      (enumString, 2))
+      .foldLeft(("", 0))((r, t) => (
         List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
         r._2 + t._2 + 1))._1
 
