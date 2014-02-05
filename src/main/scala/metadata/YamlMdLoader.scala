@@ -31,8 +31,24 @@ case class YamlFieldDef(
 
 trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
   val tableDefStrings = getRawTableDefs
+  private def checkTableDefs(td: Seq[TableDef]) = {
+    val m = td.map(t => (t.name, t)).toMap
+    if (m.size < td.size) sys.error("repeating definition of " +
+      td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
+    def checkName(t: TableDef) =
+      if (t.name == null || t.name.trim == "") sys.error("Table without name")
+    def checkHasColumns(t: TableDef) =
+      if (t.cols == null || t.cols.size == 0) sys.error(
+        "Table " + t.name + " has no columns")
+    def checkRepeatingColumnNames(t: TableDef) =
+      if (t.cols.map(_.name).toSet.size < t.cols.size) sys.error(
+        "Table " + t.name + " defines multiple columns named " + t.cols
+          .groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
+    td foreach checkName
+    td foreach checkHasColumns
+    td foreach checkRepeatingColumnNames
+  }
   override lazy val entities = try {
-    // TODO validate tableDefs
     val rawTableDefs = tableDefStrings map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
         case e: Exception => throw new RuntimeException(
@@ -41,6 +57,7 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
     }
     // FIXME handle (resolve) refs and their types properly!
     // PKs, FKs and their names? By conventions!
+    checkTableDefs(rawTableDefs)
     rawTableDefs
   }
   def loadYamlTableDef(typeDef: String) = {
