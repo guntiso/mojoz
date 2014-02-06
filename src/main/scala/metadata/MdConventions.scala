@@ -22,7 +22,7 @@ object MdConventions {
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
   def fromExternal(typeDef: ExTypeDef): TableDef = {
-    val cols = typeDef.cols.map(fromExternal(_))
+    val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
     TableDef(typeDef.name, typeDef.comment, cols, primaryKey)
   }

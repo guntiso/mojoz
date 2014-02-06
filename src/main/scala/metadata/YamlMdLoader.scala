@@ -79,7 +79,7 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = None // TODO primary key
     // TODO rewrite fromExternal conventions API
-    val exTypeDef = ExTypeDef(name, comment, cols, pk) 
+    val exTypeDef = ExTypeDef(name, comment, cols, pk)
     MdConventions.fromExternal(exTypeDef)
   }
   def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
@@ -177,9 +177,9 @@ object YamlMdLoader {
     case ("string", Some(len), _) => new XsdType("string", len)
     case ("boolean", _, _) => new XsdType("boolean")
     case ("int", None, _) => new XsdType("int")
-    case ("int", Some(len), _) => new XsdType("int", None, Some(len), None, false)
+    case ("int", Some(len), _) => XsdType("int", None, Some(len), None, false)
     case ("long", None, _) => new XsdType("long")
-    case ("long", Some(len), _) => new XsdType("long", None, Some(len), None, false)
+    case ("long", Some(len), _) => XsdType("long", None, Some(len), None, false)
     case ("decimal", None, None) => new XsdType("decimal")
     case ("decimal", Some(len), None) => new XsdType("decimal", len, 0)
     case ("decimal", Some(len), Some(frac)) => new XsdType("decimal", len, frac)
