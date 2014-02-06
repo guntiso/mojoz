@@ -55,10 +55,54 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
           "Failed to load typedef from " + md.filename, e) // TODO line number
       }
     }
-    // FIXME handle (resolve) refs and their types properly!
-    // PKs, FKs and their names? By conventions!
     checkTableDefs(rawTableDefs)
-    rawTableDefs
+
+    def resolvedName(n: String) = n.replace('.', '_')
+    val nameToTableDef = rawTableDefs.map(t => (t.name, t)).toMap
+    def refToCol(ref: String) =
+      (ref.split("\\.", 2).toList match {
+        case t :: c :: Nil => Some((t, c)) case x => None
+      })
+        .flatMap(tc => nameToTableDef.get(tc._1).map((_, tc._2)))
+        .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)
+          .map(c => (tc._1, c)))
+        .getOrElse(sys.error("Bad ref: " + ref))
+    def overwriteXsdType(base: XsdType, overwrite: XsdType) = XsdType(
+      Option(base.name) getOrElse overwrite.name,
+      overwrite.length orElse base.length,
+      overwrite.totalDigits orElse base.totalDigits,
+      overwrite.fractionDigits orElse base.fractionDigits,
+      false)
+    def baseRefChain(col: ColumnDef, visited: List[String]): List[String] = {
+      def chain(ref: String) =
+        if (visited contains ref)
+          sys.error("Cyclic column refs: " +
+            (ref :: visited).reverse.mkString(" -> "))
+        else baseRefChain(refToCol(ref)._2, ref :: visited)
+      // TODO ??? if type explicitly defined, why ref? throw?
+      if (Option(col.xsdType.name).map(_ contains ".") getOrElse false)
+        chain(col.xsdType.name)
+      else if (col.name contains ".") chain(col.name)
+      else visited
+    }
+    val tableDefs = rawTableDefs map { r =>
+      val resolvedCols = r.cols.map { c =>
+        val refChain = baseRefChain(c, Nil)
+        if (refChain.size == 0) c
+        else {
+          // TODO add refs to table - for sql writer and tresql metadata
+          // TODO add known aliases (ref names) to tables (refs?)
+          // TODO how about multi-col refs, how to define/use these?
+          // TODO PKs, FKs and their names? By conventions!
+          val colName = c.name.replace('.', '_')
+          val xsdType = refChain.foldLeft(new XsdType(null))((t, ref) =>
+            overwriteXsdType(t, refToCol(ref)._2.xsdType))
+          c.copy(name = colName, xsdType = xsdType)
+        }
+      }
+      r.copy(cols = resolvedCols)
+    }
+    tableDefs
   }
   def loadYamlTableDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
@@ -186,6 +230,8 @@ object YamlMdLoader {
     case ("base64Binary", None, _) => new XsdType("base64Binary")
     case ("base64Binary", Some(len), _) => new XsdType("base64Binary", len)
     case ("anyType", _, _) => new XsdType("anyType")
+    case (x, len, frac) if MdConventions.isRefName(x) =>
+      XsdType(x, len, None, frac, false) // FIXME len <> totalDigits, resolve!
     // if no known xsd type name found - let it be complex type!
     case (x, _, _) => new XsdType(x, true)
   }

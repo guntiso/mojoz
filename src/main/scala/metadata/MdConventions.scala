@@ -15,6 +15,7 @@ case class ExFieldDef(
 
 object MdConventions {
   // TODO default comment for id col?
+  def isRefName(name: String) = name != null && name.contains(".")
   def isBooleanName(name: String) =
     name.startsWith("is_") || name.startsWith("has_")
   def isDateName(name: String) = name.endsWith("_date")
@@ -42,8 +43,14 @@ object MdConventions {
         else x
       } getOrElse new XsdType(defaultName)
     col match {
+      case ExFieldDef(name, Some(xsdType), nullable, dbDefault, enum, comment) if isRefName(xsdType.name) =>
+        ColumnDef(name, xsdType,
+          nullable getOrElse false, dbDefault, enum, comment)
       case ExFieldDef("id", xsdType, nullable, dbDefault, enum, comment) =>
         ColumnDef("id", defaultType("long"),
+          nullable getOrElse false, dbDefault, enum, comment)
+      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isRefName(name) =>
+        ColumnDef(name, xsdType getOrElse new XsdType(null),
           nullable getOrElse false, dbDefault, enum, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
         ColumnDef(name, defaultType("boolean"),
