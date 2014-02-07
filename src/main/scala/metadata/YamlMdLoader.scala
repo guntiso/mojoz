@@ -86,21 +86,28 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
       else visited
     }
     val tableDefs = rawTableDefs map { r =>
-      val resolvedCols = r.cols.map { c =>
+      val resolvedColsAndRefs: Seq[(ColumnDef, Seq[Ref])] = r.cols.map { c =>
         val refChain = baseRefChain(c, Nil)
-        if (refChain.size == 0) c
+        if (refChain.size == 0) (c, Nil)
         else {
-          // TODO add refs to table - for sql writer and tresql metadata
-          // TODO add known aliases (ref names) to tables (refs?)
           // TODO how about multi-col refs, how to define/use these?
           // TODO PKs, FKs and their names? By conventions!
+          val defaultRefTableAlias =
+            if (c.xsdType.name == null || c.name.indexOf('.') < 0) null
+            else c.name.substring(0, c.name.indexOf('.'))
           val colName = c.name.replace('.', '_')
+          val (refTable, refCol) =
+            refToCol(Option(c.xsdType.name) getOrElse c.name)
           val xsdType = refChain.foldLeft(new XsdType(null))((t, ref) =>
             overwriteXsdType(t, refToCol(ref)._2.xsdType))
-          c.copy(name = colName, xsdType = xsdType)
+          val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
+              null, defaultRefTableAlias, null, null)
+          (c.copy(name = colName, xsdType = xsdType), List(ref))
         }
       }
-      r.copy(cols = resolvedCols)
+      r.copy(
+        cols = resolvedColsAndRefs.map(_._1),
+        refs = resolvedColsAndRefs.flatMap(_._2))
     }
     tableDefs
   }

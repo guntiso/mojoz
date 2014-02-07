@@ -9,7 +9,10 @@ case class DbTableDef(
   name: String,
   comment: String,
   cols: Seq[DbColumnDef],
-  pk: Option[DbIndex])
+  pk: Option[DbIndex],
+  uk: Seq[DbIndex],
+  idx: Seq[DbIndex],
+  refs: Seq[Ref])
 case class DbColumnDef(
   name: String,
   dbType: String,
@@ -54,7 +57,7 @@ trait SqlMdLoader extends TableDefSource { this: SqlLinesSource =>
         val readyCols = commentedCols.map(col =>
           if (pkCols contains col.name) col.copy(nullable = false) else col)
         val tableDef =
-          DbTableDef(tableName, tableComment, readyCols, primaryKey)
+          DbTableDef(tableName, tableComment, readyCols, primaryKey, Nil, Nil, Nil)
         tables = tableDef :: tables
         tableName = ""
         tableComment = ""

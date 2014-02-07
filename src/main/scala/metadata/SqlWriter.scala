@@ -30,8 +30,8 @@ object OracleSqlWriter {
   // TODO
   def foreignKeys() {}
   def dbTableDef(t: TableDef) = t match {
-    case TableDef(name, comment, cols, pk) => DbTableDef(
-      DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk)
+    case TableDef(name, comment, cols, pk, uk, idx, refs) => DbTableDef(
+      DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk, uk, idx, refs)
   }
   def dbColumnDef(c: ColumnDef) = c match {
     case ColumnDef(name, xsdType, nullable, dbDefault, enum, comment) => DbColumnDef(

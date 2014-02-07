@@ -17,11 +17,23 @@ case class XsdType(name: String, length: Option[Int],
 case class DbIndex(
   name: String,
   cols: Seq[String])
+case class Ref(
+  name: String,
+  cols: Seq[String],
+  refTable: String,
+  refCols: Seq[String],
+  defaultTableAlias: String,
+  defaultRefTableAlias: String,
+  onDeleteAction: String,
+  onUpdateAction: String)
 case class TableDef(
   name: String,
   comment: String,
   cols: Seq[ColumnDef],
-  pk: Option[DbIndex])
+  pk: Option[DbIndex],
+  uk: Seq[DbIndex],
+  idx: Seq[DbIndex],
+  refs: Seq[Ref])
 case class ColumnDef(
   name: String,
   xsdType: XsdType,
