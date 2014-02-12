@@ -98,8 +98,10 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
           val colName = c.name.replace('.', '_')
           val (refTable, refCol) =
             refToCol(Option(c.xsdType.name) getOrElse c.name)
-          val xsdType = refChain.foldLeft(new XsdType(null))((t, ref) =>
-            overwriteXsdType(t, refToCol(ref)._2.xsdType))
+          val xsdType = overwriteXsdType(
+            refChain.foldLeft(new XsdType(null))((t, ref) =>
+              overwriteXsdType(t, refToCol(ref)._2.xsdType)),
+            c.xsdType)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
               null, defaultRefTableAlias, null, null)
           (c.copy(name = colName, xsdType = xsdType), List(ref))
