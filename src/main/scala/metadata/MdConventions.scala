@@ -45,13 +45,13 @@ object MdConventions {
     col match {
       case ExFieldDef(name, Some(xsdType), nullable, dbDefault, enum, comment) if isRefName(xsdType.name) =>
         ColumnDef(name, xsdType,
-          nullable getOrElse false, dbDefault, enum, comment)
+          nullable getOrElse true, dbDefault, enum, comment)
       case ExFieldDef("id", xsdType, nullable, dbDefault, enum, comment) =>
         ColumnDef("id", defaultType("long"),
           nullable getOrElse false, dbDefault, enum, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isRefName(name) =>
         ColumnDef(name, xsdType getOrElse new XsdType(null),
-          nullable getOrElse false, dbDefault, enum, comment)
+          nullable getOrElse true, dbDefault, enum, comment)
       case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
         ColumnDef(name, defaultType("boolean"),
           nullable getOrElse true, dbDefault, enum, comment)
