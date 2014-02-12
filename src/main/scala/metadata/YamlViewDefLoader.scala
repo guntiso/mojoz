@@ -130,6 +130,7 @@ trait YamlViewDefLoader extends ViewDefSource {
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = yfd.cardinality != null
       val joinToParent = yfd.joinToParent
+      val enum = yfd.enum
       val orderBy = yfd.orderBy
       val comment = yfd.comment
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
@@ -144,7 +145,7 @@ trait YamlViewDefLoader extends ViewDefSource {
 
       XsdFieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
-        xsdType, null, joinToParent, orderBy, false, comment)
+        xsdType, enum, joinToParent, orderBy, false, comment)
     }
     XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
@@ -252,7 +253,8 @@ trait YamlViewDefLoader extends ViewDefSource {
                 case Right(b) => b || col.nullable
                 case Left(s) => true // FIXME Left(nullableTableDependency)!
               }
-          f.copy(nullable = nullable, xsdType = col.xsdType, enum = col.enum,
+          f.copy(nullable = nullable, xsdType = col.xsdType,
+            enum = Option(f.enum) getOrElse col.enum,
             comment = Option(f.comment) getOrElse col.comment)
         }
       }
