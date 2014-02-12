@@ -5,3 +5,5 @@ lib_managed
 .classpath
 .project
 .settings
+*.blame
+*.log
