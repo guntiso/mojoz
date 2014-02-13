@@ -19,8 +19,8 @@ case class XsdTypeDef(
   name: String,
   table: String,
   tableAlias: String,
-  joins: String, // tresql from clause
-  filter: String,
+  joins: String, // from clause
+  filter: String, // where clause
   xtnds: String,
   draftOf: String,
   detailsOf: String,
@@ -58,7 +58,7 @@ trait ViewDefSource {
 }
 
 trait YamlViewDefLoader extends ViewDefSource {
-  this: RawViewDefSource with Metadata with I18nRules with ExpressionRules =>
+  this: RawViewDefSource with Metadata with I18nRules with JoinsParser with ExpressionRules =>
 
   val typedefStrings = getRawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
@@ -224,14 +224,14 @@ trait YamlViewDefLoader extends ViewDefSource {
     }
 
     def resolveBaseTableAlias(t: XsdTypeDef) = t.copy(tableAlias =
-      JoinsParser(t.table, t.joins).filter(_.table == t.table).toList match {
+      parseJoins(t.table, t.joins).filter(_.table == t.table).toList match {
         case Join(a, _, _) :: Nil => // if only one base table encountered return alias
           Option(a) getOrElse t.table
         case _ => "b" // default base table alias 
       })
 
     def resolveFieldNamesAndTypes(t: XsdTypeDef) = {
-      val joins = JoinsParser(t.table, t.joins)
+      val joins = parseJoins(t.table, t.joins)
       val aliasToTable =
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
       val tableOrAliasToJoin =
