@@ -4,19 +4,20 @@ import scala.annotation.tailrec
 import scala.math.max
 
 object OracleSqlWriter {
+  def createStatements(tables: Seq[TableDef]) = {
+    List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
+  }
   def createTablesStatements(tables: Seq[TableDef]) = {
     tables.map(dbTableDef).map(t => List(
       createTableStatement(t), tableComment(t), columnComments(t))
       .mkString("\n")).mkString("\n\n") + (if (tables.size > 0) "\n" else "")
   }
-  // TODO default values
   def createTableStatement(t: DbTableDef) =
     (t.cols.map(createColumn) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
   def primaryKey(t: DbTableDef) = t.pk map { pk =>
     "constraint " + pk.name + " primary key (" + pk.cols.mkString(", ") + ")"
   }
-  // TODO default
   private def createColumn(c: DbColumnDef) =
     c.name + " " + c.dbType +
       (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
@@ -27,8 +28,15 @@ object OracleSqlWriter {
   def columnComments(t: DbTableDef) = t.cols.map(c =>
     "comment on column " + t.name + "." + c.name +
       " is '" + Option(c.comment).getOrElse("") + "';") mkString "\n"
-  // TODO
-  def foreignKeys() {}
+  def foreignKeys(tables: Seq[TableDef]) = tables.map(dbTableDef).map { t =>
+    t.refs map { r =>
+      // TODO cascade
+      val fkName = t.name + "_" + Option(r.defaultRefTableAlias).getOrElse(r.refTable) + "_fk"
+      s"alter table ${t.name} add constraint $fkName foreign key (${
+        r.cols mkString ", "
+      }) references ${r.refTable}(${r.refCols mkString ", "});"
+    }
+  }.flatMap(x => x) mkString "\n"
   def dbTableDef(t: TableDef) = t match {
     case TableDef(name, comment, cols, pk, uk, idx, refs) => DbTableDef(
       DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk, uk, idx, refs)
@@ -67,7 +75,7 @@ object OracleSqlWriter {
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
-        .mkString(" check (" + dbColumnName + " in (", ", ", "))")
+          .mkString(" check (" + dbColumnName + " in (", ", ", "))")
       case _ => ""
     }
   }
