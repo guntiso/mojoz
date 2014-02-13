@@ -21,6 +21,7 @@ case class XsdTypeDef(
   table: String,
   tableAlias: String,
   joins: String, // tresql from clause
+  filter: String,
   xtnds: String,
   draftOf: String,
   detailsOf: String,
@@ -87,6 +88,7 @@ trait YamlViewDefLoader extends ViewDefSource {
     val rawName = get("name")
     val rawTable = get("table")
     val joins = get("joins")
+    val filter = get("filter")
     val xtnds = get("extends")
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
@@ -147,7 +149,7 @@ trait YamlViewDefLoader extends ViewDefSource {
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
-    XsdTypeDef(name, table, null, joins, xtnds, draftOf, detailsOf, comment,
+    XsdTypeDef(name, table, null, joins, filter, xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
   private def checkTypedefs(td: Seq[XsdTypeDef]) = {
@@ -208,6 +210,15 @@ trait YamlViewDefLoader extends ViewDefSource {
         else inheritedJoins(m(t.xtnds))
       if (t.xtnds == null) t
       else t.copy(joins = inheritedJoins(t))
+    }
+
+    def inheritFilter(t: XsdTypeDef) = {
+      @tailrec
+      def inheritedFilter(t: XsdTypeDef): String =
+        if (t.filter != null || t.xtnds == null) t.filter
+        else inheritedFilter(m(t.xtnds))
+      if (t.xtnds == null) t
+      else t.copy(filter = inheritedFilter(t))
     }
 
     def resolveBaseTableAlias(t: XsdTypeDef) = t.copy(tableAlias =
@@ -388,6 +399,7 @@ trait YamlViewDefLoader extends ViewDefSource {
     val result = resolvedTypes.toList
       .map(inheritTable)
       .map(inheritJoins)
+      .map(inheritFilter)
       .map(resolveBaseTableAlias)
       .map(resolveFieldNamesAndTypes)
     checkTypedefs(result)
