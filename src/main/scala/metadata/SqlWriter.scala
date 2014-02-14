@@ -3,7 +3,67 @@ package metadata
 import scala.annotation.tailrec
 import scala.math.max
 
-object OracleSqlWriter {
+trait ConstraintNamingRules {
+  def pkName(tableName: String): String
+  def fkName(tableName: String, ref: Ref): String
+}
+
+trait SimpleConstraintNamingRules extends ConstraintNamingRules {
+  val maxNameLen = 60
+  val pkPrefix = "pk_"
+  val pkSuffix = ""
+  val fkPrefix = "fk_"
+  val fkSuffix = ""
+  val fkTableNameSep = "_"
+  def pkUsableLen =
+    maxNameLen - pkPrefix.length - pkSuffix.length
+  def fkUsableLen =
+    maxNameLen - fkPrefix.length - fkTableNameSep.length - fkSuffix.length
+  def fkTableNameLen = fkUsableLen / 2
+  def fkRefTableNameLen = fkUsableLen - fkTableNameLen
+  def shorten(s: String, maxLen: Int) = {
+    if (s.length <= maxLen) s
+    else if (maxLen < 4) s.substring(0, maxLen)
+    else {
+      val leftS = s.substring(0, maxLen / 2) match {
+        case s if s endsWith "_" => s.substring(0, s.length - 1)
+        case s => s
+      }
+      val rightS = s.substring(s.length + leftS.length + 1 - maxLen) match {
+        case s if s startsWith "_" => s substring 1
+        case s => s
+      }
+      leftS + "_" + rightS
+    }
+  }
+  override def fkName(tableName: String, r: Ref) = {
+    val tnRaw = tableName
+    val rnRaw = Option(r.defaultRefTableAlias).getOrElse(r.refTable)
+    val rawLen =
+      fkPrefix.length + tnRaw.length + fkTableNameSep.length + rnRaw.length +
+        fkSuffix.length
+    val overLen = tnRaw.length + rnRaw.length > fkUsableLen
+    val tnOverLen = tnRaw.length > fkTableNameLen
+    val rnOverLen = rnRaw.length > fkRefTableNameLen
+    val (tn, rn) = (overLen, tnOverLen, rnOverLen) match {
+      case (false, _, _) => (tnRaw, rnRaw)
+      case (_, _, true) =>
+        val tn = shorten(tnRaw, fkTableNameLen)
+        val rn = shorten(rnRaw, fkUsableLen - tn.length)
+        (tn, rn)
+      case _ => (shorten(tnRaw, fkUsableLen - rnRaw.length), rnRaw)
+    }
+    s"$fkPrefix$tn$fkTableNameSep$rn$fkSuffix"
+  }
+  override def pkName(tableName: String) =
+    pkPrefix + shorten(tableName, pkUsableLen) + pkSuffix
+}
+
+trait OracleConstraintNamingRules extends SimpleConstraintNamingRules {
+  override val maxNameLen = 30
+}
+
+trait OracleSqlWriter { this: ConstraintNamingRules =>
   def createStatements(tables: Seq[TableDef]) = {
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
@@ -16,7 +76,8 @@ object OracleSqlWriter {
     (t.cols.map(createColumn) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
   def primaryKey(t: DbTableDef) = t.pk map { pk =>
-    "constraint " + pk.name + " primary key (" + pk.cols.mkString(", ") + ")"
+    "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
+      " primary key (" + pk.cols.mkString(", ") + ")"
   }
   private def createColumn(c: DbColumnDef) =
     c.name + " " + c.dbType +
@@ -31,8 +92,7 @@ object OracleSqlWriter {
   def foreignKeys(tables: Seq[TableDef]) = tables.map(dbTableDef).map { t =>
     t.refs map { r =>
       // TODO cascade
-      val fkName = t.name + "_" + Option(r.defaultRefTableAlias).getOrElse(r.refTable) + "_fk"
-      s"alter table ${t.name} add constraint $fkName foreign key (${
+      s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
         r.cols mkString ", "
       }) references ${r.refTable}(${r.refCols mkString ", "});"
     }
