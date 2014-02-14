@@ -31,9 +31,11 @@ object MdConventions {
     val cols = typeDef.cols
     if (typeDef.pk.isDefined) typeDef.pk
     else if (cols.filter(_.name == "id").size == 1)
-      Some(DbIndex("pk_" + typeDef.name, List("id")))
+      Some(DbIndex(null, List("id")))
+    else if (cols.filter(_.name == "code").size == 1)
+      Some(DbIndex(null, List("code")))
     else if (cols.size == 2 && cols.filter(_.name endsWith "_id").size == 2)
-      Some(DbIndex("pk_" + typeDef.name, cols.map(_.name)))
+      Some(DbIndex(null, cols.map(_.name)))
     else None
   }
   def fromExternal(col: ExFieldDef): ColumnDef = {
