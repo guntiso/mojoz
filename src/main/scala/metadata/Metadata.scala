@@ -76,19 +76,4 @@ trait Metadata { this: TableDefSource with ViewDefSource =>
             + ", joins: " + typeDef.joins, ex)
     }
   }
-
-  def getViewDef(viewClass: Class[_ <: AnyRef]): XsdTypeDef =
-    nameToExtendedViewDef.get(ElementName.get(viewClass)) getOrElse
-      (nameToExtendedViewDef.get(ElementName.get(viewClass)
-        .replace("ku-29", "ku29") // XXX
-        .replace("-", "_")) getOrElse
-        (viewClass.getSuperclass match {
-          case c: Class[_] =>
-            try getViewDef(c.asInstanceOf[Class[_ <: AnyRef]]) catch {
-              case e: Exception => throw new RuntimeException(
-                "Failed to get view definition for " + viewClass.getName, e)
-            }
-          case x => throw new RuntimeException(
-            "Failed to get view definition for " + viewClass.getName)
-        }))
 }
