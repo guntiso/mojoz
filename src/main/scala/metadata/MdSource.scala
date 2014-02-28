@@ -39,7 +39,7 @@ trait FilesMdSource extends RawTableDefSource with RawViewDefSource {
   def path: String
   def filter: (File) => Boolean
   def recursiveListFiles(f: File): Array[File] = {
-    val these = f.listFiles
+    val these = Option(f.listFiles) getOrElse Array()
     these.filter(!_.isDirectory) ++
       these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
