@@ -36,14 +36,16 @@ object MdSource {
 }
 
 trait FilesMdSource extends RawTableDefSource with RawViewDefSource {
-  def path: String
-  def filter: (File) => Boolean
+  def path: String = null
+  def filter: (File) => Boolean = _.getName endsWith ".yaml"
   def recursiveListFiles(f: File): Array[File] = {
     val these = Option(f.listFiles) getOrElse Array()
     these.filter(!_.isDirectory) ++
       these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
-  def typedefFiles = recursiveListFiles(new File(path)).toSeq.filter(filter)
+  def typedefFiles =
+    if (path == null) sys.error("FilesMdSource path not initialized")
+    else recursiveListFiles(new File(path)).toSeq.filter(filter)
   def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
     Source.fromFile(f).mkString))
   override def getRawTableDefs = MdSource.getTableDefs(defSets)
@@ -51,8 +53,8 @@ trait FilesMdSource extends RawTableDefSource with RawViewDefSource {
 }
 
 trait ResourcesMdSource extends RawTableDefSource with RawViewDefSource {
-  def indexPath: String
-  def nameFilter: (String) => Boolean
+  def indexPath: String = "/-md-files.txt"
+  def nameFilter: (String) => Boolean = _.endsWith(".yaml")
   def nameMap: (String) => String = "/" + _
   // getClass.getClassLoader.getResources("") does not work from jar :(
   def typedefResources =
