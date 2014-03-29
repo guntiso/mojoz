@@ -1,4 +1,4 @@
-package metadata
+package mojoz.metadata.in
 
 import java.io.File
 import scala.Array.canBuildFrom
@@ -8,6 +8,8 @@ import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import scala.io.Source
 import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
+import mojoz.metadata._
+import mojoz.metadata.io._
 import org.yaml.snakeyaml.Yaml
 
 case class YamlTypeDef(

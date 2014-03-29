@@ -1,6 +1,7 @@
-package metadata
+package mojoz.metadata.out
 
-import metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata._
+import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
 trait ScalaClassWriter {
   def nl = System.getProperty("line.separator")

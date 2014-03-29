@@ -1,4 +1,6 @@
-package metadata
+package mojoz.metadata.io
+
+import mojoz.metadata._
 
 case class ExTypeDef(
   name: String,

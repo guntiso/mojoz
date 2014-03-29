@@ -1,7 +1,9 @@
-package metadata
+package mojoz.metadata.out
 
 import scala.Option.option2Iterable
 import scala.annotation.tailrec
+import mojoz.metadata._
+import mojoz.metadata.io._
 
 trait YamlMdWriter { this: TableDefSource =>
   val MaxLineLength = 100

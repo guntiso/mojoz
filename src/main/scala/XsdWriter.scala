@@ -1,8 +1,9 @@
-package metadata
+package mojoz.metadata.out
 
 import scala.xml.PrettyPrinter
 
-import metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata._
+import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
 trait XsdWriter { this: Metadata with ViewDefSource =>
   private def annotation(comment: String) =

@@ -1,7 +1,9 @@
-package metadata
+package mojoz.metadata.out
 
 import scala.annotation.tailrec
 import scala.math.max
+import mojoz.metadata._
+import mojoz.metadata.io._
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String

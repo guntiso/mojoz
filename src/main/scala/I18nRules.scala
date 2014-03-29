@@ -1,8 +1,13 @@
-package metadata
+package mojoz.metadata.in
+
+import mojoz.metadata.Metadata // TODO ???
+import mojoz.metadata.XsdTypeDef
 
 trait I18nRules {
   def setI18n(t: XsdTypeDef): XsdTypeDef
 }
+
+package rules {
 
 trait NoI18nRules extends I18nRules {
   override def setI18n(t: XsdTypeDef) = t
@@ -28,4 +33,5 @@ trait SuffixI18nRules extends I18nRules { this: Metadata =>
     else t.copy(fields = t.fields.map(f =>
       if (i18n contains f) f.copy(isI18n = true) else f))
   }
+}
 }

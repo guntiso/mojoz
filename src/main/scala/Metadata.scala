@@ -1,4 +1,4 @@
-package metadata
+package mojoz.metadata
 
 import xsdgen.ElementName
 

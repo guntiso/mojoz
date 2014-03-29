@@ -1,8 +1,9 @@
-package metadata
+package mojoz.metadata.out
 
 import scala.xml.PrettyPrinter
 
-import metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata._
+import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
 trait ViewDefVisualizer { this: ViewDefSource =>
   def getType(s: String) = nameToExtendedViewDef(s)

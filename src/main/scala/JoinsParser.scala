@@ -1,4 +1,4 @@
-package metadata
+package mojoz.metadata.in
 
 case class Join(alias: String, table: String, nullable: Either[String, Boolean])
 

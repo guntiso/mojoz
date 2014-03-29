@@ -1,9 +1,16 @@
-package metadata
+package mojoz.metadata
 
 import java.io.File
+import scala.io.Codec
 import scala.io.Source
 import scala.math.max
 import scala.annotation.tailrec
+
+trait TableDefSource {
+  val entities: Seq[TableDef]
+}
+
+package io {
 
 case class DbTableDef(
   name: String,
@@ -21,6 +28,12 @@ case class DbColumnDef(
   check: String,
   comment: String)
 
+}
+
+package in {
+
+import mojoz.metadata.io._
+
 trait SqlLinesSource {
   def lines: Seq[String]
 }
@@ -33,11 +46,7 @@ trait FileSqlLinesSource extends SqlLinesSource {
 trait ResourceSqlLinesSource extends SqlLinesSource {
   def sqlPath: String = "/schema.sql"
   override def lines = Source.fromInputStream(
-    getClass.getResourceAsStream(sqlPath))(io.Codec("UTF-8")).getLines.toList
-}
-
-trait TableDefSource {
-  val entities: Seq[TableDef]
+    getClass.getResourceAsStream(sqlPath))(Codec("UTF-8")).getLines.toList
 }
 
 trait SqlMdLoader extends TableDefSource { this: SqlLinesSource =>
@@ -165,4 +174,5 @@ trait SqlMdLoader extends TableDefSource { this: SqlLinesSource =>
       case x => throw new RuntimeException("Unexpected db type: " + col.dbType)
     }
   }
+}
 }

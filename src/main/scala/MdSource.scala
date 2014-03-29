@@ -1,6 +1,7 @@
-package metadata
+package mojoz.metadata.in
 
 import java.io.File
+import scala.io.Codec
 import scala.io.Source
 
 case class MdDef(
@@ -59,7 +60,7 @@ trait ResourcesMdSource extends RawTableDefSource with RawViewDefSource {
   // getClass.getClassLoader.getResources("") does not work from jar :(
   def typedefResources =
     Option(getClass.getResourceAsStream(indexPath))
-      .map(Source.fromInputStream(_)(io.Codec("UTF-8"))
+      .map(Source.fromInputStream(_)(Codec("UTF-8"))
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toSeq
   def defSets = typedefResources.map(r => MdDef(r, 0,

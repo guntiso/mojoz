@@ -1,4 +1,4 @@
-package metadata
+package mojoz.metadata
 
 import java.io.File
 import java.util.ArrayList
@@ -13,7 +13,9 @@ import scala.reflect.BeanProperty
 
 import org.yaml.snakeyaml.Yaml
 
-import metadata.DbConventions.{ xsdNameToDbName => dbName }
+import mojoz.metadata.in._
+import mojoz.metadata.io._
+import mojoz.metadata.DbConventions.{ xsdNameToDbName => dbName }
 
 case class XsdTypeDef(
   name: String,
@@ -56,6 +58,8 @@ trait ViewDefSource {
   // typedef name to typedef with extended field list
   val nameToExtendedViewDef: Map[String, XsdTypeDef]
 }
+
+package in {
 
 trait YamlViewDefLoader extends ViewDefSource {
   this: RawViewDefSource with Metadata with I18nRules with JoinsParser with ExpressionRules =>
@@ -422,4 +426,5 @@ trait YamlViewDefLoader extends ViewDefSource {
     })
     .map(setI18n)
     .map(t => (t.name, t)).toMap
+}
 }
