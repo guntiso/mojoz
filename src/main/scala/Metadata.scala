@@ -1,7 +1,5 @@
 package mojoz.metadata
 
-import xsdgen.ElementName
-
 case class XsdType(name: String, length: Option[Int],
   totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
   def this(name: String) = this(name, None, None, None, false)

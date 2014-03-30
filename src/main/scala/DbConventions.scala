@@ -1,7 +1,5 @@
 package mojoz.metadata
 
-import xsdgen.ElementName
-
 object DbConventions {
   def dbNameToXsdName(dbName: String) = {
     val parts = dbName.split("[_\\.]+")
@@ -13,7 +11,7 @@ object DbConventions {
     }).map(_.capitalize).mkString
   }
   def xsdNameToDbName(xsdName: String) = {
-    val parts = ElementName.get(xsdName).split("[\\-\\_]")
+    val parts = dasherize(xsdName).split("[\\-\\_]")
     val hadPrefix = xsdName.startsWith("_")
     val hadSuffix = xsdName.endsWith("_")
     val clean = parts.toList.map(_.toLowerCase match {
@@ -30,5 +28,27 @@ object DbConventions {
       case (false, true) => clean + "_"
       case (false, false) => clean
     }
+  }
+
+  def dasherize(name: String) = {
+    val (upper, digit, other) = (1, 2, 3)
+    val buf = new StringBuilder(name.length() * 2)
+    var charType = 0
+    var prevCharType = 0
+    for (i <- 0 to (name.length - 1)) {
+      val c = name.charAt(i)
+      if (Character.isUpperCase(c)) charType = upper
+      else if (Character.isDigit(c)) charType = digit
+      else charType = other
+      if (i > 0
+        && charType != prevCharType
+        && !(prevCharType == upper && charType == other)) {
+        buf.append('-')
+      }
+      if (charType == upper) buf.append(Character.toLowerCase(c))
+      else buf.append(c)
+      prevCharType = charType
+    }
+    buf.toString
   }
 }
