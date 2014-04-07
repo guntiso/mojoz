@@ -122,7 +122,8 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
         "numeric(" + xt.totalDigits.get + ", " + xt.fractionDigits.get + ")"
       case "date" => "date"
       case "dateTime" => "timestamp"
-      case "string" => "varchar2(" + xt.length.get + " char)"
+      case "string" =>
+        "varchar2" + xt.length.map(l => s"($l char)").getOrElse("")
       case "boolean" => "char"
       case "base64Binary" => "blob"
       case x => throw new RuntimeException("Unexpected xsd type: " + xt)
