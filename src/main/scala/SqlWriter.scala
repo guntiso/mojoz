@@ -98,7 +98,8 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
         r.cols mkString ", "
       }) references ${r.refTable}(${r.refCols mkString ", "});"
     }
-  }.flatMap(x => x) mkString "\n"
+  }.flatMap(x => x)
+    .mkString("", "\n", if (tables.exists(_.refs.size > 0)) "\n" else "")
   def dbTableDef(t: TableDef) = t match {
     case TableDef(name, comment, cols, pk, uk, idx, refs) => DbTableDef(
       DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk, uk, idx, refs)
