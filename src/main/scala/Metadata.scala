@@ -1,5 +1,9 @@
 package mojoz.metadata
 
+import scala.annotation.tailrec
+
+import mojoz.metadata.in.I18nRules
+
 case class XsdType(name: String, length: Option[Int],
   totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
   def this(name: String) = this(name, None, None, None, false)
@@ -40,7 +44,7 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-class Metadata(val tableDefs: Seq[TableDef]) { this: ViewDefSource =>
+class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[XsdTypeDef]) { this: I18nRules =>
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String): TableDef =
@@ -74,4 +78,18 @@ class Metadata(val tableDefs: Seq[TableDef]) { this: ViewDefSource =>
             + ", joins: " + typeDef.joins, ex)
     }
   }
+
+  // typedef name to typedef
+  val viewDef = viewDefs.map(t => (t.name, t)).toMap
+  // typedef name to typedef with extended field list
+  val extendedViewDef = viewDefs.map(t =>
+    if (t.xtnds == null) t else {
+      @tailrec
+      def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
+        if (t.xtnds == null) t.fields ++ fields
+        else baseFields(viewDef(t.xtnds), t.fields ++ fields)
+      t.copy(fields = baseFields(t, Nil))
+    })
+    .map(setI18n)
+    .map(t => (t.name, t)).toMap
 }

@@ -51,18 +51,10 @@ case class XsdFieldDef(
   val isComplexType = xsdType != null && xsdType.isComplexType
 }
 
-trait ViewDefSource {
-  val typedefs: List[XsdTypeDef]
-  // typedef name to typedef
-  val nameToViewDef: Map[String, XsdTypeDef]
-  // typedef name to typedef with extended field list
-  val nameToExtendedViewDef: Map[String, XsdTypeDef]
-}
-
 package in {
 
 class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
-  this: Metadata with I18nRules with JoinsParser with ExpressionRules =>
+  this: Metadata with JoinsParser with ExpressionRules =>
 
   private val typedefStrings = rawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
@@ -412,19 +404,5 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
     checkTypedefMapping(result)
     result
   }
-
-  // typedef name to typedef
-  val nameToViewDef = typedefs.map(t => (t.name, t)).toMap
-  // typedef name to typedef with extended field list
-  val nameToExtendedViewDef = typedefs.map(t =>
-    if (t.xtnds == null) t else {
-      @tailrec
-      def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
-        if (t.xtnds == null) t.fields ++ fields
-        else baseFields(nameToViewDef(t.xtnds), t.fields ++ fields)
-      t.copy(fields = baseFields(t, Nil))
-    })
-    .map(setI18n)
-    .map(t => (t.name, t)).toMap
 }
 }

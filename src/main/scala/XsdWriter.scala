@@ -5,7 +5,8 @@ import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
-trait XsdWriter { this: Metadata with ViewDefSource =>
+class XsdWriter(metadata: Metadata) {
+  private val typedefs = metadata.viewDefs
   private def annotation(comment: String) =
     if (comment != null && comment.trim.length > 0)
       <xs:annotation>
@@ -53,7 +54,7 @@ trait XsdWriter { this: Metadata with ViewDefSource =>
     }
   }
   def createComplexType(typeDef: XsdTypeDef) = {
-    val tableComment = tableDefOption(typeDef).map(_.comment)
+    val tableComment = metadata.tableDefOption(typeDef).map(_.comment)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
