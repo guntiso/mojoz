@@ -61,10 +61,10 @@ trait ViewDefSource {
 
 package in {
 
-trait YamlViewDefLoader extends ViewDefSource {
-  this: RawViewDefSource with Metadata with I18nRules with JoinsParser with ExpressionRules =>
+class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
+  this: Metadata with I18nRules with JoinsParser with ExpressionRules =>
 
-  val typedefStrings = getRawViewDefs
+  private val typedefStrings = rawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
     try loadRawTypeDef(md.body) catch {
       case e: Exception => throw new RuntimeException(

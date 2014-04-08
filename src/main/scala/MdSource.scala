@@ -9,15 +9,7 @@ case class MdDef(
   line: Int,
   body: String)
 
-trait RawTableDefSource {
-  def getRawTableDefs: Seq[MdDef]
-}
-
-trait RawViewDefSource {
-  def getRawViewDefs: Seq[MdDef]
-}
-
-object MdSource {
+private[in] object MdSource {
   def split(mdDefs: Seq[MdDef]) = {
     // TODO set line numbers while splitting
     def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
@@ -36,35 +28,35 @@ object MdSource {
   def getViewDefs(mdDefs: Seq[MdDef]) = split(mdDefs).filter(isViewDef)
 }
 
-trait FilesMdSource extends RawTableDefSource with RawViewDefSource {
-  def path: String = null
-  def filter: (File) => Boolean = _.getName endsWith ".yaml"
-  def recursiveListFiles(f: File): Array[File] = {
+class FilesMdSource(
+  val path: String,
+  val filter: (File) => Boolean = _.getName endsWith ".yaml") {
+  require(path != null)
+  private def recursiveListFiles(f: File): Array[File] = {
     val these = Option(f.listFiles) getOrElse Array()
     these.filter(!_.isDirectory) ++
       these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
-  def typedefFiles =
-    if (path == null) sys.error("FilesMdSource path not initialized")
-    else recursiveListFiles(new File(path)).toSeq.filter(filter)
-  def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
+  private def typedefFiles =
+    recursiveListFiles(new File(path)).toSeq.filter(filter)
+  private def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
     Source.fromFile(f).mkString))
-  override def getRawTableDefs = MdSource.getTableDefs(defSets)
-  override def getRawViewDefs = MdSource.getViewDefs(defSets)
+  def getRawTableDefs = MdSource.getTableDefs(defSets)
+  def getRawViewDefs = MdSource.getViewDefs(defSets)
 }
 
-trait ResourcesMdSource extends RawTableDefSource with RawViewDefSource {
-  def indexPath: String = "/-md-files.txt"
-  def nameFilter: (String) => Boolean = _.endsWith(".yaml")
-  def nameMap: (String) => String = "/" + _
+class ResourcesMdSource(
+  val indexPath: String = "/-md-files.txt",
+  val nameFilter: (String) => Boolean = _.endsWith(".yaml"),
+  val nameMap: (String) => String = "/" + _) {
   // getClass.getClassLoader.getResources("") does not work from jar :(
-  def typedefResources =
+  private def typedefResources =
     Option(getClass.getResourceAsStream(indexPath))
       .map(Source.fromInputStream(_)(Codec("UTF-8"))
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toSeq
-  def defSets = typedefResources.map(r => MdDef(r, 0,
+  private def defSets = typedefResources.map(r => MdDef(r, 0,
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
-  override def getRawTableDefs = MdSource.getTableDefs(defSets)
-  override def getRawViewDefs = MdSource.getViewDefs(defSets)
+  def getRawTableDefs = MdSource.getTableDefs(defSets)
+  def getRawViewDefs = MdSource.getViewDefs(defSets)
 }

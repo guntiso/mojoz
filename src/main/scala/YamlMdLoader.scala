@@ -31,8 +31,8 @@ case class YamlFieldDef(
   orderBy: String,
   comment: String)
 
-trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
-  val tableDefStrings = getRawTableDefs
+class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
+  private val tableDefStrings = rawTableDefs
   private def checkTableDefs(td: Seq[TableDef]) = {
     val m = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
@@ -50,7 +50,7 @@ trait YamlTableDefLoader extends TableDefSource { this: RawTableDefSource =>
     td foreach checkHasColumns
     td foreach checkRepeatingColumnNames
   }
-  override lazy val entities = try {
+  val tableDefs = try {
     val rawTableDefs = tableDefStrings map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
         case e: Exception => throw new RuntimeException(
