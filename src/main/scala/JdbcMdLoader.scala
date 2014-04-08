@@ -15,7 +15,7 @@ import mojoz.metadata.Ref
 import mojoz.metadata.TableDef
 import mojoz.metadata.{ XsdType => Type }
 
-object JdbcMdLoader {
+object JdbcTableDefLoader {
   def loadTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
