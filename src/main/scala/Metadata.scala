@@ -40,8 +40,8 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-trait Metadata { this: TableDefSource with ViewDefSource =>
-  private lazy val md = entities.map(e => (e.name, e)).toMap
+class Metadata(val tableDefs: Seq[TableDef]) { this: ViewDefSource =>
+  private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String): TableDef =
     md.get(tableName) getOrElse

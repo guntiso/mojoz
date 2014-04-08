@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import mojoz.metadata._
 import mojoz.metadata.io._
 
-trait YamlMdWriter { this: TableDefSource =>
+class YamlMdWriter(val tableDefs: Seq[TableDef]) { 
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
@@ -61,7 +61,7 @@ trait YamlMdWriter { this: TableDefSource =>
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYamlTableDefs: String = (entities map toYaml).mkString("\n---\n\n")
+  def toYamlTableDefs: String = (tableDefs map toYaml).mkString("\n---\n\n")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec
     def _wrapped(
