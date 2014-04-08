@@ -76,6 +76,14 @@ object JdbcMdLoader {
     }
     tableDefs.toList
   }
+  def checkToEnum(check: String) =
+    // TODO properly, regexp at least
+    Option(check).map(_ split "[\\s'\\(\\),]+")
+      .map(_.toList.filter(_ != ""))
+      .map {
+        case "check" :: _ :: "in" :: tail => tail
+        case x => Nil
+      }.filter(_.size > 0).orNull
   def loadColDefs(rs: ResultSet) = {
     val cols = ListBuffer[ColumnDef]()
     while (rs.next) {
@@ -153,6 +161,10 @@ object JdbcMdLoader {
 
 // java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/GettingStartedTOC.fm.html
 object JdbcToXsdTypeMapper {
+  def integerOrSubtype(len: Int) =
+    if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
+    else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
+    else new Type("int", None, Some(len.toInt), None, false)
   def map(jdbcTypeCode: Int, size: Integer, fractionDigits: Integer) =
     jdbcTypeCode match {
       case Types.ARRAY => new Type("base64Binary")
@@ -166,7 +178,7 @@ object JdbcToXsdTypeMapper {
       case Types.DATALINK => new Type("string", size) // anyURI instead?
       case Types.DATE => new Type("date")
       case Types.DECIMAL | Types.NUMERIC =>
-        // TODO choose best base type?
+        // TODO choose best base type? use integerOrSubtype(len: Int)?
         new Type("decimal", size, fractionDigits)
       case Types.DISTINCT =>
         // TODO need base type to solve this correctly
