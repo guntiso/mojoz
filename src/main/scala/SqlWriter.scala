@@ -70,28 +70,28 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
   def createTablesStatements(tables: Seq[TableDef]) = {
-    tables.map(dbTableDef).map(t => List(
+    tables.map(t => List(
       createTableStatement(t), tableComment(t), columnComments(t))
       .mkString("\n")).mkString("\n\n") + (if (tables.size > 0) "\n" else "")
   }
-  def createTableStatement(t: DbTableDef) =
+  def createTableStatement(t: TableDef) =
     (t.cols.map(createColumn) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
-  def primaryKey(t: DbTableDef) = t.pk map { pk =>
+  def primaryKey(t: TableDef) = t.pk map { pk =>
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + pk.cols.mkString(", ") + ")"
   }
-  private def createColumn(c: DbColumnDef) =
-    c.name + " " + c.dbType +
+  private def createColumn(c: ColumnDef) =
+    c.name + " " + dbType(c) +
       (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
-      c.check
-  def tableComment(t: DbTableDef) = "comment on table " + t.name +
+      check(c)
+  def tableComment(t: TableDef) = "comment on table " + t.name +
     " is '" + Option(t.comment).getOrElse("") + "';"
-  def columnComments(t: DbTableDef) = t.cols.map(c =>
+  def columnComments(t: TableDef) = t.cols.map(c =>
     "comment on column " + t.name + "." + c.name +
       " is '" + Option(c.comment).getOrElse("") + "';") mkString "\n"
-  def foreignKeys(tables: Seq[TableDef]) = tables.map(dbTableDef).map { t =>
+  def foreignKeys(tables: Seq[TableDef]) = tables.map { t =>
     t.refs map { r =>
       // TODO cascade
       s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
@@ -100,15 +100,6 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
     }
   }.flatMap(x => x)
     .mkString("", "\n", if (tables.exists(_.refs.size > 0)) "\n" else "")
-  def dbTableDef(t: TableDef) = t match {
-    case TableDef(name, comment, cols, pk, uk, idx, refs) => DbTableDef(
-      DbConventions.xsdNameToDbName(name), comment, cols.map(dbColumnDef), pk, uk, idx, refs)
-  }
-  def dbColumnDef(c: ColumnDef) = c match {
-    case ColumnDef(name, xsdType, nullable, dbDefault, enum, comment) => DbColumnDef(
-      DbConventions.xsdNameToDbName(name),
-      dbType(c), nullable, dbDefault, check(c), comment)
-  }
   def dbType(c: ColumnDef) = {
     val xt = c.xsdType
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
