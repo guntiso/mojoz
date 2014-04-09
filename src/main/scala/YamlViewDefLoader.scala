@@ -53,8 +53,8 @@ case class FieldDef(
 
 package in {
 
-class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
-  this: Metadata with JoinsParser with ExpressionRules =>
+class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[MdDef]) {
+  this: JoinsParser with ExpressionRules =>
 
   private val typedefStrings = rawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
@@ -75,7 +75,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
     else baseTable(nameToTypeDef.get(t.xtnds)
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
-  val typedefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
+  val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
   def loadRawTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
@@ -183,7 +183,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
         if (f.xsdType.isComplexType)
           m.get(f.xsdType.name) getOrElse sys.error("Type " + f.xsdType.name +
             " referenced from " + t.name + " is not found")
-        else if (!f.isExpression) getCol(t, f)
+        else if (!f.isExpression) tableMetadata.columnDef(t, f)
       }
     }
   }
@@ -252,7 +252,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
       def resolveTypeFromDbMetadata(f: FieldDef) = {
         if (f.isExpression || f.isCollection) f
         else {
-          val col = getCol(t, f)
+          val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
           // FIXME autojoins nullable?
           val nullable =

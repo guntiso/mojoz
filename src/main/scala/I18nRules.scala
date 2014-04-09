@@ -1,6 +1,6 @@
 package mojoz.metadata.in
 
-import mojoz.metadata.Metadata // TODO ???
+import mojoz.metadata.TableMetadata
 import mojoz.metadata.ViewDef
 
 trait I18nRules {
@@ -13,7 +13,7 @@ trait NoI18nRules extends I18nRules {
   override def setI18n(t: ViewDef) = t
 }
 
-trait SuffixI18nRules extends I18nRules { this: Metadata =>
+trait SuffixI18nRules extends I18nRules { this: TableMetadata =>
   val i18nSuffixes: Set[String]
   val noI18nFields: Set[String] = Set()
   val iI8nForcedViews: Set[String] = Set()

@@ -44,7 +44,7 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this: I18nRules =>
+class TableMetadata(val tableDefs: Seq[TableDef]) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String): TableDef =
@@ -60,7 +60,9 @@ class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this:
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 
-  def getCol(typeDef: ViewDef, f: FieldDef) = {
+  def columnDef(viewDef: ViewDef, fieldDef: FieldDef) = {
+    val typeDef = viewDef
+    val f = fieldDef
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
@@ -78,11 +80,14 @@ class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this:
             + ", joins: " + typeDef.joins, ex)
     }
   }
+}
 
+class Metadata(tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef])
+  extends TableMetadata(tableDefs) { this: I18nRules =>
   // typedef name to typedef
   val viewDef = viewDefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
-  val extendedViewDef = viewDefs.map(t =>
+  lazy val extendedViewDef = viewDefs.map(t =>
     if (t.xtnds == null) t else {
       @tailrec
       def baseFields(t: ViewDef, fields: Seq[FieldDef]): Seq[FieldDef] =
