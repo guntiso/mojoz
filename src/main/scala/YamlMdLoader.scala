@@ -160,7 +160,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
   }
 }
 
-object YamlMdLoader {
+private [in] object YamlMdLoader {
   val FieldDef = {
     val ident = "[_a-zA-z][_a-zA-Z0-9]*"
     val qualifiedIdent = <a>{ ident }(\.{ ident })?</a>.text
