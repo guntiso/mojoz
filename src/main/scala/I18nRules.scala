@@ -9,7 +9,7 @@ trait I18nRules {
 
 package rules {
 
-trait NoI18nRules extends I18nRules {
+trait NoI18n extends I18nRules {
   override def setI18n(t: ViewDef) = t
 }
 
