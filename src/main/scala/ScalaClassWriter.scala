@@ -11,7 +11,7 @@ trait ScalaClassWriter {
       x(0).toLower + x.substring(1)
     case x => x
   }
-  def scalaFieldTypeName(field: XsdFieldDef) = {
+  def scalaFieldTypeName(field: FieldDef) = {
     val itemTypeName =
       if (field.isComplexType) scalaComplexTypeName(field.xsdType)
       else scalaSimpleTypeName(field.xsdType)
@@ -34,9 +34,9 @@ trait ScalaClassWriter {
       throw new RuntimeException("Unexpected type: " + t)
   }
   def scalaComplexTypeName(t: XsdType) = scalaClassName(t.name)
-  def initialValueString(col: XsdFieldDef) =
+  def initialValueString(col: FieldDef) =
     if (col.isCollection) "Nil" else "null"
-  private def scalaFieldString(fieldName: String, col: XsdFieldDef) =
+  private def scalaFieldString(fieldName: String, col: FieldDef) =
     s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   def scalaClassExtends(typeDef: ViewDef) =
     Option(typeDef.xtnds).filter(_ != "").map(scalaClassName)

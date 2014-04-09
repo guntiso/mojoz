@@ -13,7 +13,7 @@ class XsdWriter(metadata: Metadata) {
         <xs:documentation>{ comment }</xs:documentation>
       </xs:annotation>
   private def xsdTypeName(name: String) = xsdName(name) + "Type"
-  private def createElement(elName: String, col: XsdFieldDef) = {
+  private def createElement(elName: String, col: FieldDef) = {
     val colcomment = annotation(col.comment)
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {

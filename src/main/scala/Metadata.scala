@@ -60,7 +60,7 @@ class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this:
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 
-  def getCol(typeDef: ViewDef, f: XsdFieldDef) = {
+  def getCol(typeDef: ViewDef, f: FieldDef) = {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
@@ -85,7 +85,7 @@ class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this:
   val extendedViewDef = viewDefs.map(t =>
     if (t.xtnds == null) t else {
       @tailrec
-      def baseFields(t: ViewDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
+      def baseFields(t: ViewDef, fields: Seq[FieldDef]): Seq[FieldDef] =
         if (t.xtnds == null) t.fields ++ fields
         else baseFields(viewDef(t.xtnds), t.fields ++ fields)
       t.copy(fields = baseFields(t, Nil))

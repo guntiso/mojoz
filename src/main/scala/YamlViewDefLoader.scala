@@ -27,9 +27,9 @@ case class ViewDef(
   draftOf: String,
   detailsOf: String,
   comment: String,
-  fields: Seq[XsdFieldDef])
+  fields: Seq[FieldDef])
 
-case class XsdFieldDef(
+case class FieldDef(
   table: String,
   tableAlias: String,
   name: String,
@@ -143,7 +143,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
-      XsdFieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
+      FieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
@@ -168,7 +168,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
         nameToTypeDef, t.name :: visited)
     }
     td.foreach(t => checkExtends(t, m, Nil))
-    def propName(f: XsdFieldDef) = Option(f.alias) getOrElse f.name
+    def propName(f: FieldDef) = Option(f.alias) getOrElse f.name
     def checkRepeatingFieldNames(t: ViewDef) =
       if (t.fields.map(propName).toSet.size < t.fields.size) sys.error(
         "Type " + t.name + " defines multiple fields named " + t.fields
@@ -232,7 +232,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
       val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
-      def resolveNameAndTable(f: XsdFieldDef) =
+      def resolveNameAndTable(f: FieldDef) =
         if (f.name.indexOf(".") < 0)
           f.copy(table = dbName(t.table), name = dbName(f.name))
         else {
@@ -249,7 +249,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias)
         }
-      def resolveTypeFromDbMetadata(f: XsdFieldDef) = {
+      def resolveTypeFromDbMetadata(f: FieldDef) = {
         if (f.isExpression || f.isCollection) f
         else {
           val col = getCol(t, f)
@@ -295,7 +295,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
       def addMissingDraftOf(draftOf: ViewDef) = addMissing(
         draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
           xtnds = null, draftOf = draftOf.name, fields = Nil))
-      def draftField(f: XsdFieldDef) =
+      def draftField(f: FieldDef) =
         if (f.isComplexType) {
           val t = m(f.xsdType.name)
           def fCopy = f.copy(xsdType = f.xsdType.copy(name = draftName(t.name)))
@@ -341,7 +341,7 @@ class YamlViewDefLoader(val rawViewDefs: Seq[MdDef]) {
       def addMissingDetailsOf(dtOf: ViewDef) = addMissing(
         dtOf.copy(name = detailsName(dtOf.name), table = null, joins = null,
           xtnds = null, detailsOf = dtOf.name, fields = Nil))
-      def detailsField(f: XsdFieldDef) = if (f.isSimpleType) f else {
+      def detailsField(f: FieldDef) = if (f.isSimpleType) f else {
         val t = m(f.xsdType.name)
         def fCopy = f.copy(xsdType = f.xsdType.copy(name = detailsName(t.name)))
         if (isDefined(detailsName(t.name))) fCopy
