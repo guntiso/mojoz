@@ -12,12 +12,12 @@ import mojoz.metadata._
 import mojoz.metadata.io._
 import org.yaml.snakeyaml.Yaml
 
-case class YamlTypeDef(
+private [in] case class YamlTableDef(
   table: String,
   comment: String,
   columns: Seq[YamlFieldDef])
 
-case class YamlFieldDef(
+private [in] case class YamlFieldDef(
   name: String,
   cardinality: String,
   maxOccurs: Option[Int],
@@ -115,7 +115,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
     }
     tableDefs
   }
-  def loadYamlTableDef(typeDef: String) = {
+  private def loadYamlTableDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
     val table = tdMap.get("table").map(_.toString)
@@ -126,9 +126,9 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
-    YamlTypeDef(table, comment, colDefs)
+    YamlTableDef(table, comment, colDefs)
   }
-  def yamlTypeDefToTableDef(y: YamlTypeDef) = {
+  private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     val name = y.table
     val comment = y.comment
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
@@ -137,7 +137,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
     val exTypeDef = ExTypeDef(name, comment, cols, pk)
     MdConventions.fromExternal(exTypeDef)
   }
-  def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
+  private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
     val name = yfd.name
     if (yfd.maxOccurs.isDefined)
       sys.error("maxOccurs not supported for table columns")
