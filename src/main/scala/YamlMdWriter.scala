@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import mojoz.metadata._
 import mojoz.metadata.io._
 
-class YamlMdWriter(val tableDefs: Seq[TableDef]) { 
+class YamlTableDefWriter(val tableDefs: Seq[TableDef]) { 
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
