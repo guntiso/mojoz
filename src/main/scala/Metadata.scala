@@ -44,23 +44,23 @@ case class ColumnDef(
   enum: Seq[String],
   comment: String)
 
-class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[XsdTypeDef]) { this: I18nRules =>
+class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef]) { this: I18nRules =>
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String): TableDef =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
-  def tableDefOption(typeDef: XsdTypeDef): Option[TableDef] =
+  def tableDefOption(typeDef: ViewDef): Option[TableDef] =
     md.get(typeDef.table)
 
-  def tableDef(typeDef: XsdTypeDef): TableDef =
+  def tableDef(typeDef: ViewDef): TableDef =
     // TODO get line, file info from xsd type def
     md.get(typeDef.table) getOrElse
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 
-  def getCol(typeDef: XsdTypeDef, f: XsdFieldDef) = {
+  def getCol(typeDef: ViewDef, f: XsdFieldDef) = {
     val tableMd = tableDef(typeDef)
     val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
@@ -85,7 +85,7 @@ class Metadata(val tableDefs: Seq[TableDef], val viewDefs: Seq[XsdTypeDef]) { th
   val extendedViewDef = viewDefs.map(t =>
     if (t.xtnds == null) t else {
       @tailrec
-      def baseFields(t: XsdTypeDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
+      def baseFields(t: ViewDef, fields: Seq[XsdFieldDef]): Seq[XsdFieldDef] =
         if (t.xtnds == null) t.fields ++ fields
         else baseFields(viewDef(t.xtnds), t.fields ++ fields)
       t.copy(fields = baseFields(t, Nil))

@@ -53,7 +53,7 @@ class XsdWriter(metadata: Metadata) {
         </xs:element>
     }
   }
-  def createComplexType(typeDef: XsdTypeDef) = {
+  def createComplexType(typeDef: ViewDef) = {
     val tableComment = metadata.tableDefOption(typeDef).map(_.comment)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
@@ -83,9 +83,9 @@ class XsdWriter(metadata: Metadata) {
         <xs:element type="xs:int" minOccurs="0" name="Offset"/>
       </xs:sequence>
     </xs:complexType>
-  def listWrapperName(typeDef: XsdTypeDef) =
+  def listWrapperName(typeDef: ViewDef) =
     typeDef.name.replace("_list_row", "_list_wrapper")
-  def createListWrapper(typeDef: XsdTypeDef) = // XXX
+  def createListWrapper(typeDef: ViewDef) = // XXX
     <xs:complexType name={ xsdTypeName(listWrapperName(typeDef)) }>
       <xs:complexContent>
         <xs:extension base={ "tns:" + listWrapperXsdTypeName }>
