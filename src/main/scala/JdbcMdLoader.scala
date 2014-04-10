@@ -20,7 +20,7 @@ case class JdbcColumnType(
   jdbcTypeCode: Int,
   size: Int,
   fractionDigits: Int)
-object JdbcTableDefLoader {
+class JdbcTableDefLoader {
   def loadTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
