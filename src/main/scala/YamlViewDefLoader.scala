@@ -23,6 +23,8 @@ case class ViewDef(
   tableAlias: String,
   joins: String, // from clause
   filter: String, // where clause
+  group: String, // group by clause
+  order: String, // order by clause
   xtnds: String,
   draftOf: String,
   detailsOf: String,
@@ -84,6 +86,8 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[M
     val rawTable = get("table")
     val joins = get("joins")
     val filter = get("filter")
+    val group = get("group")
+    val order = get("order")
     val xtnds = get("extends")
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
@@ -147,7 +151,8 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[M
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
-    ViewDef(name, table, null, joins, filter, xtnds, draftOf, detailsOf, comment,
+    ViewDef(name, table, null, joins, filter, group, order,
+      xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
   private def checkTypedefs(td: Seq[ViewDef]) = {
