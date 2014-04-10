@@ -13,7 +13,7 @@ trait NoI18n extends I18nRules {
   override def setI18n(t: ViewDef) = t
 }
 
-trait SuffixI18nRules extends I18nRules { this: TableMetadata =>
+trait SuffixI18nRules extends I18nRules { this: TableMetadata[_] =>
   val i18nSuffixes: Set[String]
   val noI18nFields: Set[String] = Set()
   val iI8nForcedViews: Set[String] = Set()

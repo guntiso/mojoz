@@ -33,16 +33,16 @@ private [in] case class YamlFieldDef(
 
 class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
   private val tableDefStrings = rawTableDefs
-  private def checkTableDefs(td: Seq[TableDef]) = {
-    val m = td.map(t => (t.name, t)).toMap
+  private def checkTableDefs(td: Seq[TableDef[_]]) = {
+    val m: Map[String, _] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
-    def checkName(t: TableDef) =
+    def checkName(t: TableDef[_]) =
       if (t.name == null || t.name.trim == "") sys.error("Table without name")
-    def checkHasColumns(t: TableDef) =
+    def checkHasColumns(t: TableDef[_]) =
       if (t.cols == null || t.cols.size == 0) sys.error(
         "Table " + t.name + " has no columns")
-    def checkRepeatingColumnNames(t: TableDef) =
+    def checkRepeatingColumnNames(t: TableDef[_]) =
       if (t.cols.map(_.name).toSet.size < t.cols.size) sys.error(
         "Table " + t.name + " defines multiple columns named " + t.cols
           .groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
@@ -75,38 +75,38 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
       overwrite.totalDigits orElse base.totalDigits,
       overwrite.fractionDigits orElse base.fractionDigits,
       false)
-    def baseRefChain(col: ColumnDef, visited: List[String]): List[String] = {
+    def baseRefChain(col: ColumnDef[XsdType], visited: List[String]): List[String] = {
       def chain(ref: String) =
         if (visited contains ref)
           sys.error("Cyclic column refs: " +
             (ref :: visited).reverse.mkString(" -> "))
         else baseRefChain(refToCol(ref)._2, ref :: visited)
       // TODO ??? if type explicitly defined, why ref? throw?
-      if (Option(col.xsdType.name).map(_ contains ".") getOrElse false)
-        chain(col.xsdType.name)
+      if (Option(col.type_.name).map(_ contains ".") getOrElse false)
+        chain(col.type_.name)
       else if (col.name contains ".") chain(col.name)
       else visited
     }
     val tableDefs = rawTableDefs map { r =>
-      val resolvedColsAndRefs: Seq[(ColumnDef, Seq[Ref])] = r.cols.map { c =>
+      val resolvedColsAndRefs: Seq[(ColumnDef[XsdType], Seq[Ref])] = r.cols.map { c =>
         val refChain = baseRefChain(c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {
           // TODO how about multi-col refs, how to define/use these?
           // TODO PKs, FKs and their names? By conventions!
           val defaultRefTableAlias =
-            if (c.xsdType.name == null || c.name.indexOf('.') < 0) null
+            if (c.type_.name == null || c.name.indexOf('.') < 0) null
             else c.name.substring(0, c.name.indexOf('.'))
           val colName = c.name.replace('.', '_')
           val (refTable, refCol) =
-            refToCol(Option(c.xsdType.name) getOrElse c.name)
+            refToCol(Option(c.type_.name) getOrElse c.name)
           val xsdType = overwriteXsdType(
             refChain.foldLeft(new XsdType(null))((t, ref) =>
-              overwriteXsdType(t, refToCol(ref)._2.xsdType)),
-            c.xsdType)
+              overwriteXsdType(t, refToCol(ref)._2.type_)),
+            c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
               null, defaultRefTableAlias, null, null)
-          (c.copy(name = colName, xsdType = xsdType), List(ref))
+          (c.copy(name = colName, type_ = xsdType), List(ref))
         }
       }
       r.copy(

@@ -28,33 +28,33 @@ case class Ref(
   defaultRefTableAlias: String,
   onDeleteAction: String,
   onUpdateAction: String)
-case class TableDef(
+case class TableDef[T](
   name: String,
   comment: String,
-  cols: Seq[ColumnDef],
+  cols: Seq[ColumnDef[T]],
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
   idx: Seq[DbIndex],
   refs: Seq[Ref])
-case class ColumnDef(
+case class ColumnDef[T](
   name: String,
-  xsdType: XsdType,
+  type_ : T,
   nullable: Boolean,
   dbDefault: String,
   enum: Seq[String],
   comment: String)
 
-class TableMetadata(val tableDefs: Seq[TableDef]) {
+class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
-  def tableDef(tableName: String): TableDef =
+  def tableDef(tableName: String) =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
-  def tableDefOption(typeDef: ViewDef): Option[TableDef] =
+  def tableDefOption(typeDef: ViewDef) =
     md.get(typeDef.table)
 
-  def tableDef(typeDef: ViewDef): TableDef =
+  def tableDef(typeDef: ViewDef) =
     // TODO get line, file info from xsd type def
     md.get(typeDef.table) getOrElse
       sys.error("table not found: " + typeDef.table +
@@ -82,7 +82,7 @@ class TableMetadata(val tableDefs: Seq[TableDef]) {
   }
 }
 
-class Metadata(tableDefs: Seq[TableDef], val viewDefs: Seq[ViewDef])
+class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef])
   extends TableMetadata(tableDefs) { this: I18nRules =>
   // typedef name to typedef
   val viewDef = viewDefs.map(t => (t.name, t)).toMap

@@ -15,11 +15,16 @@ import mojoz.metadata.Ref
 import mojoz.metadata.TableDef
 import mojoz.metadata.{ XsdType => Type }
 
+case class JdbcColumnType(
+  dbTypeName: String,
+  jdbcTypeCode: Int,
+  size: Int,
+  fractionDigits: Int)
 object JdbcTableDefLoader {
   def loadTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
-    val tableDefs = ListBuffer[TableDef]()
+    val tableDefs = ListBuffer[TableDef[JdbcColumnType]]()
     val dmd = conn.getMetaData
     val rs = dmd.getTables(catalog, schemaPattern, tableNamePattern,
       if (types.size == 0) null else types.toArray)
@@ -85,10 +90,10 @@ object JdbcTableDefLoader {
         case x => Nil
       }.filter(_.size > 0).orNull
   def loadColDefs(rs: ResultSet) = {
-    val cols = ListBuffer[ColumnDef]()
+    val cols = ListBuffer[ColumnDef[JdbcColumnType]]()
     while (rs.next) {
       val name = rs.getString("COLUMN_NAME")
-      val jdbcTypeCode = rs.getInt("DATA_TYPE") // TODO use it?
+      val jdbcTypeCode = rs.getInt("DATA_TYPE")
       val dbTypeName = rs.getString("TYPE_NAME")
       val size = rs.getInt("COLUMN_SIZE")
       val fractionDigits = rs.getInt("DECIMAL_DIGITS")
@@ -96,8 +101,8 @@ object JdbcTableDefLoader {
       val dbDefault = rs.getString("COLUMN_DEF")
       val comment = rs.getString("REMARKS")
       val check = null // TODO check constraint for column (enum)!
-      // TODO extract mapping, use db type!
-      val dbType = JdbcToXsdTypeMapper.map(jdbcTypeCode, size, fractionDigits)
+      val dbType =
+        JdbcColumnType(dbTypeName, jdbcTypeCode, size, fractionDigits)
       cols += ColumnDef(name, dbType, nullable, dbDefault, check, comment)
     }
     rs.close

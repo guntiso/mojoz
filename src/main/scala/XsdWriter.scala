@@ -5,7 +5,7 @@ import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
-class XsdWriter(metadata: Metadata) {
+class XsdWriter(metadata: Metadata[XsdType]) {
   private val typedefs = metadata.viewDefs
   private def annotation(comment: String) =
     if (comment != null && comment.trim.length > 0)

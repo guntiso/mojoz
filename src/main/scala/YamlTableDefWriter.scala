@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import mojoz.metadata._
 import mojoz.metadata.io._
 
-class YamlTableDefWriter(val tableDefs: Seq[TableDef]) { 
+class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
@@ -52,7 +52,7 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef]) {
       wrapped(escapeYamlValue(comment.trim), defString + " :", indent)
     }
   }
-  def toYaml(entity: TableDef): String =
+  def toYaml(entity: TableDef[XsdType]): String =
     toYaml(MdConventions.toExternal(entity))
   def toYaml(entity: ExTypeDef): String =
     List(Some(entity.name).map("table:   " + _),

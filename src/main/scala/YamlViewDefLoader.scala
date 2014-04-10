@@ -55,7 +55,7 @@ case class FieldDef(
 
 package in {
 
-class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[MdDef]) {
+class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDefs: Seq[MdDef]) {
   this: JoinsParser with ExpressionRules =>
 
   private val typedefStrings = rawViewDefs
@@ -142,7 +142,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[M
         if (isExpression)
           MdConventions.fromExternal(
             // XXX unnecessary complex structure used
-            ExFieldDef(name, rawXsdType, None, null, null, comment)).xsdType
+            ExFieldDef(name, rawXsdType, None, null, null, comment)).type_
         else null
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
@@ -267,7 +267,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata, val rawViewDefs: Seq[M
                 case Right(b) => b || col.nullable
                 case Left(s) => true // FIXME Left(nullableTableDependency)!
               }
-          f.copy(nullable = nullable, xsdType = col.xsdType,
+          f.copy(nullable = nullable, xsdType = col.type_,
             enum = Option(f.enum) getOrElse col.enum,
             comment = Option(f.comment) getOrElse col.comment)
         }

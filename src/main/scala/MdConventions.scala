@@ -24,7 +24,7 @@ object MdConventions {
   def isIdRefName(name: String) = name.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
-  def fromExternal(typeDef: ExTypeDef): TableDef = {
+  def fromExternal(typeDef: ExTypeDef): TableDef[XsdType] = {
     val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
     TableDef(typeDef.name, typeDef.comment, cols, primaryKey, Nil, Nil, Nil)
@@ -40,7 +40,7 @@ object MdConventions {
       Some(DbIndex(null, cols.map(_.name)))
     else None
   }
-  def fromExternal(col: ExFieldDef): ColumnDef = {
+  def fromExternal(col: ExFieldDef): ColumnDef[XsdType] = {
     def defaultType(defaultName: String) =
       col.xsdType map { x =>
         if (x.name == null) x.copy(name = defaultName)
@@ -70,10 +70,10 @@ object MdConventions {
           x.nullable getOrElse true, x.dbDefault, x.enum, x.comment)
     }
   }
-  def toExternal(typeDef: TableDef): ExTypeDef =
+  def toExternal(typeDef: TableDef[XsdType]): ExTypeDef =
     ExTypeDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal,
       toExternalPk(typeDef))
-  def toExternalPk(typeDef: TableDef) = {
+  def toExternalPk(typeDef: TableDef[XsdType]) = {
     val cols = typeDef.cols
     val DefaultPkName = "pk_" + typeDef.name
     if (!typeDef.pk.isDefined) None
@@ -92,13 +92,13 @@ object MdConventions {
     else None
   }
 
-  def toExternal(col: ColumnDef): ExFieldDef = {
+  def toExternal(col: ColumnDef[XsdType]): ExFieldDef = {
     val nullOpt = (col.name, col.nullable) match {
       case ("id", false) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
     }
-    val typeOpt = (col.name, col.xsdType.name, col.xsdType.length) match {
+    val typeOpt = (col.name, col.type_.name, col.type_.length) match {
       case ("id", "long", _) => None
       case (name, "long", _) if isIdRefName(name) => None
       case (name, "boolean", _) if isBooleanName(name) => None
@@ -106,7 +106,7 @@ object MdConventions {
       case (name, "string", None) if !isTypedName(name) => None
       case (name, "string", Some(len)) if !isTypedName(name) =>
         Some(new XsdType(null.asInstanceOf[String], len))
-      case _ => Option(col.xsdType)
+      case _ => Option(col.type_)
     }
     ExFieldDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comment)
   }

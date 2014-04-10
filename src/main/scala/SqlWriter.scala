@@ -66,32 +66,32 @@ trait OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 }
 
 trait OracleSqlWriter { this: ConstraintNamingRules =>
-  def createStatements(tables: Seq[TableDef]) = {
+  def createStatements(tables: Seq[TableDef[XsdType]]) = {
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
-  def createTablesStatements(tables: Seq[TableDef]) = {
+  def createTablesStatements(tables: Seq[TableDef[XsdType]]) = {
     tables.map(t => List(
       createTableStatement(t), tableComment(t), columnComments(t))
       .mkString("\n")).mkString("\n\n") + (if (tables.size > 0) "\n" else "")
   }
-  def createTableStatement(t: TableDef) =
+  def createTableStatement(t: TableDef[XsdType]) =
     (t.cols.map(createColumn) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
-  def primaryKey(t: TableDef) = t.pk map { pk =>
+  def primaryKey(t: TableDef[_]) = t.pk map { pk =>
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + pk.cols.mkString(", ") + ")"
   }
-  private def createColumn(c: ColumnDef) =
+  private def createColumn(c: ColumnDef[XsdType]) =
     c.name + " " + dbType(c) +
       (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
       check(c)
-  def tableComment(t: TableDef) = "comment on table " + t.name +
+  def tableComment(t: TableDef[_]) = "comment on table " + t.name +
     " is '" + Option(t.comment).getOrElse("") + "';"
-  def columnComments(t: TableDef) = t.cols.map(c =>
+  def columnComments(t: TableDef[_]) = t.cols.map(c =>
     "comment on column " + t.name + "." + c.name +
       " is '" + Option(c.comment).getOrElse("") + "';") mkString "\n"
-  def foreignKeys(tables: Seq[TableDef]) = tables.map { t =>
+  def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
     t.refs map { r =>
       // TODO cascade
       s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
@@ -100,8 +100,8 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
     }
   }.flatMap(x => x)
     .mkString("", "\n", if (tables.exists(_.refs.size > 0)) "\n" else "")
-  def dbType(c: ColumnDef) = {
-    val xt = c.xsdType
+  def dbType(c: ColumnDef[XsdType]) = { // FIXME generic class with type mapper!
+    val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
       case "integer" =>
@@ -121,8 +121,9 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
       case x => throw new RuntimeException("Unexpected xsd type: " + xt)
     }
   }
-  def check(c: ColumnDef) = {
-    val xt = c.xsdType
+  def check(c: ColumnDef[XsdType]) = {
+    // TODO depends on database!
+    val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"

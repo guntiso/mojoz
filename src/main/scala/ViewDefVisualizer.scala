@@ -3,8 +3,9 @@ package mojoz.metadata.out
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 import mojoz.metadata.Metadata
 import mojoz.metadata.ViewDef
+import mojoz.metadata.XsdType
 
-class ViewDefVisualizer(metadata: Metadata) {
+class ViewDefVisualizer(metadata: Metadata[XsdType]) {
   private def getType(s: String) = metadata.extendedViewDef(s)
   private def printComplexType(indent: String, typeDef: ViewDef) {
     val nextIndent = indent + "  "
