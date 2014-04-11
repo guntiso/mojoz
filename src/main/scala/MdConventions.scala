@@ -5,9 +5,9 @@ import mojoz.metadata._
 case class ExTableDef(
   name: String,
   comment: String,
-  cols: Seq[ExFieldDef],
+  cols: Seq[ExColumnDef],
   pk: Option[DbIndex])
-case class ExFieldDef(
+case class ExColumnDef(
   name: String,
   xsdType: Option[XsdType],
   nullable: Option[Boolean],
@@ -40,29 +40,29 @@ object MdConventions {
       Some(DbIndex(null, cols.map(_.name)))
     else None
   }
-  def fromExternal(col: ExFieldDef): ColumnDef[XsdType] = {
+  def fromExternal(col: ExColumnDef): ColumnDef[XsdType] = {
     def defaultType(defaultName: String) =
       col.xsdType map { x =>
         if (x.name == null) x.copy(name = defaultName)
         else x
       } getOrElse new XsdType(defaultName)
     col match {
-      case ExFieldDef(name, Some(xsdType), nullable, dbDefault, enum, comment) if isRefName(xsdType.name) =>
+      case ExColumnDef(name, Some(xsdType), nullable, dbDefault, enum, comment) if isRefName(xsdType.name) =>
         ColumnDef(name, xsdType,
           nullable getOrElse true, dbDefault, enum, comment)
-      case ExFieldDef("id", xsdType, nullable, dbDefault, enum, comment) =>
+      case ExColumnDef("id", xsdType, nullable, dbDefault, enum, comment) =>
         ColumnDef("id", defaultType("long"),
           nullable getOrElse false, dbDefault, enum, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isRefName(name) =>
+      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isRefName(name) =>
         ColumnDef(name, xsdType getOrElse new XsdType(null),
           nullable getOrElse true, dbDefault, enum, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
+      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
         ColumnDef(name, defaultType("boolean"),
           nullable getOrElse true, dbDefault, enum, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isDateName(name) =>
+      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isDateName(name) =>
         ColumnDef(name, defaultType("date"),
           nullable getOrElse true, dbDefault, enum, comment)
-      case ExFieldDef(name, xsdType, nullable, dbDefault, enum, comment) if isIdRefName(name) =>
+      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isIdRefName(name) =>
         ColumnDef(name, defaultType("long"),
           nullable getOrElse true, dbDefault, enum, comment)
       case x =>
@@ -92,7 +92,7 @@ object MdConventions {
     else None
   }
 
-  def toExternal(col: ColumnDef[XsdType]): ExFieldDef = {
+  def toExternal(col: ColumnDef[XsdType]): ExColumnDef = {
     val nullOpt = (col.name, col.nullable) match {
       case ("id", false) => None
       case (_, true) => None
@@ -108,6 +108,6 @@ object MdConventions {
         Some(new XsdType(null.asInstanceOf[String], len))
       case _ => Option(col.type_)
     }
-    ExFieldDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comment)
+    ExColumnDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comment)
   }
 }

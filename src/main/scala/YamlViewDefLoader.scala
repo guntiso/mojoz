@@ -144,7 +144,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
         if (isExpression)
           MdConventions.fromExternal(
             // XXX unnecessary complex structure used
-            ExFieldDef(name, rawXsdType, None, null, null, comment)).type_
+            ExColumnDef(name, rawXsdType, None, null, null, comment)).type_
         else null
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null

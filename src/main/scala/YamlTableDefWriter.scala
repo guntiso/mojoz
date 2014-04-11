@@ -16,7 +16,7 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
-  def toYamlColDef(colDef: ExFieldDef) = {
+  def toYamlColDef(colDef: ExColumnDef) = {
     import colDef._
     val t = colDef.xsdType getOrElse new XsdType(null, None, None, None, false)
     val typeString = List(
