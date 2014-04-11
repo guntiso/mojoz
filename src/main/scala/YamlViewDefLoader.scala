@@ -23,7 +23,7 @@ case class ViewDef[T](
   tableAlias: String,
   joins: String, // from clause
   filter: String, // where clause
-  group: String, // group by clause
+  groupBy: String,
   order: String, // order by clause
   xtnds: String,
   draftOf: String,
