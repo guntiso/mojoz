@@ -24,7 +24,7 @@ case class ViewDef[T](
   joins: String, // from clause
   filter: String, // where clause
   groupBy: String,
-  order: String, // order by clause
+  orderBy: String,
   xtnds: String,
   draftOf: String,
   detailsOf: String,
