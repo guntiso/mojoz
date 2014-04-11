@@ -12,12 +12,12 @@ import mojoz.metadata._
 import mojoz.metadata.io._
 import org.yaml.snakeyaml.Yaml
 
-private [in] case class YamlTableDef(
+private[in] case class YamlTableDef(
   table: String,
   comments: String,
   columns: Seq[YamlFieldDef])
 
-private [in] case class YamlFieldDef(
+private[in] case class YamlFieldDef(
   name: String,
   cardinality: String,
   maxOccurs: Option[Int],
@@ -31,7 +31,8 @@ private [in] case class YamlFieldDef(
   orderBy: String,
   comments: String)
 
-class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
+class YamlTableDefLoader(val rawTableDefs: Seq[MdDef],
+  conventions: MdConventions = new MdConventions) {
   private val tableDefStrings = rawTableDefs
   private def checkTableDefs(td: Seq[TableDef[_]]) = {
     val m: Map[String, _] = td.map(t => (t.name, t)).toMap
@@ -105,7 +106,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
               overwriteXsdType(t, refToCol(ref)._2.type_)),
             c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
-              null, defaultRefTableAlias, null, null)
+            null, defaultRefTableAlias, null, null)
           (c.copy(name = colName, type_ = xsdType), List(ref))
         }
       }
@@ -133,9 +134,11 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
     val comment = y.comments
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = None // TODO primary key
-    // TODO rewrite fromExternal conventions API
-    val exTypeDef = ExTableDef(name, comment, cols, pk)
-    MdConventions.fromExternal(exTypeDef)
+    val uk = Nil // TODO unique indexes
+    val idx = Nil // TODO indexes
+    val refs = Nil // TODO refs?
+    val exTypeDef = TableDef(name, comment, cols, pk, uk, idx, refs)
+    conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
     val name = yfd.name
@@ -155,12 +158,13 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
     val comment = yfd.comments
-    val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
-    ExColumnDef(name, rawXsdType, nullable, dbDefault, enum, comment)
+    val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
+    ColumnDef(name, ExColumnType(nullable, rawXsdType),
+      nullable getOrElse true, dbDefault, enum, comment)
   }
 }
 
-private [in] object YamlMdLoader {
+private[in] object YamlMdLoader {
   val FieldDef = {
     val ident = "[_a-zA-z][_a-zA-Z0-9]*"
     val qualifiedIdent = <a>{ ident }(\.{ ident })?</a>.text
@@ -219,7 +223,8 @@ private [in] object YamlMdLoader {
     }
   }
 
-  def xsdType(f: YamlFieldDef) = (f.typeName, f.length, f.fraction) match {
+  def xsdType(f: YamlFieldDef,
+    conventions: MdConventions) = (f.typeName, f.length, f.fraction) match {
     // FIXME do properly (check unsupported patterns, ...)
     // FIXME TODO complex types
     case (null, None, None) => null
@@ -241,7 +246,7 @@ private [in] object YamlMdLoader {
     case ("base64Binary", None, _) => new XsdType("base64Binary")
     case ("base64Binary", Some(len), _) => new XsdType("base64Binary", len)
     case ("anyType", _, _) => new XsdType("anyType")
-    case (x, len, frac) if MdConventions.isRefName(x) =>
+    case (x, len, frac) if conventions.isRefName(x) =>
       XsdType(x, len, None, frac, false) // FIXME len <> totalDigits, resolve!
     // if no known xsd type name found - let it be complex type!
     case (x, _, _) => new XsdType(x, true)

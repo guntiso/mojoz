@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 import mojoz.metadata._
 import mojoz.metadata.io._
 
-class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
+class YamlTableDefWriter {
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
@@ -16,9 +16,9 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
-  def toYamlColDef(colDef: ExColumnDef) = {
+  def toYamlColDef(colDef: ColumnDef[ExColumnType]) = {
     import colDef._
-    val t = colDef.xsdType getOrElse new XsdType(null, None, None, None, false)
+    val t = colDef.type_.type_ getOrElse new XsdType(null, None, None, None, false)
     val typeString = List(
       Option(t.name),
       t.length,
@@ -32,7 +32,7 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
 
     val defString = List(
       (name, 20),
-      (colDef.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
+      (colDef.type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
       (typeString, 10),
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (
@@ -52,16 +52,15 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }
   }
-  def toYaml(entity: TableDef[XsdType]): String =
-    toYaml(MdConventions.toExternal(entity))
-  def toYaml(entity: ExTableDef): String =
+  def toYaml(entity: TableDef[ExColumnType]): String =
     List(Some(entity.name).map("table:   " + _),
       Option(entity.comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYamlTableDefs: String = (tableDefs map toYaml).mkString("\n---\n\n")
+  def toYamlTableDefs(tableDefs: Seq[TableDef[ExColumnType]]): String =
+    tableDefs.map(toYaml).mkString("\n\n")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec
     def _wrapped(

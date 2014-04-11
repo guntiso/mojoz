@@ -2,21 +2,9 @@ package mojoz.metadata.io
 
 import mojoz.metadata._
 
-case class ExTableDef(
-  name: String,
-  comments: String,
-  cols: Seq[ExColumnDef],
-  pk: Option[DbIndex])
-case class ExColumnDef(
-  name: String,
-  xsdType: Option[XsdType],
-  nullable: Option[Boolean],
-  dbDefault: String,
-  enum: Seq[String],
-  comments: String)
+case class ExColumnType(nullable: Option[Boolean], type_ : Option[XsdType])
 
-object MdConventions {
-  // TODO default comment for id col?
+class MdConventions {
   def isRefName(name: String) = name != null && name.contains(".")
   def isBooleanName(name: String) =
     name.startsWith("is_") || name.startsWith("has_")
@@ -24,12 +12,13 @@ object MdConventions {
   def isIdRefName(name: String) = name.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
-  def fromExternal(typeDef: ExTableDef): TableDef[XsdType] = {
+  def fromExternal(typeDef: TableDef[ExColumnType]): TableDef[XsdType] = {
     val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
     TableDef(typeDef.name, typeDef.comments, cols, primaryKey, Nil, Nil, Nil)
   }
-  def fromExternalPk(typeDef: ExTableDef) = {
+  def fromExternalPk(typeDef: TableDef[_]) = {
+    import scala.language.existentials
     val cols = typeDef.cols
     if (typeDef.pk.isDefined) typeDef.pk
     else if (cols.filter(_.name == "id").size == 1)
@@ -40,39 +29,38 @@ object MdConventions {
       Some(DbIndex(null, cols.map(_.name)))
     else None
   }
-  def fromExternal(col: ExColumnDef): ColumnDef[XsdType] = {
+  def fromExternal(col: ColumnDef[ExColumnType]): ColumnDef[XsdType] = {
+    val (typ, nullable) =
+      fromExternal(col.name, col.type_.type_, col.type_.nullable)
+    col.copy(type_ = typ, nullable = nullable)
+  }
+  def fromExternal(name: String, type_ : Option[XsdType], nullable: Option[Boolean]) = {
     def defaultType(defaultName: String) =
-      col.xsdType map { x =>
+      type_ map { x =>
         if (x.name == null) x.copy(name = defaultName)
         else x
       } getOrElse new XsdType(defaultName)
-    col match {
-      case ExColumnDef(name, Some(xsdType), nullable, dbDefault, enum, comment) if isRefName(xsdType.name) =>
-        ColumnDef(name, xsdType,
-          nullable getOrElse true, dbDefault, enum, comment)
-      case ExColumnDef("id", xsdType, nullable, dbDefault, enum, comment) =>
-        ColumnDef("id", defaultType("long"),
-          nullable getOrElse false, dbDefault, enum, comment)
-      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isRefName(name) =>
-        ColumnDef(name, xsdType getOrElse new XsdType(null),
-          nullable getOrElse true, dbDefault, enum, comment)
-      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isBooleanName(name) =>
-        ColumnDef(name, defaultType("boolean"),
-          nullable getOrElse true, dbDefault, enum, comment)
-      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isDateName(name) =>
-        ColumnDef(name, defaultType("date"),
-          nullable getOrElse true, dbDefault, enum, comment)
-      case ExColumnDef(name, xsdType, nullable, dbDefault, enum, comment) if isIdRefName(name) =>
-        ColumnDef(name, defaultType("long"),
-          nullable getOrElse true, dbDefault, enum, comment)
-      case x =>
-        ColumnDef(x.name, defaultType("string"),
-          x.nullable getOrElse true, x.dbDefault, x.enum, x.comments)
+    def nullableOrTrue = nullable getOrElse true
+    def nullableOrFalse = nullable getOrElse false
+    (name, type_) match {
+      case (name, Some(typ)) if isRefName(typ.name) =>
+        (typ, nullableOrTrue)
+      case ("id", _) =>
+        (defaultType("long"), nullableOrFalse)
+      case (name, typ) if isRefName(name) =>
+        (typ getOrElse new XsdType(null), nullableOrTrue)
+      case (name, _) if isBooleanName(name) =>
+        (defaultType("boolean"), nullableOrTrue)
+      case (name, _) if isDateName(name) =>
+        (defaultType("date"), nullableOrTrue)
+      case (name, _) if isIdRefName(name) =>
+        (defaultType("long"), nullableOrTrue)
+      case _ =>
+        (defaultType("string"), nullableOrTrue)
     }
   }
-  def toExternal(typeDef: TableDef[XsdType]): ExTableDef =
-    ExTableDef(typeDef.name, typeDef.comments, typeDef.cols map toExternal,
-      toExternalPk(typeDef))
+  def toExternal(typeDef: TableDef[XsdType]): TableDef[ExColumnType] =
+    typeDef.copy(cols = typeDef.cols map toExternal, pk = toExternalPk(typeDef))
   def toExternalPk(typeDef: TableDef[XsdType]) = {
     val cols = typeDef.cols
     val DefaultPkName = "pk_" + typeDef.name
@@ -92,7 +80,7 @@ object MdConventions {
     else None
   }
 
-  def toExternal(col: ColumnDef[XsdType]): ExColumnDef = {
+  def toExternal(col: ColumnDef[XsdType]): ColumnDef[ExColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
       case ("id", false) => None
       case (_, true) => None
@@ -108,6 +96,6 @@ object MdConventions {
         Some(new XsdType(null.asInstanceOf[String], len))
       case _ => Option(col.type_)
     }
-    ExColumnDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comments)
+    col.copy(type_ = ExColumnType(nullOpt, typeOpt))
   }
 }
