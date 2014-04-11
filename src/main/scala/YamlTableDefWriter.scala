@@ -39,9 +39,9 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
         List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
         r._2 + t._2 + 1))._1
 
-    val hasComment = (comment != null && comment.trim != "")
+    val hasComment = (comments != null && comments.trim != "")
     val slComment =
-      if (hasComment) " : " + escapeYamlValue(comment.trim) else ""
+      if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
     if (!hasComment) defString.trim
     else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
@@ -49,14 +49,14 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
       val indent =
         if (MaxLineLength < defString.length + 20) " " * 41
         else " " * (2 + defString.length + 3)
-      wrapped(escapeYamlValue(comment.trim), defString + " :", indent)
+      wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }
   }
   def toYaml(entity: TableDef[XsdType]): String =
     toYaml(MdConventions.toExternal(entity))
   def toYaml(entity: ExTableDef): String =
     List(Some(entity.name).map("table:   " + _),
-      Option(entity.comment).filter(_ != "").map(c =>
+      Option(entity.comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))

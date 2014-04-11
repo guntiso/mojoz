@@ -28,7 +28,7 @@ case class ViewDef[T](
   extends_ : String,
   draftOf: String,
   detailsOf: String,
-  comment: String,
+  comments: String,
   fields: Seq[FieldDef[T]])
 
 case class FieldDef[T](
@@ -48,7 +48,7 @@ case class FieldDef[T](
   joinToParent: String,
   orderBy: String,
   isI18n: Boolean,
-  comment: String) {
+  comments: String) {
 }
 
 package in {
@@ -138,7 +138,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
       val orderBy = yfd.orderBy
-      val comment = yfd.comment
+      val comment = yfd.comments
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
       val xsdTypeFe =
         if (isExpression)
@@ -271,7 +271,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
               }
           f.copy(nullable = nullable, type_ = col.type_,
             enum = Option(f.enum) getOrElse col.enum,
-            comment = Option(f.comment) getOrElse col.comment)
+            comments = Option(f.comments) getOrElse col.comments)
         }
       }
       t.copy(fields = t.fields

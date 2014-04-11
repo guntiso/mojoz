@@ -45,7 +45,7 @@ class JdbcTableDefLoader {
 
     // work around oracle bugs
     if (conn.getClass.getName.startsWith("oracle")) {
-      if (!tableDefs.exists(_.comment != null)) {
+      if (!tableDefs.exists(_.comments != null)) {
         val st = conn.prepareStatement(
           "select comments from all_tab_comments" +
             " where owner || '.' || table_name = ?",
@@ -56,10 +56,10 @@ class JdbcTableDefLoader {
           val comment = if (rs.next) rs.getString(1) else null
           rs.close()
           st.clearParameters()
-          if (comment == null) td else td.copy(comment = comment)
+          if (comment == null) td else td.copy(comments = comment)
         }
       }
-      if (!tableDefs.exists(_.cols.exists(_.comment != null))) {
+      if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
         val st = conn.prepareStatement(
           "select column_name, comments from all_col_comments" +
             " where owner || '.' || table_name = ?",
@@ -75,7 +75,7 @@ class JdbcTableDefLoader {
           val cMap = cList.toMap
           if (!cMap.values.exists(c => c != null && c != "")) td
           else td.copy(cols = td.cols.map(c =>
-            c.copy(comment = cMap.get(c.name).orNull)))
+            c.copy(comments = cMap.get(c.name).orNull)))
         }
       }
     }

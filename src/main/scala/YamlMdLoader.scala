@@ -14,7 +14,7 @@ import org.yaml.snakeyaml.Yaml
 
 private [in] case class YamlTableDef(
   table: String,
-  comment: String,
+  comments: String,
   columns: Seq[YamlFieldDef])
 
 private [in] case class YamlFieldDef(
@@ -29,7 +29,7 @@ private [in] case class YamlFieldDef(
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
-  comment: String)
+  comments: String)
 
 class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
   private val tableDefStrings = rawTableDefs
@@ -130,7 +130,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     val name = y.table
-    val comment = y.comment
+    val comment = y.comments
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = None // TODO primary key
     // TODO rewrite fromExternal conventions API
@@ -154,7 +154,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
       sys.error("joinToParent not supported for table columns")
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
-    val comment = yfd.comment
+    val comment = yfd.comments
     val rawXsdType = Option(YamlMdLoader.xsdType(yfd))
     ExColumnDef(name, rawXsdType, nullable, dbDefault, enum, comment)
   }

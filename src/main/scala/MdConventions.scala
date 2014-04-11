@@ -4,7 +4,7 @@ import mojoz.metadata._
 
 case class ExTableDef(
   name: String,
-  comment: String,
+  comments: String,
   cols: Seq[ExColumnDef],
   pk: Option[DbIndex])
 case class ExColumnDef(
@@ -13,7 +13,7 @@ case class ExColumnDef(
   nullable: Option[Boolean],
   dbDefault: String,
   enum: Seq[String],
-  comment: String)
+  comments: String)
 
 object MdConventions {
   // TODO default comment for id col?
@@ -27,7 +27,7 @@ object MdConventions {
   def fromExternal(typeDef: ExTableDef): TableDef[XsdType] = {
     val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
-    TableDef(typeDef.name, typeDef.comment, cols, primaryKey, Nil, Nil, Nil)
+    TableDef(typeDef.name, typeDef.comments, cols, primaryKey, Nil, Nil, Nil)
   }
   def fromExternalPk(typeDef: ExTableDef) = {
     val cols = typeDef.cols
@@ -67,11 +67,11 @@ object MdConventions {
           nullable getOrElse true, dbDefault, enum, comment)
       case x =>
         ColumnDef(x.name, defaultType("string"),
-          x.nullable getOrElse true, x.dbDefault, x.enum, x.comment)
+          x.nullable getOrElse true, x.dbDefault, x.enum, x.comments)
     }
   }
   def toExternal(typeDef: TableDef[XsdType]): ExTableDef =
-    ExTableDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal,
+    ExTableDef(typeDef.name, typeDef.comments, typeDef.cols map toExternal,
       toExternalPk(typeDef))
   def toExternalPk(typeDef: TableDef[XsdType]) = {
     val cols = typeDef.cols
@@ -108,6 +108,6 @@ object MdConventions {
         Some(new XsdType(null.asInstanceOf[String], len))
       case _ => Option(col.type_)
     }
-    ExColumnDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comment)
+    ExColumnDef(col.name, typeOpt, nullOpt, col.dbDefault, col.enum, col.comments)
   }
 }

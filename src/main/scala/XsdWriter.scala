@@ -14,7 +14,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
       </xs:annotation>
   private def xsdTypeName(name: String) = xsdName(name) + "Type"
   private def createElement(elName: String, col: FieldDef[XsdType]) = {
-    val colcomment = annotation(col.comment)
+    val colcomment = annotation(col.comments)
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
       if (col.isCollection) "unbounded" else null
@@ -54,7 +54,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
     }
   }
   def createComplexType(typeDef: ViewDef[XsdType]) = {
-    val tableComment = metadata.tableDefOption(typeDef).map(_.comment)
+    val tableComment = metadata.tableDefOption(typeDef).map(_.comments)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
@@ -64,7 +64,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
       }</xs:sequence>
     }
     <xs:complexType name={ xsdTypeName(typeDef.name) }>{
-      annotation(Option(typeDef.comment).orElse(tableComment).orNull)
+      annotation(Option(typeDef.comments).orElse(tableComment).orNull)
     }{
       if (typeDef.extends_ == null) createFields
       else <xs:complexContent>

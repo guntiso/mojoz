@@ -87,10 +87,10 @@ trait OracleSqlWriter { this: ConstraintNamingRules =>
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
       check(c)
   def tableComment(t: TableDef[_]) = "comment on table " + t.name +
-    " is '" + Option(t.comment).getOrElse("") + "';"
+    " is '" + Option(t.comments).getOrElse("") + "';"
   def columnComments(t: TableDef[_]) = t.cols.map(c =>
     "comment on column " + t.name + "." + c.name +
-      " is '" + Option(c.comment).getOrElse("") + "';") mkString "\n"
+      " is '" + Option(c.comments).getOrElse("") + "';") mkString "\n"
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
     t.refs map { r =>
       // TODO cascade

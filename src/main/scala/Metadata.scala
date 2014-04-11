@@ -30,7 +30,7 @@ case class Ref(
   onUpdateAction: String)
 case class TableDef[T](
   name: String,
-  comment: String,
+  comments: String,
   cols: Seq[ColumnDef[T]],
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
@@ -42,7 +42,7 @@ case class ColumnDef[T](
   nullable: Boolean,
   dbDefault: String,
   enum: Seq[String],
-  comment: String)
+  comments: String)
 
 class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
