@@ -7,12 +7,12 @@ import mojoz.metadata.XsdType
 
 class ViewDefVisualizer(metadata: Metadata[XsdType]) {
   private def getType(s: String) = metadata.extendedViewDef(s)
-  private def printComplexType(indent: String, typeDef: ViewDef) {
+  private def printComplexType(indent: String, typeDef: ViewDef[XsdType]) {
     val nextIndent = indent + "  "
     typeDef.fields.foreach(f => {
       println(nextIndent + (xsdName(Option(f.alias) getOrElse f.name)))
-      if (f.isComplexType)
-        printComplexType(nextIndent, getType(f.xsdType.name))
+      if (f.type_ != null && f.type_.isComplexType)
+        printComplexType(nextIndent, getType(f.type_.name))
     })
   }
   def print(typeName: String) = {

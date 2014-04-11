@@ -13,7 +13,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         <xs:documentation>{ comment }</xs:documentation>
       </xs:annotation>
   private def xsdTypeName(name: String) = xsdName(name) + "Type"
-  private def createElement(elName: String, col: FieldDef) = {
+  private def createElement(elName: String, col: FieldDef[XsdType]) = {
     val colcomment = annotation(col.comment)
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
@@ -23,12 +23,12 @@ class XsdWriter(metadata: Metadata[XsdType]) {
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"
     val typeName =
-      if (col.xsdType.isComplexType) "tns:" + xsdTypeName(col.xsdType.name)
-      else "xs:" + col.xsdType.name
+      if (col.type_.isComplexType) "tns:" + xsdTypeName(col.type_.name)
+      else "xs:" + col.type_.name
     val noBlankStr = required && typeName == "xs:string" &&
-      (col.xsdType.length getOrElse 1) > 0
+      (col.type_.length getOrElse 1) > 0
     val minLength = if (noBlankStr) Some(1) else None
-    val t = col.xsdType
+    val t = col.type_
     (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits, Option(col.enum)) match {
       case (None, None, None, None, None, None) =>
         <xs:element name={ elName } nillable={ nillable }
@@ -53,7 +53,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         </xs:element>
     }
   }
-  def createComplexType(typeDef: ViewDef) = {
+  def createComplexType(typeDef: ViewDef[XsdType]) = {
     val tableComment = metadata.tableDefOption(typeDef).map(_.comment)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
@@ -83,9 +83,9 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         <xs:element type="xs:int" minOccurs="0" name="Offset"/>
       </xs:sequence>
     </xs:complexType>
-  def listWrapperName(typeDef: ViewDef) =
+  def listWrapperName(typeDef: ViewDef[XsdType]) =
     typeDef.name.replace("_list_row", "_list_wrapper")
-  def createListWrapper(typeDef: ViewDef) = // XXX
+  def createListWrapper(typeDef: ViewDef[XsdType]) = // XXX
     <xs:complexType name={ xsdTypeName(listWrapperName(typeDef)) }>
       <xs:complexContent>
         <xs:extension base={ "tns:" + listWrapperXsdTypeName }>
@@ -98,6 +98,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
       </xs:complexContent>
     </xs:complexType>
   def createSchema = {
+    // FIXME namespaces etc.
     // TODO elementFormDefault="qualified">
     <xs:schema xmlns:tns="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema"
       version="1.0" targetNamespace="kps.ldz.lv">

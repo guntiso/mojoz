@@ -51,16 +51,16 @@ class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
-  def tableDefOption(typeDef: ViewDef) =
+  def tableDefOption(typeDef: ViewDef[_]) =
     md.get(typeDef.table)
 
-  def tableDef(typeDef: ViewDef) =
+  def tableDef(typeDef: ViewDef[_]) =
     // TODO get line, file info from xsd type def
     md.get(typeDef.table) getOrElse
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 
-  def columnDef(viewDef: ViewDef, fieldDef: FieldDef) = {
+  def columnDef(viewDef: ViewDef[_], fieldDef: FieldDef[_]) = {
     val typeDef = viewDef
     val f = fieldDef
     val tableMd = tableDef(typeDef)
@@ -82,15 +82,15 @@ class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
   }
 }
 
-class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef])
-  extends TableMetadata(tableDefs) { this: I18nRules =>
+class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]])
+  extends TableMetadata(tableDefs) { this: I18nRules[T] =>
   // typedef name to typedef
   val viewDef = viewDefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
   lazy val extendedViewDef = viewDefs.map(t =>
     if (t.xtnds == null) t else {
       @tailrec
-      def baseFields(t: ViewDef, fields: Seq[FieldDef]): Seq[FieldDef] =
+      def baseFields(t: ViewDef[T], fields: Seq[FieldDef[T]]): Seq[FieldDef[T]] =
         if (t.xtnds == null) t.fields ++ fields
         else baseFields(viewDef(t.xtnds), t.fields ++ fields)
       t.copy(fields = baseFields(t, Nil))
