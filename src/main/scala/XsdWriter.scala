@@ -66,9 +66,9 @@ class XsdWriter(metadata: Metadata[XsdType]) {
     <xs:complexType name={ xsdTypeName(typeDef.name) }>{
       annotation(Option(typeDef.comment).orElse(tableComment).orNull)
     }{
-      if (typeDef.xtnds == null) createFields
+      if (typeDef.extends_ == null) createFields
       else <xs:complexContent>
-             <xs:extension base={ "tns:" + xsdTypeName(typeDef.xtnds) }>
+             <xs:extension base={ "tns:" + xsdTypeName(typeDef.extends_) }>
                { createFields }
              </xs:extension>
            </xs:complexContent>

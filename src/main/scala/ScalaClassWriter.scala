@@ -40,7 +40,7 @@ trait ScalaClassWriter {
   private def scalaFieldString(fieldName: String, col: FieldDef[XsdType]) =
     s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   def scalaClassExtends(typeDef: ViewDef[XsdType]) =
-    Option(typeDef.xtnds).filter(_ != "").map(scalaClassName)
+    Option(typeDef.extends_).filter(_ != "").map(scalaClassName)
   def scalaClassTraits(typeDef: ViewDef[XsdType]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
   def scalaFieldsStrings(typeDef: ViewDef[XsdType]) =

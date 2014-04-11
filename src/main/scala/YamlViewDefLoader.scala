@@ -25,7 +25,7 @@ case class ViewDef[T](
   filter: String, // where clause
   groupBy: String,
   orderBy: String,
-  xtnds: String,
+  extends_ : String,
   draftOf: String,
   detailsOf: String,
   comment: String,
@@ -76,7 +76,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
       sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
-    else baseTable(nameToTypeDef.get(t.xtnds)
+    else baseTable(nameToTypeDef.get(t.extends_)
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
   val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
@@ -165,7 +165,7 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
     def checkExtends(t: ViewDef[_], nameToTypeDef: Map[String, ViewDef[_]],
       visited: List[String]): Boolean = {
       val extendsOrModifies =
-        Option(t.xtnds).orElse(Option(t.detailsOf)).getOrElse(t.draftOf)
+        Option(t.extends_).orElse(Option(t.detailsOf)).getOrElse(t.draftOf)
       if (visited contains t.name) sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
       else if (extendsOrModifies == null) true
@@ -211,18 +211,18 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
     def inheritJoins(t: ViewDef[XsdType]) = {
       @tailrec
       def inheritedJoins(t: ViewDef[XsdType]): String =
-        if (t.joins != null || t.xtnds == null) t.joins
-        else inheritedJoins(m(t.xtnds))
-      if (t.xtnds == null) t
+        if (t.joins != null || t.extends_ == null) t.joins
+        else inheritedJoins(m(t.extends_))
+      if (t.extends_ == null) t
       else t.copy(joins = inheritedJoins(t))
     }
 
     def inheritFilter(t: ViewDef[XsdType]) = {
       @tailrec
       def inheritedFilter(t: ViewDef[XsdType]): String =
-        if (t.filter != null || t.xtnds == null) t.filter
-        else inheritedFilter(m(t.xtnds))
-      if (t.xtnds == null) t
+        if (t.filter != null || t.extends_ == null) t.filter
+        else inheritedFilter(m(t.extends_))
+      if (t.extends_ == null) t
       else t.copy(filter = inheritedFilter(t))
     }
 
@@ -298,10 +298,10 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
         canReuseSimpleFieldsForDraft(t) && canReuseComplexFieldsForDraft(t)
       def canReuseAsDraft(t: ViewDef[XsdType]): Boolean =
         canReuseFieldsForDraft(t) &&
-          (t.xtnds == null || canReuseAsDraft(m(t.xtnds)))
+          (t.extends_ == null || canReuseAsDraft(m(t.extends_)))
       def addMissingDraftOf(draftOf: ViewDef[XsdType]) = addMissing(
         draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
-          xtnds = null, draftOf = draftOf.name, fields = Nil))
+          extends_ = null, draftOf = draftOf.name, fields = Nil))
       def draftField(f: FieldDef[XsdType]) =
         if (isComplexType(f)) {
           val t = m(f.type_.name)
@@ -314,18 +314,18 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
         else f
       val draftOf = m(draft.draftOf)
       if (canReuseAsDraft(draftOf))
-        draft.copy(xtnds = draftOf.name, draftOf = null)
+        draft.copy(extends_ = draftOf.name, draftOf = null)
       else {
-        val xDraftName = Option(draftOf.xtnds).map(draftName).orNull
+        val xDraftName = Option(draftOf.extends_).map(draftName).orNull
         val xtnds =
-          if (draftOf.xtnds == null) null
+          if (draftOf.extends_ == null) null
           else if (isDefined(xDraftName)) xDraftName
-          else if (canReuseAsDraft(m(draftOf.xtnds))) draftOf.xtnds
-          else { addMissingDraftOf(m(draftOf.xtnds)); xDraftName }
+          else if (canReuseAsDraft(m(draftOf.extends_))) draftOf.extends_
+          else { addMissingDraftOf(m(draftOf.extends_)); xDraftName }
         val table = Option(draft.table) getOrElse draftOf.table
         val joins = Option(draft.joins) getOrElse draftOf.joins
         draft.copy(
-          table = table, joins = joins, xtnds = xtnds, draftOf = null,
+          table = table, joins = joins, extends_ = xtnds, draftOf = null,
           fields = draftOf.fields.map(draftField) ++ draft.fields)
       }
     }
@@ -342,12 +342,12 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
       def canReuseFieldsForDetails(t: ViewDef[XsdType]) = !hasChildrenWithDetails(t)
       def canReuseAsDetailsSuper(t: ViewDef[XsdType]): Boolean =
         canReuseFieldsForDetails(t) &&
-          (t.xtnds == null || canReuseAsDetails(m(t.xtnds)))
+          (t.extends_ == null || canReuseAsDetails(m(t.extends_)))
       def canReuseAsDetails(t: ViewDef[XsdType]): Boolean =
         !isDefined(detailsName(t.name)) && canReuseAsDetailsSuper(t)
       def addMissingDetailsOf(dtOf: ViewDef[_]) = addMissing(
         dtOf.copy(name = detailsName(dtOf.name), table = null, joins = null,
-          xtnds = null, detailsOf = dtOf.name, fields = Nil))
+          extends_ = null, detailsOf = dtOf.name, fields = Nil))
       def detailsField(f: FieldDef[XsdType]) = if (isSimpleType(f)) f else {
         val t = m(f.type_.name)
         def fCopy = f.copy(type_ = f.type_.copy(name = detailsName(t.name)))
@@ -357,20 +357,20 @@ class YamlViewDefLoader(val tableMetadata: TableMetadata[XsdType], val rawViewDe
       }
       val detailsOf = m(details.detailsOf)
       if (canReuseAsDetailsSuper(detailsOf))
-        details.copy(xtnds = detailsOf.name, detailsOf = null)
+        details.copy(extends_ = detailsOf.name, detailsOf = null)
       else {
-        val xDetailsName = Option(detailsOf.xtnds).map(detailsName).orNull
+        val xDetailsName = Option(detailsOf.extends_).map(detailsName).orNull
         val xtnds =
-          if (detailsOf.xtnds == null) null
+          if (detailsOf.extends_ == null) null
           else if (isDefined(xDetailsName)) xDetailsName
-          else if (canReuseAsDetails(m(detailsOf.xtnds))) detailsOf.xtnds
-          else { addMissingDetailsOf(m(detailsOf.xtnds)); xDetailsName }
+          else if (canReuseAsDetails(m(detailsOf.extends_))) detailsOf.extends_
+          else { addMissingDetailsOf(m(detailsOf.extends_)); xDetailsName }
         val table = Option(details.table) getOrElse (
           if (xtnds == null) detailsOf.table else null)
         val joins = Option(details.joins) getOrElse (
           if (xtnds == null) detailsOf.joins else null)
         details.copy(
-          table = table, joins = joins, xtnds = xtnds, detailsOf = null,
+          table = table, joins = joins, extends_ = xtnds, detailsOf = null,
           fields = detailsOf.fields.map(detailsField) ++ details.fields)
       }
     }

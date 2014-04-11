@@ -88,11 +88,11 @@ class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]])
   val viewDef = viewDefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
   lazy val extendedViewDef = viewDefs.map(t =>
-    if (t.xtnds == null) t else {
+    if (t.extends_ == null) t else {
       @tailrec
       def baseFields(t: ViewDef[T], fields: Seq[FieldDef[T]]): Seq[FieldDef[T]] =
-        if (t.xtnds == null) t.fields ++ fields
-        else baseFields(viewDef(t.xtnds), t.fields ++ fields)
+        if (t.extends_ == null) t.fields ++ fields
+        else baseFields(viewDef(t.extends_), t.fields ++ fields)
       t.copy(fields = baseFields(t, Nil))
     })
     .map(setI18n)
