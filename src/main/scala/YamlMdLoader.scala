@@ -134,7 +134,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[MdDef]) {
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = None // TODO primary key
     // TODO rewrite fromExternal conventions API
-    val exTypeDef = ExTypeDef(name, comment, cols, pk)
+    val exTypeDef = ExTableDef(name, comment, cols, pk)
     MdConventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {

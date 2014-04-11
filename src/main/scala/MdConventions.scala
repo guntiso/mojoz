@@ -2,7 +2,7 @@ package mojoz.metadata.io
 
 import mojoz.metadata._
 
-case class ExTypeDef(
+case class ExTableDef(
   name: String,
   comment: String,
   cols: Seq[ExFieldDef],
@@ -24,12 +24,12 @@ object MdConventions {
   def isIdRefName(name: String) = name.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
-  def fromExternal(typeDef: ExTypeDef): TableDef[XsdType] = {
+  def fromExternal(typeDef: ExTableDef): TableDef[XsdType] = {
     val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
     TableDef(typeDef.name, typeDef.comment, cols, primaryKey, Nil, Nil, Nil)
   }
-  def fromExternalPk(typeDef: ExTypeDef) = {
+  def fromExternalPk(typeDef: ExTableDef) = {
     val cols = typeDef.cols
     if (typeDef.pk.isDefined) typeDef.pk
     else if (cols.filter(_.name == "id").size == 1)
@@ -70,8 +70,8 @@ object MdConventions {
           x.nullable getOrElse true, x.dbDefault, x.enum, x.comment)
     }
   }
-  def toExternal(typeDef: TableDef[XsdType]): ExTypeDef =
-    ExTypeDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal,
+  def toExternal(typeDef: TableDef[XsdType]): ExTableDef =
+    ExTableDef(typeDef.name, typeDef.comment, typeDef.cols map toExternal,
       toExternalPk(typeDef))
   def toExternalPk(typeDef: TableDef[XsdType]) = {
     val cols = typeDef.cols

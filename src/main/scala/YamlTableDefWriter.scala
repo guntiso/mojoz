@@ -54,7 +54,7 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
   }
   def toYaml(entity: TableDef[XsdType]): String =
     toYaml(MdConventions.toExternal(entity))
-  def toYaml(entity: ExTypeDef): String =
+  def toYaml(entity: ExTableDef): String =
     List(Some(entity.name).map("table:   " + _),
       Option(entity.comment).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
