@@ -11,7 +11,7 @@ class YamlTableDefWriter(val tableDefs: Seq[TableDef[XsdType]]) {
     .toCharArray.map(_.toString).toSet
   private val yamlChB = ",[]{}&*!|>'%@`\""
     .toCharArray.map(_.toString).toSet
-  def escapeYamlValue(s: String) =
+  private def escapeYamlValue(s: String) =
     if (s != null &&
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
