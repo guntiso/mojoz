@@ -56,8 +56,9 @@ package in {
 class YamlViewDefLoader(
     val tableMetadata: TableMetadata[XsdType],
     val rawViewDefs: Seq[MdDef],
-    conventions: MdConventions = new MdConventions) {
-  this: JoinsParser with ExpressionRules =>
+    conventions: MdConventions = new MdConventions,
+    isExpressionFilterable: (String) => Boolean = (_) => true) {
+  this: JoinsParser =>
 
   private val typedefStrings = rawViewDefs
   private val rawTypeDefs = typedefStrings map { md =>
@@ -125,15 +126,15 @@ class YamlViewDefLoader(
       else isExpressionFilterable(expression)
       /*
       // if expression consists of a call to function attached to Env,
-      // then we consider is not filterable, otherwise consider it db function and filterable
-      else QueryParser.parseExp(expression) match {
-	    case QueryParser.Fun(f, p, _) 
-	    if Env.isDefined(f) && Env.functions.flatMap(_.getClass.getMethods.filter(
-	      m => m.getName == f && m.getParameterTypes.length == p.size
-	    ).headOption) != None 
-	      => false
-	    case _ => true
-	  }
+      // then we consider is not filterable,
+      // otherwise consider it db function and filterable
+      QueryParser.parseExp(expression) match {
+        case QueryParser.Fun(f, p, _) if Env.isDefined(f) && Env.functions.flatMap {
+          _.getClass.getMethods.filter(
+            m => m.getName == f && m.getParameterTypes.length == p.size).headOption
+        } != None => false
+        case _ => true
+      }
       */
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
