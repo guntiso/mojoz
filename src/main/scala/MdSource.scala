@@ -9,7 +9,7 @@ case class YamlMd(
   line: Int,
   body: String)
 
-private[in] object MdSource {
+private[in] trait MdSource {
   def split(mdDefs: Seq[YamlMd]) = {
     // TODO set line numbers while splitting
     def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
@@ -21,16 +21,13 @@ private[in] object MdSource {
     }.flatMap(x => x)
       .map(x => x._1.copy(body = x._2))
   }
-  private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
-  def isTableDef(d: YamlMd) = tableDefPattern.findFirstIn(d.body).isDefined
-  def isViewDef(d: YamlMd) = !isTableDef(d)
-  def getTableDefs(mdDefs: Seq[YamlMd]) = split(mdDefs).filter(isTableDef)
-  def getViewDefs(mdDefs: Seq[YamlMd]) = split(mdDefs).filter(isViewDef)
+  def defSets: Seq[YamlMd]
+  def defs = split(defSets)
 }
 
-class FilesMdSource(
+private[in] class FilesMdSource(
   val path: String,
-  val filter: (File) => Boolean = _.getName endsWith ".yaml") {
+  val filter: (File) => Boolean) extends MdSource {
   require(path != null)
   private def recursiveListFiles(f: File): Array[File] = {
     val these = Option(f.listFiles) getOrElse Array()
@@ -39,24 +36,36 @@ class FilesMdSource(
   }
   private def typedefFiles =
     recursiveListFiles(new File(path)).toSeq.filter(filter)
-  private def defSets = typedefFiles.map(f => YamlMd(f.getName, 0,
+  override def defSets = typedefFiles.map(f => YamlMd(f.getName, 0,
     Source.fromFile(f).mkString))
-  def getRawTableDefs = MdSource.getTableDefs(defSets)
-  def getRawViewDefs = MdSource.getViewDefs(defSets)
 }
 
-class ResourcesMdSource(
-  val indexPath: String = "/-md-files.txt",
-  val nameFilter: (String) => Boolean = _.endsWith(".yaml"),
-  val nameMap: (String) => String = "/" + _) {
+private[in] class ResourcesMdSource(
+  val indexPath: String,
+  val nameFilter: (String) => Boolean,
+  val nameMap: (String) => String) extends MdSource {
   // getClass.getClassLoader.getResources("") does not work from jar :(
   private def typedefResources =
     Option(getClass.getResourceAsStream(indexPath))
       .map(Source.fromInputStream(_)(Codec("UTF-8"))
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toSeq
-  private def defSets = typedefResources.map(r => YamlMd(r, 0,
+  override def defSets = typedefResources.map(r => YamlMd(r, 0,
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
-  def getRawTableDefs = MdSource.getTableDefs(defSets)
-  def getRawViewDefs = MdSource.getViewDefs(defSets)
+}
+
+object YamlMd {
+  private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
+  private[in] def isTableDef(d: YamlMd) =
+    tableDefPattern.findFirstIn(d.body).isDefined
+  private[in] def isViewDef(d: YamlMd) = !isTableDef(d)
+  def fromFiles(
+    path: String,
+    filter: (File) => Boolean = _.getName endsWith ".yaml") =
+    new FilesMdSource(path, filter).defs
+  def fromResources(
+    indexPath: String = "/-md-files.txt",
+    nameFilter: (String) => Boolean = _.endsWith(".yaml"),
+    nameMap: (String) => String = "/" + _) =
+    new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
 }

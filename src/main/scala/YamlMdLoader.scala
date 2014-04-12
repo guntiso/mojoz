@@ -31,9 +31,9 @@ private[in] case class YamlFieldDef(
   orderBy: String,
   comments: String)
 
-class YamlTableDefLoader(val rawTableDefs: Seq[YamlMd],
+class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   conventions: MdConventions = new MdConventions) {
-  private val tableDefStrings = rawTableDefs
+  val sources = yamlMd.filter(YamlMd.isTableDef)
   private def checkTableDefs(td: Seq[TableDef[_]]) = {
     val m: Map[String, _] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
@@ -52,7 +52,7 @@ class YamlTableDefLoader(val rawTableDefs: Seq[YamlMd],
     td foreach checkRepeatingColumnNames
   }
   val tableDefs = try {
-    val rawTableDefs = tableDefStrings map { md =>
+    val rawTableDefs = sources map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
         case e: Exception => throw new RuntimeException(
           "Failed to load typedef from " + md.filename, e) // TODO line number

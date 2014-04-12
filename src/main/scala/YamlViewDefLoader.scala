@@ -54,17 +54,17 @@ case class FieldDef[T](
 package in {
 
 class YamlViewDefLoader(
-    val tableMetadata: TableMetadata[XsdType],
-    val rawViewDefs: Seq[YamlMd],
+    tableMetadata: TableMetadata[XsdType],
+    yamlMd: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
     isExpressionFilterable: (String) => Boolean = (_) => true) {
   this: JoinsParser =>
 
-  private val typedefStrings = rawViewDefs
-  private val rawTypeDefs = typedefStrings map { md =>
+  val sources = yamlMd.filter(YamlMd.isViewDef)
+  private val rawTypeDefs = sources map { md =>
     try loadRawTypeDef(md.body) catch {
       case e: Exception => throw new RuntimeException(
-        "Failed to load typedef from " + md.filename, e) // TODO line number
+        "Failed to load viewdef from " + md.filename, e) // TODO line number
     }
   }
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
