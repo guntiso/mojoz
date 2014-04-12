@@ -31,7 +31,7 @@ private[in] case class YamlFieldDef(
   orderBy: String,
   comments: String)
 
-class YamlTableDefLoader(val rawTableDefs: Seq[MdDef],
+class YamlTableDefLoader(val rawTableDefs: Seq[YamlMd],
   conventions: MdConventions = new MdConventions) {
   private val tableDefStrings = rawTableDefs
   private def checkTableDefs(td: Seq[TableDef[_]]) = {

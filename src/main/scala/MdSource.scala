@@ -4,13 +4,13 @@ import java.io.File
 import scala.io.Codec
 import scala.io.Source
 
-case class MdDef(
+case class YamlMd(
   filename: String,
   line: Int,
   body: String)
 
 private[in] object MdSource {
-  def split(mdDefs: Seq[MdDef]) = {
+  def split(mdDefs: Seq[YamlMd]) = {
     // TODO set line numbers while splitting
     def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
     mdDefs.map { d =>
@@ -22,10 +22,10 @@ private[in] object MdSource {
       .map(x => x._1.copy(body = x._2))
   }
   private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
-  def isTableDef(d: MdDef) = tableDefPattern.findFirstIn(d.body).isDefined
-  def isViewDef(d: MdDef) = !isTableDef(d)
-  def getTableDefs(mdDefs: Seq[MdDef]) = split(mdDefs).filter(isTableDef)
-  def getViewDefs(mdDefs: Seq[MdDef]) = split(mdDefs).filter(isViewDef)
+  def isTableDef(d: YamlMd) = tableDefPattern.findFirstIn(d.body).isDefined
+  def isViewDef(d: YamlMd) = !isTableDef(d)
+  def getTableDefs(mdDefs: Seq[YamlMd]) = split(mdDefs).filter(isTableDef)
+  def getViewDefs(mdDefs: Seq[YamlMd]) = split(mdDefs).filter(isViewDef)
 }
 
 class FilesMdSource(
@@ -39,7 +39,7 @@ class FilesMdSource(
   }
   private def typedefFiles =
     recursiveListFiles(new File(path)).toSeq.filter(filter)
-  private def defSets = typedefFiles.map(f => MdDef(f.getName, 0,
+  private def defSets = typedefFiles.map(f => YamlMd(f.getName, 0,
     Source.fromFile(f).mkString))
   def getRawTableDefs = MdSource.getTableDefs(defSets)
   def getRawViewDefs = MdSource.getViewDefs(defSets)
@@ -55,7 +55,7 @@ class ResourcesMdSource(
       .map(Source.fromInputStream(_)(Codec("UTF-8"))
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toSeq
-  private def defSets = typedefResources.map(r => MdDef(r, 0,
+  private def defSets = typedefResources.map(r => YamlMd(r, 0,
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
   def getRawTableDefs = MdSource.getTableDefs(defSets)
   def getRawViewDefs = MdSource.getViewDefs(defSets)

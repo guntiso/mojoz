@@ -55,7 +55,7 @@ package in {
 
 class YamlViewDefLoader(
     val tableMetadata: TableMetadata[XsdType],
-    val rawViewDefs: Seq[MdDef],
+    val rawViewDefs: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
     isExpressionFilterable: (String) => Boolean = (_) => true) {
   this: JoinsParser =>
