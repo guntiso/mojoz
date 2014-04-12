@@ -82,8 +82,9 @@ class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
   }
 }
 
-class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]])
-  extends TableMetadata(tableDefs) { this: I18nRules[T] =>
+class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]],
+  i18nRules: I18nRules = I18nRules.noI18n)
+  extends TableMetadata(tableDefs) {
   // typedef name to typedef
   val viewDef = viewDefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list
@@ -95,6 +96,6 @@ class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]])
         else baseFields(viewDef(t.extends_), t.fields ++ fields)
       t.copy(fields = baseFields(t, Nil))
     })
-    .map(setI18n)
+    .map(i18nRules.setI18n(this, _))
     .map(t => (t.name, t)).toMap
 }
