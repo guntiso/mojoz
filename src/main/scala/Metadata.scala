@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 
 import mojoz.metadata.in.I18nRules
 
-case class XsdType(name: String, length: Option[Int],
+case class Type(name: String, length: Option[Int],
   totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
   def this(name: String) = this(name, None, None, None, false)
   def this(name: String, isComplexType: Boolean) =

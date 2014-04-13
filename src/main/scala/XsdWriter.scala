@@ -5,7 +5,7 @@ import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
-class XsdWriter(metadata: Metadata[XsdType]) {
+class XsdWriter(metadata: Metadata[Type]) {
   private val typedefs = metadata.viewDefs
   private def annotation(comment: String) =
     if (comment != null && comment.trim.length > 0)
@@ -13,7 +13,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         <xs:documentation>{ comment }</xs:documentation>
       </xs:annotation>
   private def xsdTypeName(name: String) = xsdName(name) + "Type"
-  private def createElement(elName: String, col: FieldDef[XsdType]) = {
+  private def createElement(elName: String, col: FieldDef[Type]) = {
     val colcomment = annotation(col.comments)
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
@@ -53,7 +53,7 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         </xs:element>
     }
   }
-  def createComplexType(typeDef: ViewDef[XsdType]) = {
+  def createComplexType(typeDef: ViewDef[Type]) = {
     val tableComment = metadata.tableDefOption(typeDef).map(_.comments)
     def createFields = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
@@ -83,9 +83,9 @@ class XsdWriter(metadata: Metadata[XsdType]) {
         <xs:element type="xs:int" minOccurs="0" name="Offset"/>
       </xs:sequence>
     </xs:complexType>
-  def listWrapperName(typeDef: ViewDef[XsdType]) =
+  def listWrapperName(typeDef: ViewDef[Type]) =
     typeDef.name.replace("_list_row", "_list_wrapper")
-  def createListWrapper(typeDef: ViewDef[XsdType]) = // XXX
+  def createListWrapper(typeDef: ViewDef[Type]) = // XXX
     <xs:complexType name={ xsdTypeName(listWrapperName(typeDef)) }>
       <xs:complexContent>
         <xs:extension base={ "tns:" + listWrapperXsdTypeName }>

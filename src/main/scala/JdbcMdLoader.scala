@@ -13,7 +13,7 @@ import mojoz.metadata.ColumnDef
 import mojoz.metadata.DbIndex
 import mojoz.metadata.Ref
 import mojoz.metadata.TableDef
-import mojoz.metadata.{ XsdType => Type }
+import mojoz.metadata.Type
 
 case class JdbcColumnType(
   dbTypeName: String,

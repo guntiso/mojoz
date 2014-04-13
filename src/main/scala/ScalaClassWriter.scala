@@ -11,7 +11,7 @@ trait ScalaClassWriter {
       x(0).toLower + x.substring(1)
     case x => x
   }
-  def scalaFieldTypeName(field: FieldDef[XsdType]) = {
+  def scalaFieldTypeName(field: FieldDef[Type]) = {
     val itemTypeName =
       if (field.type_.isComplexType) scalaComplexTypeName(field.type_)
       else scalaSimpleTypeName(field.type_)
@@ -20,7 +20,7 @@ trait ScalaClassWriter {
   }
   def scalaCollectionTypeName(itemTypeName: String) = s"List[$itemTypeName]"
   // TODO generic, extract
-  def scalaSimpleTypeName(t: XsdType) = t.name match {
+  def scalaSimpleTypeName(t: Type) = t.name match {
     case "integer" => "BigInt"
     case "long" => "java.lang.Long"
     case "int" => "java.lang.Integer"
@@ -34,19 +34,19 @@ trait ScalaClassWriter {
     case x =>
       throw new RuntimeException("Unexpected type: " + t)
   }
-  def scalaComplexTypeName(t: XsdType) = scalaClassName(t.name)
-  def initialValueString(col: FieldDef[XsdType]) =
+  def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
+  def initialValueString(col: FieldDef[Type]) =
     if (col.isCollection) "Nil" else "null"
-  private def scalaFieldString(fieldName: String, col: FieldDef[XsdType]) =
+  private def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
     s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  def scalaClassExtends(typeDef: ViewDef[XsdType]) =
+  def scalaClassExtends(typeDef: ViewDef[Type]) =
     Option(typeDef.extends_).filter(_ != "").map(scalaClassName)
-  def scalaClassTraits(typeDef: ViewDef[XsdType]): Seq[String] = Seq()
+  def scalaClassTraits(typeDef: ViewDef[Type]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(typeDef: ViewDef[XsdType]) =
+  def scalaFieldsStrings(typeDef: ViewDef[Type]) =
     typeDef.fields.map(f => scalaFieldString(
       scalaFieldName(Option(f.alias) getOrElse f.name), f))
-  def createScalaClassString(typeDef: ViewDef[XsdType]) = {
+  def createScalaClassString(typeDef: ViewDef[Type]) = {
     val fieldsString = scalaFieldsStrings(typeDef)
       .map(scalaFieldsIndent + _ + nl).mkString
     val extendsString = Option(scalaClassTraits(typeDef))
@@ -58,7 +58,7 @@ trait ScalaClassWriter {
     s"class ${scalaClassName(typeDef.name)}$extendsString {$nl$fieldsString}"
   }
   def createScalaClassesString(
-    headers: Seq[String], typedefs: Seq[ViewDef[XsdType]], footers: Seq[String]) =
+    headers: Seq[String], typedefs: Seq[ViewDef[Type]], footers: Seq[String]) =
     List(headers, typedefs map createScalaClassString, footers)
       .flatMap(x => x)
       .mkString("", nl, nl)

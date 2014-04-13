@@ -70,13 +70,13 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
         .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)
           .map(c => (tc._1, c)))
         .getOrElse(sys.error("Bad ref: " + ref))
-    def overwriteXsdType(base: XsdType, overwrite: XsdType) = XsdType(
+    def overwriteXsdType(base: Type, overwrite: Type) = Type(
       Option(base.name) getOrElse overwrite.name,
       overwrite.length orElse base.length,
       overwrite.totalDigits orElse base.totalDigits,
       overwrite.fractionDigits orElse base.fractionDigits,
       false)
-    def baseRefChain(col: ColumnDef[XsdType], visited: List[String]): List[String] = {
+    def baseRefChain(col: ColumnDef[Type], visited: List[String]): List[String] = {
       def chain(ref: String) =
         if (visited contains ref)
           sys.error("Cyclic column refs: " +
@@ -89,7 +89,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       else visited
     }
     val tableDefs = rawTableDefs map { r =>
-      val resolvedColsAndRefs: Seq[(ColumnDef[XsdType], Seq[Ref])] = r.cols.map { c =>
+      val resolvedColsAndRefs: Seq[(ColumnDef[Type], Seq[Ref])] = r.cols.map { c =>
         val refChain = baseRefChain(c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {
@@ -102,7 +102,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
           val (refTable, refCol) =
             refToCol(Option(c.type_.name) getOrElse c.name)
           val xsdType = overwriteXsdType(
-            refChain.foldLeft(new XsdType(null))((t, ref) =>
+            refChain.foldLeft(new Type(null))((t, ref) =>
               overwriteXsdType(t, refToCol(ref)._2.type_)),
             c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
@@ -228,27 +228,27 @@ private[in] object YamlMdLoader {
     // FIXME do properly (check unsupported patterns, ...)
     // FIXME TODO complex types
     case (null, None, None) => null
-    case (null, Some(len), None) => new XsdType(null, len)
-    case (null, Some(len), Some(frac)) => new XsdType("decimal", len, frac)
-    case ("anySimpleType", _, _) => new XsdType("anySimpleType")
-    case ("date", _, _) => new XsdType("date")
-    case ("dateTime", _, _) => new XsdType("dateTime")
-    case ("string", None, _) => new XsdType("string")
-    case ("string", Some(len), _) => new XsdType("string", len)
-    case ("boolean", _, _) => new XsdType("boolean")
-    case ("int", None, _) => new XsdType("int")
-    case ("int", Some(len), _) => XsdType("int", None, Some(len), None, false)
-    case ("long", None, _) => new XsdType("long")
-    case ("long", Some(len), _) => XsdType("long", None, Some(len), None, false)
-    case ("decimal", None, None) => new XsdType("decimal")
-    case ("decimal", Some(len), None) => new XsdType("decimal", len, 0)
-    case ("decimal", Some(len), Some(frac)) => new XsdType("decimal", len, frac)
-    case ("base64Binary", None, _) => new XsdType("base64Binary")
-    case ("base64Binary", Some(len), _) => new XsdType("base64Binary", len)
-    case ("anyType", _, _) => new XsdType("anyType")
+    case (null, Some(len), None) => new Type(null, len)
+    case (null, Some(len), Some(frac)) => new Type("decimal", len, frac)
+    case ("anySimpleType", _, _) => new Type("anySimpleType")
+    case ("date", _, _) => new Type("date")
+    case ("dateTime", _, _) => new Type("dateTime")
+    case ("string", None, _) => new Type("string")
+    case ("string", Some(len), _) => new Type("string", len)
+    case ("boolean", _, _) => new Type("boolean")
+    case ("int", None, _) => new Type("int")
+    case ("int", Some(len), _) => Type("int", None, Some(len), None, false)
+    case ("long", None, _) => new Type("long")
+    case ("long", Some(len), _) => Type("long", None, Some(len), None, false)
+    case ("decimal", None, None) => new Type("decimal")
+    case ("decimal", Some(len), None) => new Type("decimal", len, 0)
+    case ("decimal", Some(len), Some(frac)) => new Type("decimal", len, frac)
+    case ("base64Binary", None, _) => new Type("base64Binary")
+    case ("base64Binary", Some(len), _) => new Type("base64Binary", len)
+    case ("anyType", _, _) => new Type("anyType")
     case (x, len, frac) if conventions.isRefName(x) =>
-      XsdType(x, len, None, frac, false) // FIXME len <> totalDigits, resolve!
+      Type(x, len, None, frac, false) // FIXME len <> totalDigits, resolve!
     // if no known xsd type name found - let it be complex type!
-    case (x, _, _) => new XsdType(x, true)
+    case (x, _, _) => new Type(x, true)
   }
 }

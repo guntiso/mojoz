@@ -18,7 +18,7 @@ class YamlTableDefWriter {
     else s
   def toYamlColDef(colDef: ColumnDef[ExColumnType]) = {
     import colDef._
-    val t = colDef.type_.type_ getOrElse new XsdType(null, None, None, None, false)
+    val t = colDef.type_.type_ getOrElse new Type(null, None, None, None, false)
     val typeString = List(
       Option(t.name),
       t.length,

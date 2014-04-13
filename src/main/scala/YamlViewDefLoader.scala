@@ -54,7 +54,7 @@ case class FieldDef[T](
 package in {
 
 class YamlViewDefLoader(
-    tableMetadata: Metadata[XsdType],
+    tableMetadata: Metadata[Type],
     yamlMd: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
     isExpressionFilterable: (String) => Boolean = (_) => true) {
@@ -68,9 +68,9 @@ class YamlViewDefLoader(
     }
   }
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
-  private def isSimpleType(f: FieldDef[XsdType]) =
+  private def isSimpleType(f: FieldDef[Type]) =
     f.type_ == null || !f.type_.isComplexType
-  private def isComplexType(f: FieldDef[XsdType]) =
+  private def isComplexType(f: FieldDef[Type]) =
     f.type_ != null && f.type_.isComplexType
   @tailrec
   private def baseTable(t: ViewDef[_],
@@ -185,7 +185,7 @@ class YamlViewDefLoader(
     td foreach checkRepeatingFieldNames
     // check field names not repeating on extends? or overwrite instead?
   }
-  private def checkTypedefMapping(td: Seq[ViewDef[XsdType]]) = {
+  private def checkTypedefMapping(td: Seq[ViewDef[Type]]) = {
     val m = td.map(t => (t.name, t)).toMap
     td foreach { t =>
       t.fields.foreach { f =>
@@ -200,28 +200,28 @@ class YamlViewDefLoader(
     if (n endsWith "_details") n.replace("_details", "_draft_details")
     else n + "_draft"
   def detailsName(n: String) = n + "_details"
-  private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[XsdType]]) = {
+  private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[Type]]) = {
     //checkTypedefs(rawTypeDefs) FIXME does not allow draft names in type hierarchy
-    val rawTypesMap: Map[String, ViewDef[XsdType]] = rawTypeDefs.map(t => (t.name, t)).toMap
-    val resolvedTypes = new collection.mutable.ArrayBuffer[ViewDef[XsdType]]()
-    val resolvedTypesMap = collection.mutable.Map[String, ViewDef[XsdType]]()
+    val rawTypesMap: Map[String, ViewDef[Type]] = rawTypeDefs.map(t => (t.name, t)).toMap
+    val resolvedTypes = new collection.mutable.ArrayBuffer[ViewDef[Type]]()
+    val resolvedTypesMap = collection.mutable.Map[String, ViewDef[Type]]()
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
       else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
 
-    def inheritJoins(t: ViewDef[XsdType]) = {
+    def inheritJoins(t: ViewDef[Type]) = {
       @tailrec
-      def inheritedJoins(t: ViewDef[XsdType]): String =
+      def inheritedJoins(t: ViewDef[Type]): String =
         if (t.joins != null || t.extends_ == null) t.joins
         else inheritedJoins(m(t.extends_))
       if (t.extends_ == null) t
       else t.copy(joins = inheritedJoins(t))
     }
 
-    def inheritFilter(t: ViewDef[XsdType]) = {
+    def inheritFilter(t: ViewDef[Type]) = {
       @tailrec
-      def inheritedFilter(t: ViewDef[XsdType]): String =
+      def inheritedFilter(t: ViewDef[Type]): String =
         if (t.filter != null || t.extends_ == null) t.filter
         else inheritedFilter(m(t.extends_))
       if (t.extends_ == null) t
@@ -235,7 +235,7 @@ class YamlViewDefLoader(
         case _ => "b" // default base table alias 
       })
 
-    def resolveFieldNamesAndTypes(t: ViewDef[XsdType]) = {
+    def resolveFieldNamesAndTypes(t: ViewDef[Type]) = {
       val joins = parseJoins(t.table, t.joins)
       val aliasToTable =
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
@@ -258,7 +258,7 @@ class YamlViewDefLoader(
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias)
         }
-      def resolveTypeFromDbMetadata(f: FieldDef[XsdType]) = {
+      def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
         if (f.isExpression || f.isCollection) f
         else {
           val col = tableMetadata.columnDef(t, f)
@@ -282,8 +282,8 @@ class YamlViewDefLoader(
     }
 
     // drafts logic
-    def resolveDraft(draft: ViewDef[XsdType], addMissing: (ViewDef[XsdType]) => Any) = {
-      def canReuseSimpleFieldsForDraft(t: ViewDef[XsdType]) = {
+    def resolveDraft(draft: ViewDef[Type], addMissing: (ViewDef[Type]) => Any) = {
+      def canReuseSimpleFieldsForDraft(t: ViewDef[Type]) = {
         // FIXME this is not exactly correct, or should be pluggable
         !t.fields
           .filter(isSimpleType)
@@ -291,20 +291,20 @@ class YamlViewDefLoader(
           .filter(!_.nullable)
           .exists(_.isForcedCardinality)
       }
-      def canReuseComplexFieldsForDraft(t: ViewDef[XsdType]) = {
+      def canReuseComplexFieldsForDraft(t: ViewDef[Type]) = {
         !t.fields
           .filter(isComplexType)
           .exists(f => !canReuseAsDraft(m(f.type_.name)))
       }
-      def canReuseFieldsForDraft(t: ViewDef[XsdType]) =
+      def canReuseFieldsForDraft(t: ViewDef[Type]) =
         canReuseSimpleFieldsForDraft(t) && canReuseComplexFieldsForDraft(t)
-      def canReuseAsDraft(t: ViewDef[XsdType]): Boolean =
+      def canReuseAsDraft(t: ViewDef[Type]): Boolean =
         canReuseFieldsForDraft(t) &&
           (t.extends_ == null || canReuseAsDraft(m(t.extends_)))
-      def addMissingDraftOf(draftOf: ViewDef[XsdType]) = addMissing(
+      def addMissingDraftOf(draftOf: ViewDef[Type]) = addMissing(
         draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
           extends_ = null, draftOf = draftOf.name, fields = Nil))
-      def draftField(f: FieldDef[XsdType]) =
+      def draftField(f: FieldDef[Type]) =
         if (isComplexType(f)) {
           val t = m(f.type_.name)
           def fCopy = f.copy(type_ = f.type_.copy(name = draftName(t.name)))
@@ -333,24 +333,24 @@ class YamlViewDefLoader(
     }
 
     // details logic
-    def resolveDetails(details: ViewDef[XsdType], addMissing: (ViewDef[XsdType]) => Any) = {
-      def hasChildrenWithDetails(t: ViewDef[XsdType]): Boolean =
+    def resolveDetails(details: ViewDef[Type], addMissing: (ViewDef[Type]) => Any) = {
+      def hasChildrenWithDetails(t: ViewDef[Type]): Boolean =
         t.fields
           .filter(isComplexType)
           .map(_.type_)
           .filter(t =>
             isDefined(detailsName(t.name)) || hasChildrenWithDetails(m(t.name)))
           .size > 0
-      def canReuseFieldsForDetails(t: ViewDef[XsdType]) = !hasChildrenWithDetails(t)
-      def canReuseAsDetailsSuper(t: ViewDef[XsdType]): Boolean =
+      def canReuseFieldsForDetails(t: ViewDef[Type]) = !hasChildrenWithDetails(t)
+      def canReuseAsDetailsSuper(t: ViewDef[Type]): Boolean =
         canReuseFieldsForDetails(t) &&
           (t.extends_ == null || canReuseAsDetails(m(t.extends_)))
-      def canReuseAsDetails(t: ViewDef[XsdType]): Boolean =
+      def canReuseAsDetails(t: ViewDef[Type]): Boolean =
         !isDefined(detailsName(t.name)) && canReuseAsDetailsSuper(t)
       def addMissingDetailsOf(dtOf: ViewDef[_]) = addMissing(
         dtOf.copy(name = detailsName(dtOf.name), table = null, joins = null,
           extends_ = null, detailsOf = dtOf.name, fields = Nil))
-      def detailsField(f: FieldDef[XsdType]) = if (isSimpleType(f)) f else {
+      def detailsField(f: FieldDef[Type]) = if (isSimpleType(f)) f else {
         val t = m(f.type_.name)
         def fCopy = f.copy(type_ = f.type_.copy(name = detailsName(t.name)))
         if (isDefined(detailsName(t.name))) fCopy
@@ -378,23 +378,23 @@ class YamlViewDefLoader(
     }
 
     def isDefined(tName: String) = rawTypesMap.contains(tName)
-    def typeResolved(t: ViewDef[XsdType]) = {
+    def typeResolved(t: ViewDef[Type]) = {
       resolvedTypes += t
       resolvedTypesMap(t.name) = t
       t
     }
-    def addMissing(t: ViewDef[XsdType]) = {
+    def addMissing(t: ViewDef[Type]) = {
       // println("Adding missing type: " + t.name) // TODO not distinct
       resolveType(t)
     }
     // TODO add stack overflow protection
     def m(tName: String) = resolveTypeByName(tName)
-    def resolveTypeByName(tName: String): ViewDef[XsdType] =
+    def resolveTypeByName(tName: String): ViewDef[Type] =
       resolvedTypesMap.getOrElse(tName,
         resolveUnresolvedType(rawTypesMap(tName)))
-    def resolveType(t: ViewDef[XsdType]): ViewDef[XsdType] =
+    def resolveType(t: ViewDef[Type]): ViewDef[Type] =
       resolvedTypesMap.getOrElse(t.name, resolveUnresolvedType(t))
-    def resolveUnresolvedType(t: ViewDef[XsdType]): ViewDef[XsdType] = typeResolved {
+    def resolveUnresolvedType(t: ViewDef[Type]): ViewDef[Type] = typeResolved {
       (t.draftOf, t.detailsOf) match {
         case (null, null) => t
         case (draftOf, null) => resolveDraft(t, addMissing)
