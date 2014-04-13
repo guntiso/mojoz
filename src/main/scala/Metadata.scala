@@ -44,7 +44,10 @@ case class ColumnDef[T](
   enum: Seq[String],
   comments: String)
 
-class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
+class Metadata[T](
+  val tableDefs: Seq[TableDef[T]],
+  val viewDefs: Seq[ViewDef[T]] = Nil,
+  i18nRules: I18nRules = I18nRules.noI18n) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String) =
@@ -80,11 +83,7 @@ class TableMetadata[T](val tableDefs: Seq[TableDef[T]]) {
             + ", joins: " + typeDef.joins, ex)
     }
   }
-}
 
-class Metadata[T](tableDefs: Seq[TableDef[T]], val viewDefs: Seq[ViewDef[T]],
-  i18nRules: I18nRules = I18nRules.noI18n)
-  extends TableMetadata(tableDefs) {
   // typedef name to typedef
   val viewDef = viewDefs.map(t => (t.name, t)).toMap
   // typedef name to typedef with extended field list

@@ -54,7 +54,7 @@ case class FieldDef[T](
 package in {
 
 class YamlViewDefLoader(
-    tableMetadata: TableMetadata[XsdType],
+    tableMetadata: Metadata[XsdType],
     yamlMd: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
     isExpressionFilterable: (String) => Boolean = (_) => true) {
