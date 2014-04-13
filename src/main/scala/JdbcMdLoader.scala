@@ -15,12 +15,8 @@ import mojoz.metadata.Ref
 import mojoz.metadata.TableDef
 import mojoz.metadata.Type
 
-case class JdbcColumnType(
-  dbTypeName: String,
-  jdbcTypeCode: Int,
-  size: Int,
-  fractionDigits: Int)
 class JdbcTableDefLoader {
+  import JdbcTableDefLoader._
   def loadTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
@@ -165,12 +161,21 @@ class JdbcTableDefLoader {
 }
 
 // java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/GettingStartedTOC.fm.html
-object JdbcToXsdTypeMapper {
-  def integerOrSubtype(len: Int) =
+object JdbcTableDefLoader {
+  case class JdbcColumnType(
+    dbTypeName: String,
+    jdbcTypeCode: Int,
+    size: Int,
+    fractionDigits: Int)
+  private[in] def integerOrSubtype(len: Int) =
     if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
     else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
     else new Type("int", None, Some(len.toInt), None, false)
-  def map(jdbcTypeCode: Int, size: Integer, fractionDigits: Integer) =
+  def mapType(jdbcColumnType: JdbcColumnType): Type =
+    map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
+  def mapType(tableDef: TableDef[JdbcColumnType]): TableDef[Type] =
+    tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = mapType(c.type_))))
+  private[in] def map(jdbcTypeCode: Int, size: Int, fractionDigits: Int) =
     jdbcTypeCode match {
       case Types.ARRAY => new Type("base64Binary")
       case Types.BIGINT => new Type("long")
