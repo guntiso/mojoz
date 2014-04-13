@@ -1,6 +1,7 @@
 package mojoz.metadata.io
 
 import mojoz.metadata._
+import mojoz.metadata.TableDef._
 
 case class ExColumnType(nullable: Option[Boolean], type_ : Option[Type])
 

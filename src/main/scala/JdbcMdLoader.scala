@@ -10,9 +10,8 @@ import java.sql.Types
 import scala.collection.mutable.ListBuffer
 
 import mojoz.metadata.ColumnDef
-import mojoz.metadata.DbIndex
-import mojoz.metadata.Ref
 import mojoz.metadata.TableDef
+import mojoz.metadata.TableDef._
 import mojoz.metadata.Type
 
 class JdbcTableDefLoader {

@@ -10,6 +10,7 @@ import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.io._
+import mojoz.metadata.TableDef._
 import org.yaml.snakeyaml.Yaml
 
 private[in] case class YamlTableDef(

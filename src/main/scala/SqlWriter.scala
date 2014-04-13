@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.math.max
 import mojoz.metadata._
 import mojoz.metadata.io._
+import mojoz.metadata.TableDef._
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String

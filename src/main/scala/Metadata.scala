@@ -16,18 +16,21 @@ case class Type(name: String, length: Option[Int],
 
   def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
 }
-case class DbIndex(
-  name: String,
-  cols: Seq[String])
-case class Ref(
-  name: String,
-  cols: Seq[String],
-  refTable: String,
-  refCols: Seq[String],
-  defaultTableAlias: String,
-  defaultRefTableAlias: String,
-  onDeleteAction: String,
-  onUpdateAction: String)
+object TableDef {
+  case class DbIndex(
+    name: String,
+    cols: Seq[String])
+  case class Ref(
+    name: String,
+    cols: Seq[String],
+    refTable: String,
+    refCols: Seq[String],
+    defaultTableAlias: String,
+    defaultRefTableAlias: String,
+    onDeleteAction: String,
+    onUpdateAction: String)
+}
+import TableDef._
 case class TableDef[T](
   name: String,
   comments: String,
