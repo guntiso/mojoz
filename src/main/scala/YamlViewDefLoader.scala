@@ -14,6 +14,7 @@ import scala.reflect.BeanProperty
 import org.yaml.snakeyaml.Yaml
 
 import mojoz.metadata.in._
+import mojoz.metadata.in.JoinsParser.Join
 import mojoz.metadata.io._
 import mojoz.metadata.DbConventions.{ xsdNameToDbName => dbName }
 
