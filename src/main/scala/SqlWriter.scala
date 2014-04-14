@@ -62,11 +62,13 @@ trait SimpleConstraintNamingRules extends ConstraintNamingRules {
     pkPrefix + shorten(tableName, pkUsableLen) + pkSuffix
 }
 
-trait OracleConstraintNamingRules extends SimpleConstraintNamingRules {
+class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
 }
 
-trait OracleSqlWriter { this: ConstraintNamingRules =>
+class OracleSqlWriter(
+  constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules) {
+  import constraintNamingRules._
   def createStatements(tables: Seq[TableDef[Type]]) = {
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
