@@ -5,6 +5,9 @@ import scala.math.max
 import mojoz.metadata._
 import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
+import SqlWriter._
+
+object SqlWriter {
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String
@@ -66,9 +69,12 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
 }
 
-class OracleSqlWriter(
-  constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules) {
-  import constraintNamingRules._
+def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
+  new OracleSqlWriter(constraintNamingRules)
+
+}
+
+trait SqlWriter { this : ConstraintNamingRules =>
   def createStatements(tables: Seq[TableDef[Type]]) = {
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
@@ -103,7 +109,17 @@ class OracleSqlWriter(
     }
   }.flatMap(x => x)
     .mkString("", "\n", if (tables.exists(_.refs.size > 0)) "\n" else "")
-  def dbType(c: ColumnDef[Type]) = { // FIXME generic class with type mapper!
+  def dbType(c: ColumnDef[Type]): String
+  def check(c: ColumnDef[Type]): String
+}
+
+private[out] class OracleSqlWriter(
+  constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
+  override def pkName(tableName: String) =
+    constraintNamingRules.pkName(tableName)
+  override def fkName(tableName: String, ref: Ref) =
+    constraintNamingRules.fkName(tableName, ref)
+  override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
@@ -121,10 +137,10 @@ class OracleSqlWriter(
         "varchar2" + xt.length.map(l => s"($l char)").getOrElse("")
       case "boolean" => "char"
       case "base64Binary" => "blob"
-      case x => throw new RuntimeException("Unexpected xsd type: " + xt)
+      case x => throw new RuntimeException("Unexpected type: " + xt)
     }
   }
-  def check(c: ColumnDef[Type]) = {
+  override def check(c: ColumnDef[Type]) = {
     // TODO depends on database!
     val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
