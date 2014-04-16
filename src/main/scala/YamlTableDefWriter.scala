@@ -16,7 +16,7 @@ class YamlTableDefWriter {
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
-  def toYamlColDef(colDef: ColumnDef[ExColumnType]) = {
+  def toYaml(colDef: ColumnDef[ExColumnType]) = {
     import colDef._
     val t = colDef.type_.type_ getOrElse new Type(null, None, None, None, false)
     val typeString = List(
@@ -52,14 +52,14 @@ class YamlTableDefWriter {
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }
   }
-  def toYaml(entity: TableDef[ExColumnType]): String =
-    List(Some(entity.name).map("table:   " + _),
-      Option(entity.comments).filter(_ != "").map(c =>
+  def toYaml(tableDef: TableDef[ExColumnType]): String =
+    List(Some(tableDef.name).map("table:   " + _),
+      Option(tableDef.comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
-      Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
+      Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYamlTableDefs(tableDefs: Seq[TableDef[ExColumnType]]): String =
+  def toYaml(tableDefs: Seq[TableDef[ExColumnType]]): String =
     tableDefs.map(toYaml).mkString("\n\n") +
       (if (tableDefs.size > 0) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
@@ -75,4 +75,10 @@ class YamlTableDefWriter {
       }
     _wrapped(words.trim.split("[\\s]+").toList, Nil, prefix).mkString("\n")
   }
+}
+
+object YamlTableDefWriter {
+  def toYaml(tableDefs: Seq[TableDef[Type]],
+    conventions: (TableDef[Type]) => TableDef[ExColumnType] = MdConventions.toExternal) =
+    (new YamlTableDefWriter).toYaml(tableDefs.map(conventions))
 }

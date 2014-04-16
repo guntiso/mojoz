@@ -121,3 +121,5 @@ class MdConventions {
     }
   }
 }
+
+object MdConventions extends MdConventions

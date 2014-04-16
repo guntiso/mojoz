@@ -12,24 +12,25 @@ class TableDefTests extends FlatSpec with Matchers {
   val path = "src/test/resources/table-def"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in.yaml")
-  val loader = new YamlTableDefLoader(mdDefs)
+  val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val nl = System.getProperty("line.separator")
   "generated yaml file" should "equal sample file" in {
-    val source = Source.fromFile(path + "/" + "tables-out.yaml")
-    val expected = source.mkString
-    source.close()
-    val exTableDefs = loader.tableDefs.map((new MdConventions).toExternal) // TODO ???
-    val produced = (new YamlTableDefWriter).toYamlTableDefs(exTableDefs)
+    val expected = fileToString(path + "/" + "tables-out.yaml")
+    val produced = YamlTableDefWriter.toYaml(tableDefs)
     // toFile(path + "/" + "tables-out-produced.yaml", produced)
     expected should be(produced)
   }
   "generated oracle sql file" should "equal sample file" in {
-    val source = Source.fromFile(path + "/" + "tables-out-oracle.sql")
-    val expected = source.mkString
-    source.close()
-    val produced = SqlWriter.oracle().createStatements(loader.tableDefs)
+    val expected = fileToString(path + "/" + "tables-out-oracle.sql")
+    val produced = SqlWriter.oracle().createStatements(tableDefs)
     // toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
+  }
+  def fileToString(filename: String) = {
+    val source = Source.fromFile(filename)
+    val body = source.mkString
+    source.close()
+    body
   }
   /*
   def toFile(filename: String, message: String) {
