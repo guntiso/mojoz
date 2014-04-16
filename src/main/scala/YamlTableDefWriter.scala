@@ -60,7 +60,8 @@ class YamlTableDefWriter {
       Option(entity.cols.map(f => "- " + toYamlColDef(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
   def toYamlTableDefs(tableDefs: Seq[TableDef[ExColumnType]]): String =
-    tableDefs.map(toYaml).mkString("\n\n")
+    tableDefs.map(toYaml).mkString("\n\n") +
+      (if (tableDefs.size > 0) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec
     def _wrapped(
