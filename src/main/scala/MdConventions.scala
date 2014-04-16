@@ -60,8 +60,10 @@ class MdConventions {
         (defaultType("string"), nullableOrTrue)
     }
   }
-  def toExternal(typeDef: TableDef[Type]): TableDef[ExColumnType] =
-    typeDef.copy(cols = typeDef.cols map toExternal, pk = toExternalPk(typeDef))
+  def toExternal(table: TableDef[Type]): TableDef[ExColumnType] =
+    table.copy(
+      cols = table.cols.map(toExternal(table, _)),
+      pk = toExternalPk(table))
   def toExternalPk(typeDef: TableDef[Type]) = {
     val cols = typeDef.cols
     val DefaultPkName = "pk_" + typeDef.name
@@ -81,22 +83,41 @@ class MdConventions {
     else None
   }
 
-  def toExternal(col: ColumnDef[Type]): ColumnDef[ExColumnType] = {
+  def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[ExColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
       case ("id", false) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
     }
-    val typeOpt = (col.name, col.type_.name, col.type_.length) match {
-      case ("id", "long", _) => None
-      case (name, "long", _) if isIdRefName(name) => None
-      case (name, "boolean", _) if isBooleanName(name) => None
-      case (name, "date", _) if isDateName(name) => None
-      case (name, "string", None) if !isTypedName(name) => None
-      case (name, "string", Some(len)) if !isTypedName(name) =>
-        Some(new Type(null.asInstanceOf[String], len))
-      case _ => Option(col.type_)
+    val ref = table.refs
+      .filter(_.cols.size == 1)
+      .find(_.cols(0) == col.name)
+    if (ref.isDefined) {
+      // TODO ref checks (type match, type override)
+      // TODO multicol refs, ...?
+      // TODO drop enum, if differs?
+      val refTypeName = ref.map(r => r.refTable + "." + r.refCols(0)).get
+      val typeOpt =
+        if (col.name == ref.map(r => r.refTable + "_" + r.refCols(0)).get) None
+        else Some(new Type(refTypeName))
+      val name =
+        if (typeOpt.isDefined) col.name // FIXME "." for alias? moth.id/pers.id
+        else refTypeName
+      col.copy(
+        name = refTypeName,
+        type_ = ExColumnType(nullOpt, typeOpt))
+    } else {
+      val typeOpt = (col.name, col.type_.name, col.type_.length) match {
+        case ("id", "long", _) => None
+        case (name, "long", _) if isIdRefName(name) => None
+        case (name, "boolean", _) if isBooleanName(name) => None
+        case (name, "date", _) if isDateName(name) => None
+        case (name, "string", None) if !isTypedName(name) => None
+        case (name, "string", Some(len)) if !isTypedName(name) =>
+          Some(new Type(null.asInstanceOf[String], len))
+        case _ => Option(col.type_)
+      }
+      col.copy(type_ = ExColumnType(nullOpt, typeOpt))
     }
-    col.copy(type_ = ExColumnType(nullOpt, typeOpt))
   }
 }
