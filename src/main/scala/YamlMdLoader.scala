@@ -160,7 +160,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       sys.error("orderBy not supported for table columns")
     val comment = yfd.comments
     val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
-    ColumnDef(name, ExColumnType(nullable, rawXsdType),
+    ColumnDef(name, IoColumnType(nullable, rawXsdType),
       nullable getOrElse true, dbDefault, enum, comment)
   }
 }

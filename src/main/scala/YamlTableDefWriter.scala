@@ -16,7 +16,7 @@ class YamlTableDefWriter {
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
-  def toYaml(colDef: ColumnDef[ExColumnType]) = {
+  def toYaml(colDef: ColumnDef[IoColumnType]) = {
     import colDef._
     val t = colDef.type_.type_ getOrElse new Type(null, None, None, None, false)
     val typeString = List(
@@ -52,14 +52,14 @@ class YamlTableDefWriter {
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }
   }
-  def toYaml(tableDef: TableDef[ExColumnType]): String =
+  def toYaml(tableDef: TableDef[IoColumnType]): String =
     List(Some(tableDef.name).map("table:   " + _),
       Option(tableDef.comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
       Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYaml(tableDefs: Seq[TableDef[ExColumnType]]): String =
+  def toYaml(tableDefs: Seq[TableDef[IoColumnType]]): String =
     tableDefs.map(toYaml).mkString("\n\n") +
       (if (tableDefs.size > 0) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
@@ -79,6 +79,6 @@ class YamlTableDefWriter {
 
 object YamlTableDefWriter {
   def toYaml(tableDefs: Seq[TableDef[Type]],
-    conventions: (TableDef[Type]) => TableDef[ExColumnType] = MdConventions.toExternal) =
+    conventions: (TableDef[Type]) => TableDef[IoColumnType] = MdConventions.toExternal) =
     (new YamlTableDefWriter).toYaml(tableDefs.map(conventions))
 }

@@ -3,7 +3,7 @@ package mojoz.metadata.io
 import mojoz.metadata._
 import mojoz.metadata.TableDef._
 
-case class ExColumnType(nullable: Option[Boolean], type_ : Option[Type])
+case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
 class MdConventions {
   def isRefName(name: String) = name != null && name.contains(".")
@@ -13,7 +13,7 @@ class MdConventions {
   def isIdRefName(name: String) = name.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
-  def fromExternal(typeDef: TableDef[ExColumnType]): TableDef[Type] = {
+  def fromExternal(typeDef: TableDef[IoColumnType]): TableDef[Type] = {
     val cols = typeDef.cols map fromExternal
     val primaryKey = fromExternalPk(typeDef)
     TableDef(typeDef.name, typeDef.comments, cols, primaryKey, Nil, Nil, Nil)
@@ -30,7 +30,7 @@ class MdConventions {
       Some(DbIndex(null, cols.map(_.name)))
     else None
   }
-  def fromExternal(col: ColumnDef[ExColumnType]): ColumnDef[Type] = {
+  def fromExternal(col: ColumnDef[IoColumnType]): ColumnDef[Type] = {
     val (typ, nullable) =
       fromExternal(col.name, col.type_.type_, col.type_.nullable)
     col.copy(type_ = typ, nullable = nullable)
@@ -60,7 +60,7 @@ class MdConventions {
         (defaultType("string"), nullableOrTrue)
     }
   }
-  def toExternal(table: TableDef[Type]): TableDef[ExColumnType] =
+  def toExternal(table: TableDef[Type]): TableDef[IoColumnType] =
     table.copy(
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table))
@@ -83,7 +83,7 @@ class MdConventions {
     else None
   }
 
-  def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[ExColumnType] = {
+  def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
       case ("id", false) => None
       case (_, true) => None
@@ -105,7 +105,7 @@ class MdConventions {
         else refTypeName
       col.copy(
         name = refTypeName,
-        type_ = ExColumnType(nullOpt, typeOpt))
+        type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
         case ("id", "long", _) => None
@@ -117,7 +117,7 @@ class MdConventions {
           Some(new Type(null.asInstanceOf[String], len))
         case _ => Option(col.type_)
       }
-      col.copy(type_ = ExColumnType(nullOpt, typeOpt))
+      col.copy(type_ = IoColumnType(nullOpt, typeOpt))
     }
   }
 }
