@@ -1,0 +1,8 @@
+mojoz.oracle {
+  jdbc.url = "jdbc:oracle:thin:@localhost:1521:orcl"
+  dba.user = mojoz_dba
+  dba.password = mojoz_dba
+  test.user = mojoz
+  test.password = mojoz
+  debug = true
+}

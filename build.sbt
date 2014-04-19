@@ -13,8 +13,9 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.13",
   // test
-  "org.tresql" %% "tresql" % "5.3-M13-SNAPSHOT" % "test",
-  "org.scalatest" % "scalatest_2.10" % "2.0.M8" % "test"
+  "com.typesafe" % "config" % "1.2.0" % "it",
+  "org.tresql" %% "tresql" % "5.3" % "it,test",
+  "org.scalatest" % "scalatest_2.10" % "2.0.M8" % "it,test"
 )
 
 scalacOptions in (Compile, doc) <++= (baseDirectory in
