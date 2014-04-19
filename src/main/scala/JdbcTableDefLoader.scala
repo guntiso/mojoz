@@ -16,7 +16,7 @@ import mojoz.metadata.Type
 
 class JdbcTableDefLoader {
   import JdbcTableDefLoader._
-  def loadTableDefs(conn: Connection,
+  def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
     val tableDefs = ListBuffer[TableDef[JdbcColumnType]]()
@@ -28,11 +28,11 @@ class JdbcTableDefLoader {
       val schema = rs.getString("TABLE_SCHEM")
       val tableName = rs.getString("TABLE_NAME")
       val comment = rs.getString("REMARKS")
-      val cols = loadColDefs(dmd.getColumns(catalog, schema, tableName, null))
-      val pk = loadPk(dmd.getPrimaryKeys(catalog, schema, tableName))
+      val cols = colDefs(dmd.getColumns(catalog, schema, tableName, null))
+      val pk = this.pk(dmd.getPrimaryKeys(catalog, schema, tableName))
       val uk = Nil // TODO uk
       val idx = Nil // TODO idx
-      val refs = loadRefs(dmd.getImportedKeys(catalog, schema, tableName))
+      val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
       val tableFullName =
         List(catalog, schema, tableName).filter(_ != null).mkString(".")
       tableDefs += TableDef(tableFullName, comment, cols, pk, uk, idx, refs)
@@ -84,7 +84,7 @@ class JdbcTableDefLoader {
         case "check" :: _ :: "in" :: tail => tail
         case x => Nil
       }.filter(_.size > 0).orNull
-  def loadColDefs(rs: ResultSet) = {
+  def colDefs(rs: ResultSet) = {
     val cols = ListBuffer[ColumnDef[JdbcColumnType]]()
     while (rs.next) {
       val name = rs.getString("COLUMN_NAME")
@@ -103,7 +103,7 @@ class JdbcTableDefLoader {
     rs.close
     cols.toList
   }
-  def loadPk(rs: ResultSet) = {
+  def pk(rs: ResultSet) = {
     var cols: List[(Short, String, String)] = Nil
     while (rs.next) {
       val keySeq = rs.getShort("KEY_SEQ")
@@ -115,7 +115,7 @@ class JdbcTableDefLoader {
     val pkName = cols.map(_._3).headOption.orNull
     if (cols.size == 0) None else Some(DbIndex(pkName, cols.sorted.map(_._2)))
   }
-  def loadRefs(rs: ResultSet) = {
+  def refs(rs: ResultSet) = {
     def fkRule(rule: Short) = rule match {
       case DM.importedKeyNoAction | DM.importedKeyRestrict => "no action"
       case DM.importedKeyCascade => "cascade"
@@ -170,11 +170,15 @@ object JdbcTableDefLoader {
     if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
     else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
     else new Type("int", None, Some(len.toInt), None, false)
+  def jdbcTableDefs(conn: Connection,
+    catalog: String, schemaPattern: String, tableNamePattern: String,
+    types: String*) =
+    (new JdbcTableDefLoader).jdbcTableDefs(
+      conn, catalog, schemaPattern, tableNamePattern, types: _*)
   def tableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) =
-    (new JdbcTableDefLoader).loadTableDefs(
-      conn, catalog, schemaPattern, tableNamePattern, types: _*)
+    jdbcTableDefs(conn, catalog, schemaPattern, tableNamePattern, types: _*)
       .map(mapType)
   def mapType(jdbcColumnType: JdbcColumnType): Type =
     map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
