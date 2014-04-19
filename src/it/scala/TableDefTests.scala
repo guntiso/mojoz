@@ -26,9 +26,7 @@ class TableDefTests extends FlatSpec with Matchers {
     executeStatements(cfg, statements)
     val conn = DriverManager.getConnection(
       cfg.url, cfg.testUser, cfg.testPassword)
-    val jdbcTableDefs = (new JdbcTableDefLoader) // TOOD api sucks
-      .loadTableDefs(conn, null, "MOJOZ", null)
-      .map(JdbcTableDefLoader.mapType)
+    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, "MOJOZ", null)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     //toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced) // FIXME
     expected should be(produced)
@@ -53,7 +51,6 @@ class TableDefTests extends FlatSpec with Matchers {
     conn.close()
   }
   def executeStatements(cfg: Cfg, statements: Seq[String]) = {
-    // FIXME use conf!
     val conn = DriverManager.getConnection(
       cfg.url, cfg.testUser, cfg.testPassword)
     val statement = conn.createStatement

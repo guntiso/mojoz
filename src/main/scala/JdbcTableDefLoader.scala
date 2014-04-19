@@ -170,6 +170,12 @@ object JdbcTableDefLoader {
     if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
     else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
     else new Type("int", None, Some(len.toInt), None, false)
+  def tableDefs(conn: Connection,
+    catalog: String, schemaPattern: String, tableNamePattern: String,
+    types: String*) =
+    (new JdbcTableDefLoader).loadTableDefs(
+      conn, catalog, schemaPattern, tableNamePattern, types: _*)
+      .map(mapType)
   def mapType(jdbcColumnType: JdbcColumnType): Type =
     map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
   def mapType(tableDef: TableDef[JdbcColumnType]): TableDef[Type] =
