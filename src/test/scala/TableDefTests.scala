@@ -17,13 +17,13 @@ class TableDefTests extends FlatSpec with Matchers {
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val produced = YamlTableDefWriter.toYaml(tableDefs)
-    // toFile(path + "/" + "tables-out-produced.yaml", produced)
+    toFile(path + "/" + "tables-out-produced.yaml", produced)
     expected should be(produced)
   }
   "generated oracle sql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-oracle.sql")
     val produced = SqlWriter.oracle().createStatements(tableDefs)
-    // toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
+    toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
   }
   def fileToString(filename: String) = {
@@ -32,10 +32,8 @@ class TableDefTests extends FlatSpec with Matchers {
     source.close()
     body
   }
-  /*
   def toFile(filename: String, message: String) {
     val out = new PrintWriter(filename, "UTF-8")
     try out.print(message) finally out.close
   }
-  */
 }

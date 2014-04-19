@@ -28,7 +28,7 @@ class TableDefTests extends FlatSpec with Matchers {
       cfg.url, cfg.testUser, cfg.testPassword)
     val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, "MOJOZ", null)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
-    //toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced) // FIXME
+    toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
     expected should be(produced)
   }
   def getCfg(prefix: String) = Cfg(
