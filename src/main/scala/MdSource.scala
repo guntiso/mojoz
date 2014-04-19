@@ -65,7 +65,7 @@ object YamlMd {
     new FilesMdSource(path, filter).defs
   def fromResources(
     indexPath: String = "/-md-files.txt",
-    nameFilter: (String) => Boolean = _.endsWith(".yaml"),
+    nameFilter: (String) => Boolean = _ endsWith ".yaml",
     nameMap: (String) => String = "/" + _) =
     new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
 }
