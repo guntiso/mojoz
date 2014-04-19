@@ -8,7 +8,7 @@ import java.io.PrintWriter
 import java.sql.DriverManager
 import com.typesafe.config.ConfigFactory
 
-class TableDefTests extends FlatSpec with Matchers {
+class TableDefIntegrationTests extends FlatSpec with Matchers {
   case class Cfg(url: String, dbaUser: String, dbaPassword: String,
     testUser: String, testPassword: String, debug: Boolean)
   val conf = ConfigFactory.load()
