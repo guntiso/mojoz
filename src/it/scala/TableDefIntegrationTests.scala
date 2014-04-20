@@ -26,7 +26,13 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     executeStatements(cfg, statements)
     val conn = DriverManager.getConnection(
       cfg.url, cfg.testUser, cfg.testPassword)
-    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, "MOJOZ", null)
+    val Schema = "MOJOZ"
+    val Prefx = Schema + "."
+    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
+      .map(_.mapTableNames { s: String =>
+        (if (s startsWith Prefx) s.substring(Prefx.length) else s).toLowerCase
+      })
+      .map(_.mapColumnNames((t: String, c: String) => c.toLowerCase))
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
     expected should be(produced)

@@ -38,7 +38,19 @@ case class TableDef[T](
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
   idx: Seq[DbIndex],
-  refs: Seq[Ref])
+  refs: Seq[Ref]) {
+  def mapTableNames(transform: (String) => String) = copy(
+    name = transform(name),
+    refs = refs.map(r => r.copy(refTable = transform(r.refTable))))
+  def mapColumnNames(transform: (String, String) => String) = copy(
+    cols = cols.map(c => c.copy(name = transform(name, c.name))),
+    pk = pk.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
+    uk = uk.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
+    idx = idx.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
+    refs = refs.map(r => r.copy(
+      cols = r.cols.map(transform(name, _)),
+      refCols = r.refCols.map(transform(r.refTable, _)))))
+}
 case class ColumnDef[T](
   name: String,
   type_ : T,
