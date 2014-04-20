@@ -192,7 +192,11 @@ object JdbcTableDefLoader {
       case Types.BIT => new Type("boolean")
       case Types.BLOB => new Type("base64Binary")
       case Types.BOOLEAN => new Type("boolean")
-      case Types.CHAR => new Type("string", size)
+      case Types.CHAR =>
+        // XXX booleans emulated on oracle
+        // FIXME check enum = [Y, N], check is boolean name?
+        if (size == 1) new Type("boolean")
+        else new Type("string", size)
       case Types.CLOB => new Type("string", size)
       case Types.DATALINK => new Type("string", size) // anyURI instead?
       case Types.DATE => new Type("date")
