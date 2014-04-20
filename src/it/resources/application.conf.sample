@@ -1,8 +1,18 @@
+mojoz.oracle.dba {
+  jdbc.url = "jdbc:oracle:thin:@localhost:1521:orcl"
+  user = mojoz_dba
+  password = mojoz_dba
+  debug = false
+}
 mojoz.oracle {
   jdbc.url = "jdbc:oracle:thin:@localhost:1521:orcl"
-  dba.user = mojoz_dba
-  dba.password = mojoz_dba
-  test.user = mojoz
-  test.password = mojoz
-  debug = true
+  user = mojoz
+  password = mojoz
+  debug = false
+}
+mojoz.postgresql {
+  jdbc.url = "jdbc:postgresql://localhost:5432/mojoz"
+  user = mojoz
+  password = mojoz
+  debug = false
 }

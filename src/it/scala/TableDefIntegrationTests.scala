@@ -9,8 +9,7 @@ import java.sql.DriverManager
 import com.typesafe.config.ConfigFactory
 
 class TableDefIntegrationTests extends FlatSpec with Matchers {
-  case class Cfg(url: String, dbaUser: String, dbaPassword: String,
-    testUser: String, testPassword: String, debug: Boolean)
+  case class Cfg(url: String, user: String, password: String, debug: Boolean)
   val conf = ConfigFactory.load()
   val path = "src/test/resources/table-def"
   val mdDefs = YamlMd.fromFiles(
@@ -18,14 +17,13 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val nl = System.getProperty("line.separator")
   "generated oracle roundtrip file" should "equal sample file" in {
-    val cfg = getCfg("mojoz.oracle.")
-    clearDbSchema(cfg)
+    clearOracleDbSchema(getCfg("mojoz.oracle.dba."))
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements = SqlWriter.oracle().createStatements(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
-    executeStatements(cfg, statements)
-    val conn = DriverManager.getConnection(
-      cfg.url, cfg.testUser, cfg.testPassword)
+    val cfg = getCfg("mojoz.oracle.")
+    executeStatements(cfg, statements: _*)
+    val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     val Schema = "MOJOZ"
     val Prefx = Schema + "."
     val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
@@ -37,35 +35,53 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
     expected should be(produced)
   }
+  "generated postgresql roundtrip file" should "equal sample file" in {
+    val cfg = getCfg("mojoz.postgresql.")
+    clearPostgresqlDbSchema(cfg)
+    val expected = fileToString(path + "/" + "tables-out.yaml")
+    val statements = SqlWriter.postgresql().createStatements(tableDefs)
+      .split(";").toList.map(_.trim).filter(_ != "")
+    executeStatements(cfg, statements: _*)
+    val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
+    val Schema = "mojoz"
+    val Prefx = Schema + "."
+    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(
+      conn, null, Schema, null, "TABLE")
+      .map(_.mapTableNames { s: String =>
+        if (s startsWith Prefx) s.substring(Prefx.length) else s
+      })
+    val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
+    toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
+    expected should be(produced)
+  }
   def getCfg(prefix: String) = Cfg(
     url = conf.getString(prefix + "jdbc.url"),
-    dbaUser = conf.getString(prefix + "dba.user"),
-    dbaPassword = conf.getString(prefix + "dba.password"),
-    testUser = conf.getString(prefix + "test.user"),
-    testPassword = conf.getString(prefix + "test.password"),
+    user = conf.getString(prefix + "user"),
+    password = conf.getString(prefix + "password"),
     debug = conf.getBoolean(prefix + "debug"))
-  def clearDbSchema(cfg: Cfg) = {
-    val conn = DriverManager.getConnection(
-      cfg.url, cfg.dbaUser, cfg.dbaPassword)
-    val statement = conn.createStatement
-    try statement.execute("drop user mojoz cascade") catch {
+  def clearOracleDbSchema(cfg: Cfg) {
+    try executeStatements(cfg, "drop user mojoz cascade") catch {
       case ex: Exception => println("failed to drop test user: " + ex.toString)
     }
-    statement.execute("create user mojoz identified by mojoz")
-    statement.execute("grant connect, resource to mojoz")
-    statement.close()
-    conn.close()
+    executeStatements(cfg,
+      "create user mojoz identified by mojoz",
+      "grant connect, resource to mojoz")
   }
-  def executeStatements(cfg: Cfg, statements: Seq[String]) = {
-    val conn = DriverManager.getConnection(
-      cfg.url, cfg.testUser, cfg.testPassword)
-    val statement = conn.createStatement
-    statements.foreach { s =>
-      if (cfg.debug) println(s)
-      statement execute s
+  def clearPostgresqlDbSchema(cfg: Cfg) {
+    try executeStatements(cfg, "drop schema mojoz cascade") catch {
+      case ex: Exception => println("failed to drop schema: " + ex.toString)
     }
-    statement.close()
-    conn.close()
+    executeStatements(cfg, "create schema mojoz authorization mojoz")
+  }
+  def executeStatements(cfg: Cfg, statements: String*) {
+    val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
+    try {
+      val statement = conn.createStatement
+      try statements foreach { s =>
+        if (cfg.debug) println(s)
+        statement execute s
+      } finally statement.close()
+    } finally conn.close()
   }
   def fileToString(filename: String) = {
     val source = Source.fromFile(filename)
