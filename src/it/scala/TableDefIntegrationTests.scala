@@ -87,7 +87,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val source = Source.fromFile(filename)
     val body = source.mkString
     source.close()
-    body
+    body.replace(nl, "\n") // normalize newlines
   }
   def toFile(filename: String, message: String) {
     val out = new PrintWriter(filename, "UTF-8")
