@@ -14,7 +14,7 @@ trait ConstraintNamingRules {
   def fkName(tableName: String, ref: Ref): String
 }
 
-trait SimpleConstraintNamingRules extends ConstraintNamingRules {
+class SimpleConstraintNamingRules extends ConstraintNamingRules {
   val maxNameLen = 60
   val pkPrefix = "pk_"
   val pkSuffix = ""
@@ -71,6 +71,8 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
   new OracleSqlWriter(constraintNamingRules)
+def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
+  new PostgreSqlWriter(constraintNamingRules)
 
 }
 
@@ -141,13 +143,51 @@ private[out] class OracleSqlWriter(
     }
   }
   override def check(c: ColumnDef[Type]) = {
-    // TODO depends on database!
     val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
+      case "string" if c.enum != null =>
+        c.enum.map("'" + _ + "'")
+          .mkString(" check (" + dbColumnName + " in (", ", ", "))")
+      case _ => ""
+    }
+  }
+}
+
+private[out] class PostgreSqlWriter(
+  constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
+  override def pkName(tableName: String) =
+    constraintNamingRules.pkName(tableName)
+  override def fkName(tableName: String, ref: Ref) =
+    constraintNamingRules.fkName(tableName, ref)
+  override def dbType(c: ColumnDef[Type]) = {
+    val xt = c.type_
+    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    xt.name match {
+      case "integer" =>
+        "numeric(" + (xt.totalDigits getOrElse 20) + ")" // len?
+      case "long" =>
+        "numeric(" + (xt.totalDigits getOrElse 18) + ")"
+      case "int" =>
+        "numeric(" + (xt.totalDigits getOrElse 9) + ")"
+      case "decimal" =>
+        "numeric(" + xt.totalDigits.get + ", " + xt.fractionDigits.get + ")"
+      case "date" => "date"
+      case "dateTime" => "timestamp"
+      case "string" =>
+        "varchar" + xt.length.map(l => s"($l)").getOrElse("")
+      case "boolean" => "bool"
+      case "base64Binary" => "bytea"
+      case x => throw new RuntimeException("Unexpected type: " + xt)
+    }
+  }
+  override def check(c: ColumnDef[Type]) = {
+    val xt = c.type_
+    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
           .mkString(" check (" + dbColumnName + " in (", ", ", "))")
