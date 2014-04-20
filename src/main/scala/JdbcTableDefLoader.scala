@@ -197,8 +197,8 @@ object JdbcTableDefLoader {
       case Types.DATALINK => new Type("string", size) // anyURI instead?
       case Types.DATE => new Type("date")
       case Types.DECIMAL | Types.NUMERIC =>
-        // TODO choose best base type? use integerOrSubtype(len: Int)?
-        new Type("decimal", size, fractionDigits)
+        if (fractionDigits == 0) integerOrSubtype(size)
+        else new Type("decimal", size, fractionDigits)
       case Types.DISTINCT =>
         // TODO need base type to solve this correctly
         new Type("string")
