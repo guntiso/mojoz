@@ -26,6 +26,12 @@ class TableDefTests extends FlatSpec with Matchers {
     toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
   }
+  "generated postgresql file" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-postgresql.sql")
+    val produced = SqlWriter.postgresql().createStatements(tableDefs)
+    toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
+    expected should be(produced)
+  }
   def fileToString(filename: String) = {
     val source = Source.fromFile(filename)
     val body = source.mkString
