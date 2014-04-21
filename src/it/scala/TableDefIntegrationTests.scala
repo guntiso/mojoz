@@ -11,7 +11,7 @@ import com.typesafe.config.ConfigFactory
 class TableDefIntegrationTests extends FlatSpec with Matchers {
   case class Cfg(url: String, user: String, password: String, debug: Boolean)
   val conf = ConfigFactory.load()
-  val path = "src/test/resources/table-def"
+  val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs

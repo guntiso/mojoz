@@ -9,7 +9,7 @@ import mojoz.metadata.out.YamlTableDefWriter
 import java.io.PrintWriter
 
 class TableDefTests extends FlatSpec with Matchers {
-  val path = "src/test/resources/table-def"
+  val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
