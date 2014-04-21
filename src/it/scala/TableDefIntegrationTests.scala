@@ -26,7 +26,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     val Schema = "MOJOZ"
     val Prefx = Schema + "."
-    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
+    val jdbcTableDefs = {
+      try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
+      finally conn.close()
+    }
       .map(_.mapTableNames { s: String =>
         (if (s startsWith Prefx) s.substring(Prefx.length) else s).toLowerCase
       })
@@ -45,8 +48,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     val Schema = "mojoz"
     val Prefx = Schema + "."
-    val jdbcTableDefs = JdbcTableDefLoader.tableDefs(
-      conn, null, Schema, null, "TABLE")
+    val jdbcTableDefs = {
+      try JdbcTableDefLoader.tableDefs(conn, null, Schema, null, "TABLE")
+      finally conn.close
+    }
       .map(_.mapTableNames { s: String =>
         if (s startsWith Prefx) s.substring(Prefx.length) else s
       })
