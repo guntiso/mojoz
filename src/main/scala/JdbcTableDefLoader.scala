@@ -138,6 +138,7 @@ class JdbcTableDefLoader {
         case DM.importedKeyInitiallyDeferred => "deferred"
         case DM.importedKeyInitiallyImmediate => "immediate"
         case DM.importedKeyNotDeferrable => "not deferrable"
+        case _ => null
       }
       val pkTabFullName =
         List(pkTabCat, pkTabSch, pkTabName).filter(_ != null).mkString(".")

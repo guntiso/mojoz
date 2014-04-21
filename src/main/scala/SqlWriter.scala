@@ -69,6 +69,10 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
 }
 
+def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
+  new StandardSqlWriter(constraintNamingRules)
+def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
+  new StandardSqlWriter(constraintNamingRules)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
   new OracleSqlWriter(constraintNamingRules)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
@@ -76,7 +80,7 @@ def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstrai
 
 }
 
-trait SqlWriter { this : ConstraintNamingRules =>
+trait SqlWriter { this: ConstraintNamingRules =>
   def createStatements(tables: Seq[TableDef[Type]]) = {
     List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
   }
@@ -157,7 +161,7 @@ private[out] class OracleSqlWriter(
   }
 }
 
-private[out] class PostgreSqlWriter(
+private[out] class StandardSqlWriter(
   constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
   override def pkName(tableName: String) =
     constraintNamingRules.pkName(tableName)
@@ -179,7 +183,7 @@ private[out] class PostgreSqlWriter(
       case "dateTime" => "timestamp"
       case "string" =>
         "varchar" + xt.length.map(l => s"($l)").getOrElse("")
-      case "boolean" => "bool"
+      case "boolean" => "boolean"
       case "base64Binary" => "bytea"
       case x => throw new RuntimeException("Unexpected type: " + xt)
     }
@@ -192,6 +196,17 @@ private[out] class PostgreSqlWriter(
         c.enum.map("'" + _ + "'")
           .mkString(" check (" + dbColumnName + " in (", ", ", "))")
       case _ => ""
+    }
+  }
+}
+private[out] class PostgreSqlWriter(
+  constraintNamingRules: ConstraintNamingRules)
+  extends StandardSqlWriter(constraintNamingRules) {
+  override def dbType(c: ColumnDef[Type]) = {
+    c.type_.name match {
+      case "boolean" => "bool"
+      case "base64Binary" => "bytea"
+      case x => super.dbType(c)
     }
   }
 }
