@@ -19,25 +19,29 @@ class TableDefTests extends FlatSpec with Matchers {
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val produced = YamlTableDefWriter.toYaml(tableDefs)
-    toFile(path + "/" + "tables-out-produced.yaml", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-produced.yaml", produced)
     expected should be(produced)
   }
   "generated oracle sql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-oracle.sql")
     val produced = SqlWriter.oracle().createStatements(tableDefs)
-    toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
   }
   "generated postgresql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-postgresql.sql")
     val produced = SqlWriter.postgresql().createStatements(tableDefs)
-    toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
     expected should be(produced)
   }
   "generated hsqldb file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-hsqldb.sql")
     val produced = SqlWriter.hsqldb().createStatements(tableDefs)
-    toFile(path + "/" + "tables-out-hsqldb-produced.sql", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-hsqldb-produced.sql", produced)
     expected should be(produced)
   }
   "generated hsqldb roundtrip file" should "equal sample file" in {
@@ -67,7 +71,8 @@ class TableDefTests extends FlatSpec with Matchers {
       })
       .map(_.mapColumnNames((t: String, c: String) => c.toLowerCase))
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
-    toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
     expected should be(produced)
   }
   def fileToString(filename: String) = {

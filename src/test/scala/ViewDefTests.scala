@@ -23,7 +23,8 @@ class ViewDefTests extends FlatSpec with Matchers {
     // TODO xsd needs some cleanup!
     val expected = fileToString(path + "/" + "xsd-out.xsd")
     val produced = (new XsdWriter(metadata)).createSchemaString // TODO api
-    toFile(path + "/" + "xsd-out-produced.xsd", produced)
+    if (expected != produced)
+      toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)
   }
   // TODO visualizer tests
@@ -40,7 +41,8 @@ class ViewDefTests extends FlatSpec with Matchers {
     val produced = ScalaBuilder.createScalaClassesString(
       List("package some.pack", ""), metadata.viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
-    toFile(path + "/" + "classes-out-produced.scala", produced)
+    if (expected != produced)
+      toFile(path + "/" + "classes-out-produced.scala", produced)
     expected should be(produced)
   }
   def fileToString(filename: String) = {

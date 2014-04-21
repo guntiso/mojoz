@@ -35,7 +35,8 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       })
       .map(_.mapColumnNames((t: String, c: String) => c.toLowerCase))
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
-    toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
     expected should be(produced)
   }
   "generated postgresql roundtrip file" should "equal sample file" in {
@@ -56,7 +57,8 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         if (s startsWith Prefx) s.substring(Prefx.length) else s
       })
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
-    toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
     expected should be(produced)
   }
   def getCfg(prefix: String) = Cfg(
