@@ -19,6 +19,14 @@ class ViewDefTests extends FlatSpec with Matchers {
   val metadata = new Metadata(tableDefs, viewDefs,
     I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
+  "generated xsd file" should "equal sample file" in {
+    // TODO xsd needs some cleanup!
+    val expected = fileToString(path + "/" + "xsd-out.xsd")
+    val produced = (new XsdWriter(metadata)).createSchemaString // TODO api
+    toFile(path + "/" + "xsd-out-produced.xsd", produced)
+    expected should be(produced)
+  }
+  // TODO visualizer tests
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
     // TODO api sucks

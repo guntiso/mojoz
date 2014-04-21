@@ -1,0 +1,144 @@
+<xs:schema version="1.0" targetNamespace="kps.ldz.lv" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="kps.ldz.lv">
+  <xs:complexType name="AccountType">
+    <xs:annotation>
+      <xs:documentation>Klienta norēķina konts</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Id" nillable="true" minOccurs="0" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BankId" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Bankas ID, sasaiste ar Bankas.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BillingAccount">
+        <xs:annotation>
+          <xs:documentation>Norēķinu konts.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="64"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Currency" minOccurs="0" maxOccurs="unbounded">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="3"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="AccountDetailsType">
+    <xs:annotation>
+      <xs:documentation>Klienta norēķina konts</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="tns:AccountType">
+        <xs:sequence>
+          <xs:element name="BankCode">
+            <xs:annotation>
+              <xs:documentation>Bankas SWIFT kods.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+                <xs:maxLength value="16"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+          <xs:element name="BankName">
+            <xs:annotation>
+              <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+            </xs:annotation>
+            <xs:simpleType>
+              <xs:restriction base="xs:string">
+                <xs:minLength value="1"/>
+                <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+                <xs:maxLength value="240"/>
+              </xs:restriction>
+            </xs:simpleType>
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="BankListRowType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Code">
+        <xs:annotation>
+          <xs:documentation>Bankas SWIFT kods.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="16"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="CountryCode" nillable="true" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Bankas valsts, izvēle no klasifikatora.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="2"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="CountryName">
+        <xs:annotation>
+          <xs:documentation>Valsts nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="64"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Name">
+        <xs:annotation>
+          <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="240"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ListWrapperType">
+    <xs:sequence>
+      <xs:element type="xs:int" name="Count"/>
+      <xs:element type="xs:int" minOccurs="0" name="Limit"/>
+      <xs:element type="xs:int" minOccurs="0" name="Offset"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="BankListWrapperType">
+    <xs:complexContent>
+      <xs:extension base="tns:ListWrapperType">
+        <xs:sequence>
+          <xs:element maxOccurs="unbounded" minOccurs="0" nillable="true" type="tns:BankListRowType" name="Bank"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>
