@@ -1,6 +1,6 @@
 create table account(
-  id numeric(18),
-  bank_id numeric(18) not null,
+  id bigint,
+  bank_id bigint not null,
   billing_account varchar(64) not null,
   last_modified timestamp not null,
   constraint pk_account primary key (id)
@@ -12,7 +12,7 @@ comment on column account.billing_account is 'Norēķinu konts.';
 comment on column account.last_modified is 'Pēdējo izmaiņu datums un laiks.';
 
 create table account_currency(
-  account_id numeric(18) not null,
+  account_id bigint not null,
   currency_code varchar(3) not null
 );
 comment on table account_currency is 'Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu';
@@ -20,7 +20,7 @@ comment on column account_currency.account_id is 'Konta identifikators.';
 comment on column account_currency.currency_code is 'Valūtas kods.';
 
 create table bank(
-  id numeric(18),
+  id bigint,
   code varchar(16) not null,
   country_code varchar(2),
   name varchar(240) not null,

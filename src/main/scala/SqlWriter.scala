@@ -120,43 +120,31 @@ trait SqlWriter { this: ConstraintNamingRules =>
 }
 
 private[out] class OracleSqlWriter(
-  constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
-  override def pkName(tableName: String) =
-    constraintNamingRules.pkName(tableName)
-  override def fkName(tableName: String, ref: Ref) =
-    constraintNamingRules.fkName(tableName, ref)
+  constraintNamingRules: ConstraintNamingRules)
+  extends StandardSqlWriter(constraintNamingRules) {
   override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
-      case "integer" =>
-        "numeric(" + (xt.totalDigits getOrElse 20) + ")" // len?
       case "long" =>
         "numeric(" + (xt.totalDigits getOrElse 18) + ")"
       case "int" =>
         "numeric(" + (xt.totalDigits getOrElse 9) + ")"
-      case "decimal" =>
-        "numeric(" + xt.totalDigits.get + ", " + xt.fractionDigits.get + ")"
-      case "date" => "date"
-      case "dateTime" => "timestamp"
       case "string" =>
-        "varchar2" + xt.length.map(l => s"($l char)").getOrElse("")
+        if (xt.length.isDefined && xt.length.get <= 4000)
+          "varchar2" + s"(${xt.length.get} char)"
+        else "clob"
       case "boolean" => "char"
-      case "base64Binary" => "blob"
-      case x => throw new RuntimeException("Unexpected type: " + xt)
+      case _ => super.dbType(c)
     }
   }
   override def check(c: ColumnDef[Type]) = {
-    val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
-    xt.name match {
+    c.type_.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
-      case "string" if c.enum != null =>
-        c.enum.map("'" + _ + "'")
-          .mkString(" check (" + dbColumnName + " in (", ", ", "))")
-      case _ => ""
+      case _ => super.check(c)
     }
   }
 }
@@ -172,20 +160,26 @@ private[out] class StandardSqlWriter(
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {
       case "integer" =>
-        "numeric(" + (xt.totalDigits getOrElse 20) + ")" // len?
+        "numeric" + xt.totalDigits.map(l => s"($l)").getOrElse("")
       case "long" =>
-        "numeric(" + (xt.totalDigits getOrElse 18) + ")"
+        "bigint" + xt.totalDigits.map(l => s"($l)").getOrElse("")
       case "int" =>
-        "numeric(" + (xt.totalDigits getOrElse 9) + ")"
+        "integer" + xt.totalDigits.map(l => s"($l)").getOrElse("")
       case "decimal" =>
-        "numeric(" + xt.totalDigits.get + ", " + xt.fractionDigits.get + ")"
+        "numeric" + ((xt.totalDigits, xt.fractionDigits) match {
+          case (None, None) => ""
+          case (Some(t), None) => s"($t)"
+          case (None, Some(f)) => s"(*, $f)"
+          case (Some(t), Some(f)) => s"($t, $f)"
+        })
       case "date" => "date"
       case "dateTime" => "timestamp"
       case "string" =>
-        "varchar" + xt.length.map(l => s"($l)").getOrElse("")
+        xt.length.map(l => s"varchar($l)") getOrElse ("clob")
       case "boolean" => "boolean"
-      case "base64Binary" => "bytea"
-      case x => throw new RuntimeException("Unexpected type: " + xt)
+      case "base64Binary" => "blob"
+      case x =>
+        throw new RuntimeException("Unexpected type: " + xt + " for " + c.name)
     }
   }
   override def check(c: ColumnDef[Type]) = {
@@ -199,6 +193,7 @@ private[out] class StandardSqlWriter(
     }
   }
 }
+
 private[out] class PostgreSqlWriter(
   constraintNamingRules: ConstraintNamingRules)
   extends StandardSqlWriter(constraintNamingRules) {
@@ -206,6 +201,8 @@ private[out] class PostgreSqlWriter(
     c.type_.name match {
       case "boolean" => "bool"
       case "base64Binary" => "bytea"
+      case "string" =>
+        "varchar" + c.type_.length.map(l => s"($l)").getOrElse("")
       case x => super.dbType(c)
     }
   }
