@@ -17,6 +17,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val nl = System.getProperty("line.separator")
   "generated oracle roundtrip file" should "equal sample file" in {
+    Class.forName("oracle.jdbc.OracleDriver") //fix random No suitable driver found
     clearOracleDbSchema(getCfg("mojoz.oracle.dba."))
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements = SqlWriter.oracle().createStatements(tableDefs)
@@ -40,6 +41,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     expected should be(produced)
   }
   "generated postgresql roundtrip file" should "equal sample file" in {
+    Class.forName("org.postgresql.Driver") //fix random No suitable driver found
     val cfg = getCfg("mojoz.postgresql.")
     clearPostgresqlDbSchema(cfg)
     val expected = fileToString(path + "/" + "tables-out.yaml")
