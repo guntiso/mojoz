@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it",
   "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it",
-  "org.tresql" %% "tresql" % "5.3" % "it,test",
+  "org.tresql" %% "tresql" % "6.0-M2-SNAPSHOT" % "it,test",
   "org.scalatest" % "scalatest_2.10" % "2.0.M8" % "it,test"
 )
 
