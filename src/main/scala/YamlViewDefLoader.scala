@@ -9,7 +9,6 @@ import scala.collection.JavaConversions._
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import scala.collection.mutable.Queue
 import scala.io.Source
-import scala.reflect.BeanProperty
 
 import org.yaml.snakeyaml.Yaml
 

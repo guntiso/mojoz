@@ -1,6 +1,6 @@
 name := "mojoz"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.0"
 
 scalacOptions ++= Seq("-deprecation", "-feature")
 
@@ -12,6 +12,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.13",
+  "org.scala-lang.modules" %% "scala-xml" % "1.0.1",
   // test
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it",

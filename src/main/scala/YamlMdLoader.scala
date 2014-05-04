@@ -6,7 +6,6 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import scala.io.Source
-import scala.reflect.BeanProperty
 import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.io._
