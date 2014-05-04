@@ -51,7 +51,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     td foreach checkHasColumns
     td foreach checkRepeatingColumnNames
   }
-  val tableDefs = try {
+  val tableDefs = {
     val rawTableDefs = sources map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
         case e: Exception => throw new RuntimeException(
