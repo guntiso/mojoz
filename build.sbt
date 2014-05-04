@@ -18,7 +18,7 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % "1.2.0" % "it",
   "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it",
   "org.tresql" %% "tresql" % "6.0-M2-SNAPSHOT" % "it,test",
-  "org.scalatest" % "scalatest_2.10" % "2.0.M8" % "it,test"
+  "org.scalatest" %% "scalatest" % "2.1.5" % "it,test"
 )
 
 scalacOptions in (Compile, doc) <++= (baseDirectory in
