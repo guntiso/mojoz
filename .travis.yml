@@ -1,0 +1,11 @@
+language: scala
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION clean update compile test
+scala:
+  - 2.11.0
+jdk:
+  - oraclejdk7
+  - openjdk7
+notifications:
+  email:
+    - guntiso@uniso.lv
