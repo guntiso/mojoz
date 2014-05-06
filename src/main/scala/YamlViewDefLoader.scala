@@ -24,6 +24,7 @@ case class ViewDef[T](
   joins: String, // from clause
   filter: String, // where clause
   groupBy: String,
+  having: String,
   orderBy: String,
   extends_ : String,
   draftOf: String,
@@ -93,6 +94,7 @@ class YamlViewDefLoader(
     val joins = get("joins")
     val filter = get("filter")
     val group = get("group")
+    val having = get("having")
     val order = get("order")
     val xtnds = get("extends")
     val draftOf = get("draft-of")
@@ -155,7 +157,7 @@ class YamlViewDefLoader(
         isExpression, isFilterable, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
-    ViewDef(name, table, null, joins, filter, group, order,
+    ViewDef(name, table, null, joins, filter, group, having, order,
       xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
