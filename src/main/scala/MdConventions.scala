@@ -6,6 +6,7 @@ import mojoz.metadata.TableDef._
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
 class MdConventions {
+  def idTypeName = "long"
   def isIdName(name: String) = name.toLowerCase == "id"
   def isCodeName(name: String) = name.toLowerCase == "code"
   def isRefName(name: String) = name != null && name.contains(".")
@@ -49,7 +50,7 @@ class MdConventions {
       case (name, Some(typ)) if isRefName(typ.name) =>
         (typ, nullableOrTrue)
       case (name, _) if isIdName(name) =>
-        (defaultType("long"), nullableOrFalse)
+        (defaultType(idTypeName), nullableOrFalse)
       case (name, typ) if isRefName(name) =>
         (typ getOrElse new Type(null), nullableOrTrue)
       case (name, _) if isBooleanName(name) =>
@@ -57,7 +58,7 @@ class MdConventions {
       case (name, _) if isDateName(name) =>
         (defaultType("date"), nullableOrTrue)
       case (name, _) if isIdRefName(name) =>
-        (defaultType("long"), nullableOrTrue)
+        (defaultType(idTypeName), nullableOrTrue)
       case _ =>
         (defaultType("string"), nullableOrTrue)
     }
@@ -110,8 +111,8 @@ class MdConventions {
         type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
-        case (name, "long", _) if isIdName(name) => None
-        case (name, "long", _) if isIdRefName(name) => None
+        case (name, type_, _) if isIdName(name) && type_ == idTypeName => None
+        case (name, type_, _) if isIdRefName(name) && type_ == idTypeName => None
         case (name, "boolean", _) if isBooleanName(name) => None
         case (name, "date", _) if isDateName(name) => None
         case (name, "string", None) if !isTypedName(name) => None
