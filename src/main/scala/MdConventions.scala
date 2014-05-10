@@ -104,7 +104,7 @@ class MdConventions {
         if (typeOpt.isDefined) col.name // FIXME "." for alias? moth.id/pers.id
         else refTypeName
       col.copy(
-        name = refTypeName,
+        name = name,
         type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
