@@ -34,7 +34,8 @@ class JdbcTableDefLoader {
       val idx = Nil // TODO idx
       val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
       val tableFullName =
-        List(catalog, schema, tableName).filter(_ != null).mkString(".")
+        List(catalog, schema, tableName)
+          .filter(_ != null).filter(_ != "").mkString(".")
       tableDefs += TableDef(tableFullName, comment, cols, pk, uk, idx, refs)
     }
 
@@ -141,7 +142,8 @@ class JdbcTableDefLoader {
         case _ => null
       }
       val pkTabFullName =
-        List(pkTabCat, pkTabSch, pkTabName).filter(_ != null).mkString(".")
+        List(pkTabCat, pkTabSch, pkTabName)
+          .filter(_ != null).filter(_ != "").mkString(".")
       refMap.get(pkTabFullName, fkName) match {
         case Some(r) =>
           r.cols.asInstanceOf[ListBuffer[String]] += fkColName
