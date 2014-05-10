@@ -6,11 +6,13 @@ import mojoz.metadata.TableDef._
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
 class MdConventions {
+  def isIdName(name: String) = name.toLowerCase == "id"
+  def isCodeName(name: String) = name.toLowerCase == "code"
   def isRefName(name: String) = name != null && name.contains(".")
   def isBooleanName(name: String) =
-    name.startsWith("is_") || name.startsWith("has_")
-  def isDateName(name: String) = name.endsWith("_date")
-  def isIdRefName(name: String) = name.endsWith("_id")
+    name.toLowerCase.startsWith("is_") || name.toLowerCase.startsWith("has_")
+  def isDateName(name: String) = name.toLowerCase.endsWith("_date")
+  def isIdRefName(name: String) = name.toLowerCase.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
   def fromExternal(typeDef: TableDef[IoColumnType]): TableDef[Type] = {
@@ -20,14 +22,14 @@ class MdConventions {
   }
   def fromExternalPk(typeDef: TableDef[_]) = {
     import scala.language.existentials
-    val cols = typeDef.cols
+    val cols = typeDef.cols.map(_.name)
     if (typeDef.pk.isDefined) typeDef.pk
-    else if (cols.filter(_.name == "id").size == 1)
-      Some(DbIndex(null, List("id")))
-    else if (cols.filter(_.name == "code").size == 1)
-      Some(DbIndex(null, List("code")))
-    else if (cols.size == 2 && cols.filter(_.name endsWith "_id").size == 2)
-      Some(DbIndex(null, cols.map(_.name)))
+    else if (cols.filter(isIdName).size == 1)
+      Some(DbIndex(null, cols.filter(isIdName)))
+    else if (cols.filter(isCodeName).size == 1)
+      Some(DbIndex(null, cols.filter(isCodeName)))
+    else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
+      Some(DbIndex(null, cols))
     else None
   }
   def fromExternal(col: ColumnDef[IoColumnType]): ColumnDef[Type] = {
@@ -46,7 +48,7 @@ class MdConventions {
     (name, type_) match {
       case (name, Some(typ)) if isRefName(typ.name) =>
         (typ, nullableOrTrue)
-      case ("id", _) =>
+      case (name, _) if isIdName(name) =>
         (defaultType("long"), nullableOrFalse)
       case (name, typ) if isRefName(name) =>
         (typ getOrElse new Type(null), nullableOrTrue)
@@ -65,19 +67,19 @@ class MdConventions {
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table))
   def toExternalPk(typeDef: TableDef[Type]) = {
-    val cols = typeDef.cols
+    val cols = typeDef.cols.map(_.name)
     val DefaultPkName = "pk_" + typeDef.name
     if (!typeDef.pk.isDefined) None
-    else if (cols.filter(_.name == "id").size == 1)
+    else if (cols.filter(isIdName).size == 1)
       typeDef.pk match {
-        case Some(DbIndex(DefaultPkName, List("id"))) => None
+        case Some(DbIndex(DefaultPkName, List(id))) if isIdName(id) => None
         case pk => pk
       }
-    else if (cols.size == 2 && cols.filter(_.name endsWith "_id").size == 2)
+    else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
       typeDef.pk match {
         case Some(DbIndex(DefaultPkName,
-          List(col1, col2))) if (col1, col2) == (cols(0).name, cols(1).name) =>
-          None
+          List(col1, col2))) if (col1.toLowerCase, col2.toLowerCase) ==
+          (cols(0).toLowerCase, cols(1).toLowerCase) => None
         case pk => pk
       }
     else None
@@ -85,7 +87,7 @@ class MdConventions {
 
   def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
-      case ("id", false) => None
+      case (name, false) if isIdName(name) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
     }
@@ -108,7 +110,7 @@ class MdConventions {
         type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
-        case ("id", "long", _) => None
+        case (name, "long", _) if isIdName(name) => None
         case (name, "long", _) if isIdRefName(name) => None
         case (name, "boolean", _) if isBooleanName(name) => None
         case (name, "date", _) if isDateName(name) => None
