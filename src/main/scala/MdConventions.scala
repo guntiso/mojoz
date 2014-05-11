@@ -99,15 +99,27 @@ class MdConventions {
       // TODO ref checks (type match, type override)
       // TODO multicol refs, ...?
       // TODO drop enum, if differs?
-      val refTypeName = ref.map(r => r.refTable + "." + r.refCols(0)).get
-      val typeOpt =
-        if (col.name == ref.map(r => r.refTable + "_" + r.refCols(0)).get) None
-        else Some(new Type(refTypeName))
-      val name =
-        if (typeOpt.isDefined) col.name // FIXME "." for alias? moth.id/pers.id
-        else refTypeName
+      def prefix(s: String) =
+        if (s.indexOf(".") < 0) "" else s.substring(0, s lastIndexOf ".") + "."
+      def suffix(s: String) =
+        if (s.indexOf(".") < 0) s else s.substring(s.lastIndexOf(".") + 1)
+      def toRefColName(col: String, refCol: String) =
+        if (col.endsWith("_" + refCol))
+          col.substring(0, col.length - refCol.length - 1) + "." + refCol
+        else col
+      val refTable = ref.get.refTable
+      val refCol = ref.get.refCols(0)
+      val refTypeName =
+        if (prefix(table.name) == prefix(refTable))
+          suffix(refTable) + "." + refCol
+        else refTable + "." + refCol
+      val (typeOpt, refColName) =
+        if (col.name == refTypeName.replace(".", "_"))
+          (None, refTypeName)
+        else
+          (Some(new Type(refTypeName)), toRefColName(col.name, refCol))
       col.copy(
-        name = name,
+        name = refColName,
         type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
