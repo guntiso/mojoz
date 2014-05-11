@@ -30,8 +30,8 @@ class JdbcTableDefLoader {
       val comment = rs.getString("REMARKS")
       val cols = colDefs(dmd.getColumns(catalog, schema, tableName, null))
       val pk = this.pk(dmd.getPrimaryKeys(catalog, schema, tableName))
-      val uk = Nil // TODO uk
-      val idx = Nil // TODO idx
+      val (uk, idx) =
+        ukAndIdx(dmd.getIndexInfo(catalog, schema, tableName, false, true))
       val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
       val tableFullName =
         List(catalog, schema, tableName)
@@ -115,6 +115,36 @@ class JdbcTableDefLoader {
     rs.close
     val pkName = cols.map(_._3).headOption.orNull
     if (cols.size == 0) None else Some(DbIndex(pkName, cols.sorted.map(_._2)))
+  }
+  def ukAndIdx(rs: ResultSet) = {
+    var uk: List[(Short, String, String)] = Nil
+    var idx: List[(Short, String, String)] = Nil
+    while (rs.next) {
+      val isIndex = rs.getShort("TYPE") match {
+        case DM.tableIndexStatistic => false
+        case _ => true
+      }
+      if (isIndex) {
+        val ascDesc = rs.getString("ASC_OR_DESC") match {
+          case "A" => "ASC"
+          case "D" => "DESC"
+          case null => null
+        }
+        val nonUnique = rs.getBoolean("NON_UNIQUE")
+        val ordinal = rs.getShort("ORDINAL_POSITION")
+        val colName = rs.getString("COLUMN_NAME")
+        val idxName = rs.getString("INDEX_NAME")
+        // TODO INDEX_QUALIFIER?
+        // TODO FILTER_CONDITION?
+        val colExpr = List(colName, ascDesc).filter(_ != null).mkString(" ")
+        val t = (ordinal, colExpr, idxName)
+        if (nonUnique) idx = t :: idx else uk = t :: uk
+      }
+    }
+    rs.close
+    val uks = uk.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2)))
+    val idxs = idx.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2)))
+    (uks.toList.sortBy(_.name), idxs.toList.sortBy(_.name))
   }
   def refs(rs: ResultSet) = {
     def fkRule(rule: Short) = rule match {
