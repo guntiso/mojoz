@@ -1,14 +1,16 @@
-import scala.io.Source
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-import mojoz.metadata.in.YamlMd
-import mojoz.metadata.in.YamlTableDefLoader
-import mojoz.metadata.in.JdbcTableDefLoader
-import mojoz.metadata.io.MdConventions
-import mojoz.metadata.out.SqlWriter
-import mojoz.metadata.out.YamlTableDefWriter
 import java.io.PrintWriter
 import java.sql.DriverManager
+
+import scala.io.Source
+
+import org.scalatest.FlatSpec
+import org.scalatest.Matchers
+
+import mojoz.metadata.in.JdbcTableDefLoader
+import mojoz.metadata.in.YamlMd
+import mojoz.metadata.in.YamlTableDefLoader
+import mojoz.metadata.out.SqlWriter
+import mojoz.metadata.out.YamlTableDefWriter
 
 class TableDefTests extends FlatSpec with Matchers {
   val path = "src/test/resources"
@@ -61,19 +63,21 @@ class TableDefTests extends FlatSpec with Matchers {
     val Catalog = "PUBLIC"
     val Schema = "PUBLIC"
     val Prefx = Catalog + "." + Schema + "."
-    val jdbcTableDefs = {
+    val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
     }
-      // TODO move all those mappings to core somehow? 
-      .map(_.mapTableNames { s: String =>
-        (if (s startsWith Prefx) s.substring(Prefx.length) else s).toLowerCase()
-      })
-      .map(_.mapColumnNames((t: String, c: String) => c.toLowerCase))
+    val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
     expected should be(produced)
+    val jdbcTableDefs2 =
+      rawJdbcTableDefs.map(_.unprefixTableNames(Prefx)).map(_.toLowerCase)
+    val produced2 = YamlTableDefWriter.toYaml(jdbcTableDefs2)
+    if (expected != produced2)
+      toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced2)
+    expected should be(produced2)
   }
   def fileToString(filename: String) = {
     val source = Source.fromFile(filename)

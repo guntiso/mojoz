@@ -26,15 +26,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     executeStatements(cfg, statements: _*)
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     val Schema = "MOJOZ"
-    val Prefx = Schema + "."
     val jdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close()
-    }
-      .map(_.mapTableNames { s: String =>
-        (if (s startsWith Prefx) s.substring(Prefx.length) else s).toLowerCase
-      })
-      .map(_.mapColumnNames((t: String, c: String) => c.toLowerCase))
+    }.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
@@ -50,14 +45,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     executeStatements(cfg, statements: _*)
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     val Schema = "mojoz"
-    val Prefx = Schema + "."
     val jdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null, "TABLE")
       finally conn.close
-    }
-      .map(_.mapTableNames { s: String =>
-        if (s startsWith Prefx) s.substring(Prefx.length) else s
-      })
+    }.map(_.toSimpleNames)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
