@@ -39,7 +39,9 @@ case class TableDef[T](
   uk: Seq[DbIndex],
   idx: Seq[DbIndex],
   refs: Seq[Ref]) {
-  def toLowerCase = mapTableNames(_.toLowerCase).mapColumnNames(_.toLowerCase)
+  def toLowerCase = mapTableNames(_.toLowerCase)
+    .mapColumnNames(_.toLowerCase)
+    .mapConstraintNames(_.toLowerCase)
   def toSimpleNames = mapTableNames((s: String) =>
     if (s.indexOf(".") < 0) s else s.substring(s.lastIndexOf(".") + 1))
   def unprefixTableNames(prefix: String) = mapTableNames((s: String) =>
@@ -55,6 +57,16 @@ case class TableDef[T](
     refs = refs.map(r => r.copy(
       cols = r.cols.map(transform),
       refCols = r.refCols.map(transform))))
+  def mapConstraintNames(transform: (String) => String): TableDef[T] = {
+    def safeTransform(s: String) = if (s == null) s else transform(s)
+    def idxTransform(idx: TableDef.DbIndex) =
+      idx.copy(name = safeTransform(idx.name))
+    copy(
+      pk = pk.map(idxTransform),
+      uk = uk.map(idxTransform),
+      idx = idx.map(idxTransform),
+      refs = refs.map(r => r.copy(name = safeTransform(r.name))))
+  }
 }
 case class ColumnDef[T](
   name: String,
