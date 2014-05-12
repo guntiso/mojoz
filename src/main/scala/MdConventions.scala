@@ -68,7 +68,12 @@ class MdConventions {
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table),
       uk = toExternalUk(table),
+      idx = toExternalIdx(table),
       refs = toExternalRefs(table))
+  private def toExternalIdx(idx: DbIndex) =
+    if (!idx.cols.exists(_.toLowerCase endsWith " asc")) idx
+    else idx.copy(cols = idx.cols.map(c =>
+      if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c))
   def toExternalPk(typeDef: TableDef[Type]) = {
     val cols = typeDef.cols.map(_.name)
     // TODO pk: <missing>!
@@ -91,14 +96,17 @@ class MdConventions {
         case pk => pk
       }
     else None
-  }
+  }.map(toExternalIdx)
 
   def toExternalUk(table: TableDef[Type]) = {
     if (table.pk.isDefined) {
       val pkName = table.pk.get.name
       table.uk.filter(_.name != pkName)
     } else table.uk
-  }
+  }.map(toExternalIdx)
+
+  def toExternalIdx(table: TableDef[Type]): Seq[DbIndex] =
+    table.idx.map(toExternalIdx)
 
   def toExternalRefs(table: TableDef[Type]) = {
     // TODO check name, on-delete, on-update etc. mismatches!
