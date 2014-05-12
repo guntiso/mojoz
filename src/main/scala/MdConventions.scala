@@ -67,9 +67,11 @@ class MdConventions {
     table.copy(
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table),
+      uk = toExternalUk(table),
       refs = toExternalRefs(table))
   def toExternalPk(typeDef: TableDef[Type]) = {
     val cols = typeDef.cols.map(_.name)
+    // TODO pk: <missing>!
     // TODO overridable isDefaultPkName(name), use ConstraintNamingRules!
     def isDefaultPkName(name: String) =
       name == null || name.equalsIgnoreCase("pk_" + typeDef.name)
@@ -89,6 +91,13 @@ class MdConventions {
         case pk => pk
       }
     else None
+  }
+
+  def toExternalUk(table: TableDef[Type]) = {
+    if (table.pk.isDefined) {
+      val pkName = table.pk.get.name
+      table.uk.filter(_.name != pkName)
+    } else table.uk
   }
 
   def toExternalRefs(table: TableDef[Type]) = {
