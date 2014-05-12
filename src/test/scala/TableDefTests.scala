@@ -66,7 +66,10 @@ class TableDefTests extends FlatSpec with Matchers {
     val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
-    }
+    }.map(t => t.copy( // hsqldb-specific index cleanup
+      uk = t.uk.filterNot(_.name startsWith "SYS_IDX_"),
+      idx = t.idx.filterNot(_.name startsWith "SYS_IDX_")))
+
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)

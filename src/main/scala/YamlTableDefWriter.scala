@@ -52,12 +52,35 @@ class YamlTableDefWriter {
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }
   }
+  private def toYaml(name: String, cols: Seq[String]): String =
+    Option(name).filter(_ != "")
+      .map(_ + cols.mkString("(", ", ", ")"))
+      .getOrElse(cols.mkString(", "))
+  def toYaml(index: TableDef.DbIndex): String = toYaml(index.name, index.cols)
+  def toYaml(ref: TableDef.Ref): String =
+    List(
+      Some(toYaml(ref.name, ref.cols)),
+      Some("->"),
+      Some(toYaml(ref.refTable, ref.refCols)),
+      Option(ref.onDeleteAction).map("on delete " + _),
+      Option(ref.onUpdateAction).map("on update " + _))
+      .flatMap(x => x).mkString(" ")
   def toYaml(tableDef: TableDef[IoColumnType]): String =
     List(Some(tableDef.name).map("table:   " + _),
       Option(tableDef.comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Some("columns:"),
-      Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")))
+      Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")),
+      tableDef.pk.map(pk => "pk: " + toYaml(pk)),
+      Option(tableDef.uk).filter(_.size > 0).map(x => "uk:"),
+      Option(tableDef.uk).filter(_.size > 0)
+        .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
+      Option(tableDef.idx).filter(_.size > 0).map(x => "idx:"),
+      Option(tableDef.idx).filter(_.size > 0)
+        .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
+      Option(tableDef.refs).filter(_.size > 0).map(x => "refs:"),
+      Option(tableDef.refs).filter(_.size > 0)
+        .map(_.map(i => "- " + toYaml(i)).mkString("\n")))
       .flatMap(x => x).mkString("\n")
   def toYaml(tableDefs: Seq[TableDef[IoColumnType]]): String =
     tableDefs.map(toYaml).mkString("\n\n") +
