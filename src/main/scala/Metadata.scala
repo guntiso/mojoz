@@ -47,16 +47,14 @@ case class TableDef[T](
   def mapTableNames(transform: (String) => String) = copy(
     name = transform(name),
     refs = refs.map(r => r.copy(refTable = transform(r.refTable))))
-  def mapColumnNames(transform: (String) => String): TableDef[T] =
-    mapColumnNames((t: String, c: String) => transform(c))
-  def mapColumnNames(transform: (String, String) => String) = copy(
-    cols = cols.map(c => c.copy(name = transform(name, c.name))),
-    pk = pk.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
-    uk = uk.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
-    idx = idx.map(x => x.copy(cols = x.cols.map(transform(name, _)))),
+  def mapColumnNames(transform: (String) => String): TableDef[T] = copy(
+    cols = cols.map(c => c.copy(name = transform(c.name))),
+    pk = pk.map(x => x.copy(cols = x.cols.map(transform))),
+    uk = uk.map(x => x.copy(cols = x.cols.map(transform))),
+    idx = idx.map(x => x.copy(cols = x.cols.map(transform))),
     refs = refs.map(r => r.copy(
-      cols = r.cols.map(transform(name, _)),
-      refCols = r.refCols.map(transform(r.refTable, _)))))
+      cols = r.cols.map(transform),
+      refCols = r.refCols.map(transform))))
 }
 case class ColumnDef[T](
   name: String,
