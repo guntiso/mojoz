@@ -56,8 +56,9 @@ class YamlTableDefWriter {
     Option(name).filter(_ != "")
       .map(_ + cols.mkString("(", ", ", ")"))
       .getOrElse(cols.mkString(", "))
-  def toYaml(index: TableDef.DbIndex): String = toYaml(index.name, index.cols)
-  def toYaml(ref: TableDef.Ref): String =
+  private def toYaml(index: TableDef.DbIndex): String =
+    toYaml(index.name, index.cols)
+  private def toYaml(ref: TableDef.Ref): String =
     List(
       Some(toYaml(ref.name, ref.cols)),
       Some("->"),
