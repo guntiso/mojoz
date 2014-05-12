@@ -15,7 +15,11 @@ import org.yaml.snakeyaml.Yaml
 private[in] case class YamlTableDef(
   table: String,
   comments: String,
-  columns: Seq[YamlFieldDef])
+  columns: Seq[YamlFieldDef],
+  pk: Option[DbIndex],
+  uk: Seq[DbIndex],
+  idx: Seq[DbIndex],
+  refs: Seq[Ref])
 
 private[in] case class YamlFieldDef(
   name: String,
@@ -31,8 +35,21 @@ private[in] case class YamlFieldDef(
   orderBy: String,
   comments: String)
 
+private[in] object YamlTableDefLoader {
+  val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+  val qualifiedIdent = s"$ident(\\.$ident)*"
+  val s = "\\s*"
+  val idxName = qualifiedIdent
+  val col = s"$ident(\\s+[aA][sS][cC]|\\s+[dD][eE][sS][cC])?"
+  val cols = s"$col($s\\,$s$col)*"
+  private def regex(pattern: String) = ("^" + pattern + "$").r
+
+  val ColsIdxDef = regex(s"$s($s$cols)$s")
+  val NamedIdxDef = regex(s"$s($idxName)?$s\\($s($cols)$s\\)$s")
+}
 class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   conventions: MdConventions = new MdConventions) {
+  import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
   private def checkTableDefs(td: Seq[TableDef[_]]) = {
     val m: Map[String, _] = td.map(t => (t.name, t)).toMap
@@ -116,6 +133,23 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     }
     tableDefs
   }
+  private def loadYamlIndexDef(src: Any) = {
+    val ThisFail = "Failed to load index definition"
+    val PtA = ("^\\s*\\(.*?\\)$").r
+    def dbIndex(name: String, cols: String) = DbIndex(name,
+      Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil)
+    src match {
+      case idx: java.lang.String => idx match {
+        case NamedIdxDef(name, _, cols, _, _, _) => dbIndex(name, cols)
+        case ColsIdxDef(cols, _, _, _) => dbIndex(null, cols)
+        case _ => throw new RuntimeException(ThisFail +
+          " - unexpected format: " + idx.trim)
+      }
+      case x => throw new RuntimeException(ThisFail +
+        " - unexpected index definition class: " + x.getClass
+        + "\nentry: " + x.toString)
+    }
+  }
   private def loadYamlTableDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
@@ -127,16 +161,29 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
-    YamlTableDef(table, comment, colDefs)
+    val pk = tdMap.get("pk").map(loadYamlIndexDef)
+    val uk = tdMap.get("uk")
+      .filter(_ != null)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .getOrElse(Nil)
+      .map(loadYamlIndexDef)
+    val idx = tdMap.get("idx")
+      .filter(_ != null)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .getOrElse(Nil)
+      .map(loadYamlIndexDef)
+    val refs = Nil // FIXME REFS
+    YamlTableDef(table, comment, colDefs, pk, uk, idx, refs)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
+    // TODO cleanup?
     val name = y.table
     val comment = y.comments
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
-    val pk = None // TODO primary key
-    val uk = Nil // TODO unique indexes
-    val idx = Nil // TODO indexes
-    val refs = Nil // TODO refs?
+    val pk = y.pk
+    val uk = y.uk
+    val idx = y.idx
+    val refs = y.refs
     val exTypeDef = TableDef(name, comment, cols, pk, uk, idx, refs)
     conventions.fromExternal(exTypeDef)
   }

@@ -17,9 +17,9 @@ class MdConventions {
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isIdRefName(name)
   def fromExternal(typeDef: TableDef[IoColumnType]): TableDef[Type] = {
-    val cols = typeDef.cols map fromExternal
-    val primaryKey = fromExternalPk(typeDef)
-    TableDef(typeDef.name, typeDef.comments, cols, primaryKey, Nil, Nil, Nil)
+    typeDef.copy(
+      cols = typeDef.cols map fromExternal,
+      pk = fromExternalPk(typeDef))
   }
   def fromExternalPk(typeDef: TableDef[_]) = {
     import scala.language.existentials
