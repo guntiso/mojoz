@@ -66,24 +66,34 @@ class MdConventions {
   def toExternal(table: TableDef[Type]): TableDef[IoColumnType] =
     table.copy(
       cols = table.cols.map(toExternal(table, _)),
-      pk = toExternalPk(table))
+      pk = toExternalPk(table),
+      refs = toExternalRefs(table))
   def toExternalPk(typeDef: TableDef[Type]) = {
     val cols = typeDef.cols.map(_.name)
-    val DefaultPkName = "pk_" + typeDef.name
+    // TODO overridable isDefaultPkName(name), use ConstraintNamingRules!
+    def isDefaultPkName(name: String) =
+      name == null || name.equalsIgnoreCase("pk_" + typeDef.name)
     if (!typeDef.pk.isDefined) None
     else if (cols.filter(isIdName).size == 1)
       typeDef.pk match {
-        case Some(DbIndex(DefaultPkName, List(id))) if isIdName(id) => None
+        case Some(DbIndex(name, List(id))) if isIdName(id) &&
+          isDefaultPkName(name) => None
         case pk => pk
       }
     else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
       typeDef.pk match {
-        case Some(DbIndex(DefaultPkName,
+        case Some(DbIndex(name,
           List(col1, col2))) if (col1.toLowerCase, col2.toLowerCase) ==
-          (cols(0).toLowerCase, cols(1).toLowerCase) => None
+          (cols(0).toLowerCase, cols(1).toLowerCase) &&
+          isDefaultPkName(name) => None
         case pk => pk
       }
     else None
+  }
+
+  def toExternalRefs(table: TableDef[Type]) = {
+    // TODO check name, on-delete, on-update etc. mismatches!
+    table.refs.filter(_.cols.size > 1)
   }
 
   def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
