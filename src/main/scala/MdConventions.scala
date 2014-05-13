@@ -100,8 +100,8 @@ class MdConventions {
 
   def toExternalUk(table: TableDef[Type]) = {
     if (table.pk.isDefined) {
-      val pkName = table.pk.get.name
-      table.uk.filter(_.name != pkName)
+      val pkCols = toExternalIdx(table.pk.get).cols
+      table.uk.filter(toExternalIdx(_).cols != pkCols)
     } else table.uk
   }.map(toExternalIdx)
 
