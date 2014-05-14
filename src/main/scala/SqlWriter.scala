@@ -11,6 +11,8 @@ object SqlWriter {
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String
+  def ukName(tableName: String, uk: DbIndex): String
+  def idxName(tableName: String, idx: DbIndex): String
   def fkName(tableName: String, ref: Ref): String
 }
 
@@ -18,15 +20,21 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
   val maxNameLen = 60
   val pkPrefix = "pk_"
   val pkSuffix = ""
+  val ukPrefix = "uk_"
+  val ukSuffix = ""
+  val ukTableNameSep = "_"
+  val ukColNameSep = "_"
+  val idxPrefix = "idx_"
+  val idxSuffix = ""
+  val idxTableNameSep = "_"
+  val idxColNameSep = "_"
   val fkPrefix = "fk_"
   val fkSuffix = ""
   val fkTableNameSep = "_"
   def pkUsableLen =
     maxNameLen - pkPrefix.length - pkSuffix.length
-  def fkUsableLen =
-    maxNameLen - fkPrefix.length - fkTableNameSep.length - fkSuffix.length
-  def fkTableNameLen = fkUsableLen / 2
-  def fkRefTableNameLen = fkUsableLen - fkTableNameLen
+  def usableLen(prefix: String, sep: String, suffix: String) =
+    maxNameLen - prefix.length - sep.length - suffix.length
   def shorten(s: String, maxLen: Int) = {
     if (s.length <= maxLen) s
     else if (maxLen < 4) s.substring(0, maxLen)
@@ -42,27 +50,39 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
       leftS + "_" + rightS
     }
   }
-  override def fkName(tableName: String, r: Ref) = {
-    val tnRaw = tableName
-    val rnRaw = Option(r.defaultRefTableAlias).getOrElse(r.refTable)
+  def makeName(prefix: String, leftName: String, sep: String,
+    rightName: String, suffix: String) = {
+    val usable = usableLen(prefix, sep, suffix)
+    val lNameLen = usable / 2
+    val rNameLen = usable - lNameLen
+    val lnRaw = leftName
+    val rnRaw = rightName
     val rawLen =
-      fkPrefix.length + tnRaw.length + fkTableNameSep.length + rnRaw.length +
-        fkSuffix.length
-    val overLen = tnRaw.length + rnRaw.length > fkUsableLen
-    val tnOverLen = tnRaw.length > fkTableNameLen
-    val rnOverLen = rnRaw.length > fkRefTableNameLen
-    val (tn, rn) = (overLen, tnOverLen, rnOverLen) match {
-      case (false, _, _) => (tnRaw, rnRaw)
+      prefix.length + lnRaw.length + sep.length + rnRaw.length + suffix.length
+    val isOverLen = lnRaw.length + rnRaw.length > usable
+    val lnOverLen = lnRaw.length > lNameLen
+    val rnOverLen = rnRaw.length > rNameLen
+    val (ln, rn) = (isOverLen, lnOverLen, rnOverLen) match {
+      case (false, _, _) => (lnRaw, rnRaw)
       case (_, _, true) =>
-        val tn = shorten(tnRaw, fkTableNameLen)
-        val rn = shorten(rnRaw, fkUsableLen - tn.length)
-        (tn, rn)
-      case _ => (shorten(tnRaw, fkUsableLen - rnRaw.length), rnRaw)
+        val ln = shorten(lnRaw, lNameLen)
+        val rn = shorten(rnRaw, usable - ln.length)
+        (ln, rn)
+      case _ => (shorten(lnRaw, usable - rnRaw.length), rnRaw)
     }
-    s"$fkPrefix$tn$fkTableNameSep$rn$fkSuffix"
+    s"$prefix$ln$sep$rn$suffix"
   }
+  private def colsToName(cols: Seq[String], sep: String) =
+    cols.map(_.split("\\s+")(0)).mkString(sep)
   override def pkName(tableName: String) =
     pkPrefix + shorten(tableName, pkUsableLen) + pkSuffix
+  override def ukName(tableName: String, uk: DbIndex) = makeName(ukPrefix,
+    tableName, ukTableNameSep, colsToName(uk.cols, ukColNameSep), ukSuffix)
+  override def idxName(tableName: String, idx: DbIndex) = makeName(idxPrefix,
+    tableName, idxTableNameSep, colsToName(idx.cols, idxColNameSep), idxSuffix)
+  override def fkName(tableName: String, r: Ref) = makeName(fkPrefix,
+    tableName, fkTableNameSep,
+    Option(r.defaultRefTableAlias).getOrElse(r.refTable), fkSuffix)
 }
 
 class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
@@ -72,7 +92,7 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
   new StandardSqlWriter(constraintNamingRules)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new StandardSqlWriter(constraintNamingRules)
+  new HsqldbSqlWriter(constraintNamingRules)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
   new OracleSqlWriter(constraintNamingRules)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
@@ -81,31 +101,42 @@ def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstrai
 }
 
 trait SqlWriter { this: ConstraintNamingRules =>
-  def createStatements(tables: Seq[TableDef[Type]]) = {
-    List(createTablesStatements(tables), foreignKeys(tables)).mkString("\n")
-  }
-  def createTablesStatements(tables: Seq[TableDef[Type]]) = {
-    tables.map(t => List(
-      createTableStatement(t), tableComment(t), columnComments(t))
-      .mkString("\n")).mkString("\n\n") + (if (tables.size > 0) "\n" else "")
-  }
-  def createTableStatement(t: TableDef[Type]) =
-    (t.cols.map(createColumn) ++ primaryKey(t))
+  private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
+    if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
+  def schema(tables: Seq[TableDef[Type]]) = List(
+    tables.map(tableAndCommentsAndIndexes).mkString("\n\n"),
+    foreignKeys(tables).mkString("\n")).mkString("\n\n") +
+    (if (tables.size > 0) "\n" else "")
+  def tableAndCommentsAndIndexes(t: TableDef[Type]): String =
+    List[Iterable[String]](
+      Some(table(t)), tableComment(t), columnComments(t),
+      uniqueIndexes(t), indexes(t))
+      .flatten.mkString("\n")
+  def table(t: TableDef[Type]) =
+    (t.cols.map(column) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
   def primaryKey(t: TableDef[_]) = t.pk map { pk =>
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
-      " primary key (" + pk.cols.mkString(", ") + ")"
+      " primary key (" + idxCols(pk.cols).mkString(", ") + ")"
   }
-  private def createColumn(c: ColumnDef[Type]) =
+  def uniqueIndexes(t: TableDef[_]) = t.uk map { uk =>
+    "create unique index " + Option(uk.name).getOrElse(ukName(t.name, uk)) +
+      s" on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
+  }
+  def indexes(t: TableDef[_]) = t.idx map { idx =>
+    "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
+      s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
+  }
+  private def column(c: ColumnDef[Type]) =
     c.name + " " + dbType(c) +
       (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
       check(c)
-  def tableComment(t: TableDef[_]) = "comment on table " + t.name +
-    " is '" + Option(t.comments).getOrElse("") + "';"
-  def columnComments(t: TableDef[_]) = t.cols.map(c =>
-    "comment on column " + t.name + "." + c.name +
-      " is '" + Option(c.comments).getOrElse("") + "';") mkString "\n"
+  def tableComment(t: TableDef[_]) = Option(t.comments).filter(_ != "").map(c =>
+    s"comment on table ${t.name} is '$c';")
+  def columnComments(t: TableDef[_]) =
+    t.cols.filter(_.comments != null).filter(_.comments != "").map(c =>
+      s"comment on column ${t.name}.${c.name} is '${c.comments}';")
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
     t.refs map { r =>
       // TODO cascade
@@ -113,10 +144,17 @@ trait SqlWriter { this: ConstraintNamingRules =>
         r.cols mkString ", "
       }) references ${r.refTable}(${r.refCols mkString ", "});"
     }
-  }.flatMap(x => x)
-    .mkString("", "\n", if (tables.exists(_.refs.size > 0)) "\n" else "")
+  }.flatten
   def dbType(c: ColumnDef[Type]): String
   def check(c: ColumnDef[Type]): String
+}
+
+private[out] class HsqldbSqlWriter(
+  constraintNamingRules: ConstraintNamingRules)
+  extends StandardSqlWriter(constraintNamingRules) {
+  // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
+  override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
+    if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
 }
 
 private[out] class OracleSqlWriter(
@@ -153,6 +191,10 @@ private[out] class StandardSqlWriter(
   constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
   override def pkName(tableName: String) =
     constraintNamingRules.pkName(tableName)
+  override def ukName(tableName: String, uk: DbIndex) =
+    constraintNamingRules.ukName(tableName, uk)
+  override def idxName(tableName: String, idx: DbIndex) =
+    constraintNamingRules.idxName(tableName, idx)
   override def fkName(tableName: String, ref: Ref) =
     constraintNamingRules.fkName(tableName, ref)
   override def dbType(c: ColumnDef[Type]) = {

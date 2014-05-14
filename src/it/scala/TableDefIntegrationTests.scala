@@ -20,7 +20,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     Class.forName("oracle.jdbc.OracleDriver") //fix random No suitable driver found
     clearOracleDbSchema(getCfg("mojoz.oracle.dba."))
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlWriter.oracle().createStatements(tableDefs)
+    val statements = SqlWriter.oracle().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     val cfg = getCfg("mojoz.oracle.")
     executeStatements(cfg, statements: _*)
@@ -40,7 +40,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val cfg = getCfg("mojoz.postgresql.")
     clearPostgresqlDbSchema(cfg)
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlWriter.postgresql().createStatements(tableDefs)
+    val statements = SqlWriter.postgresql().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(cfg, statements: _*)
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
