@@ -2,10 +2,11 @@ package mojoz.metadata.io
 
 import mojoz.metadata._
 import mojoz.metadata.TableDef._
+import mojoz.metadata.out.SqlWriter
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
-class MdConventions {
+class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.SimpleConstraintNamingRules) {
   def idTypeName = "long"
   def isIdName(name: String) = name.toLowerCase == "id"
   def isCodeName(name: String) = name.toLowerCase == "code"
@@ -70,10 +71,14 @@ class MdConventions {
       uk = toExternalUk(table),
       idx = toExternalIdx(table),
       refs = toExternalRefs(table))
-  private def toExternalIdx(idx: DbIndex) =
+  private def toExternalIdx(defaultName: String)(idx: DbIndex) = {
     if (!idx.cols.exists(_.toLowerCase endsWith " asc")) idx
     else idx.copy(cols = idx.cols.map(c =>
       if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c))
+  } match {
+    case idx if idx.name == defaultName => idx.copy(name = null)
+    case idx => idx
+  }
   def toExternalPk(typeDef: TableDef[Type]) = {
     val cols = typeDef.cols.map(_.name)
     // TODO pk: <missing>!
@@ -96,17 +101,17 @@ class MdConventions {
         case pk => pk
       }
     else None
-  }.map(toExternalIdx)
+  }.map(toExternalIdx(naming.pkName(typeDef.name)))
 
   def toExternalUk(table: TableDef[Type]) = {
     if (table.pk.isDefined) {
-      val pkCols = toExternalIdx(table.pk.get).cols
-      table.uk.filter(toExternalIdx(_).cols != pkCols)
+      val pkCols = toExternalIdx("")(table.pk.get).cols
+      table.uk.filter(toExternalIdx("")(_).cols != pkCols)
     } else table.uk
-  }.map(toExternalIdx)
+  }.map(uk => toExternalIdx(naming.ukName(table.name, uk))(uk))
 
   def toExternalIdx(table: TableDef[Type]): Seq[DbIndex] =
-    table.idx.map(toExternalIdx)
+    table.idx.map(idx => toExternalIdx(naming.idxName(table.name, idx))(idx))
 
   def toExternalRefs(table: TableDef[Type]) = {
     // TODO check name, on-delete, on-update etc. mismatches!
@@ -164,4 +169,4 @@ class MdConventions {
   }
 }
 
-object MdConventions extends MdConventions
+object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules)
