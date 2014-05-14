@@ -285,6 +285,8 @@ private[in] object YamlMdLoader {
     case ("boolean", _, _) => new Type("boolean")
     case ("int", None, _) => new Type("int")
     case ("int", Some(len), _) => Type("int", None, Some(len), None, false)
+    case ("integer", None, _) => new Type("integer")
+    case ("integer", Some(len), _) => Type("integer", None, Some(len), None, false)
     case ("long", None, _) => new Type("long")
     case ("long", Some(len), _) => Type("long", None, Some(len), None, false)
     case ("decimal", None, None) => new Type("decimal")

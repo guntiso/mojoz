@@ -203,10 +203,14 @@ private[out] class StandardSqlWriter(
     xt.name match {
       case "integer" =>
         "numeric" + xt.totalDigits.map(l => s"($l)").getOrElse("")
-      case "long" =>
-        "bigint" + xt.totalDigits.map(l => s"($l)").getOrElse("")
-      case "int" =>
-        "integer" + xt.totalDigits.map(l => s"($l)").getOrElse("")
+      case "long" => xt.totalDigits match {
+        case None => "bigint"
+        case Some(d) => s"numeric($d)"
+      }
+      case "int" => xt.totalDigits match {
+        case None => "integer"
+        case Some(d) => s"numeric($d)"
+      }
       case "decimal" =>
         "numeric" + ((xt.totalDigits, xt.fractionDigits) match {
           case (None, None) => ""
