@@ -28,7 +28,6 @@ create table bank(
   name_rus varchar(240),
   constraint pk_bank primary key (id)
 );
-comment on table bank is '';
 comment on column bank.id is 'Ieraksta identifikators.';
 comment on column bank.code is 'Bankas SWIFT kods.';
 comment on column bank.country_code is 'Bankas valsts, izvēle no klasifikatora.';
@@ -54,7 +53,6 @@ comment on column country.code_n3 is 'ISO 3166-1 trīsciparu valsts kods';
 comment on column country.name is 'Valsts nosaukums.';
 comment on column country.name_eng is 'Valsts nosaukums angliski.';
 comment on column country.name_rus is 'Valsts nosaukums krieviski.';
-comment on column country.is_active is '';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
 
 create table currency(
@@ -69,6 +67,35 @@ comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmēj
 comment on column currency.name is 'Valūtas nosaukums.';
 comment on column currency.name_eng is 'Valūtas nosaukums angliski.';
 comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
+
+create table test_table1(
+  id bigint,
+  code varchar(1) not null,
+  col1 varchar(1),
+  col2 varchar(1),
+  col3 varchar(1),
+  col4 varchar(1),
+  col5 varchar(1),
+  constraint pk_tt1_spec_id_code primary key (id, code)
+);
+create unique index uk_test_table1_code on test_table1(code);
+create unique index uk_test_table1_code_col1 on test_table1(code, col1);
+create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
+create unique index uk_tt1_spec_col2 on test_table1(col2);
+create unique index uk_tt2_spec_code_col2 on test_table1(code, col2);
+create index idx_test_table1_id on test_table1(id);
+create index idx_test_table1_id_col1 on test_table1(id, col1);
+create index idx_tt1_spec_col3 on test_table1(col3);
+create index idx_tt1_spec_col3_col4 on test_table1(col3, col4);
+create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
+create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
+
+create table test_table2(
+  id bigint,
+  code varchar(1),
+  name varchar(1) not null,
+  constraint pk_test_table2 primary key (name)
+);
 
 alter table account add constraint fk_account_bank foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account foreign key (account_id) references account(id);

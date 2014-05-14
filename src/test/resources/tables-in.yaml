@@ -40,3 +40,34 @@ columns:
 - name                 ! 100           : Valūtas nosaukums.
 - name_eng             ! 100           : Valūtas nosaukums angliski.
 - name_rus             ! 100           : Valūtas nosaukums krieviski.
+
+table:   test_table1
+columns:
+- id
+- code                 ! 1
+- col1                   1
+- col2                   1
+- col3                   1
+- col4                   1
+- col5                   1
+pk: pk_tt1_spec_id_code(id, code)
+uk:
+- code
+- code, col1
+- code, col2 desc
+- uk_tt1_spec_col2(col2)
+- uk_tt2_spec_code_col2(code, col2)
+idx:
+- id
+- id, col1
+- idx_tt1_spec_col3(col3)
+- idx_tt1_spec_col3_col4(col3, col4)
+- idx_tt1_spec_col3_col5a(col3, col5)
+- idx_tt1_spec_col3_col5d(col3, col5 desc)
+
+table:   test_table2
+columns:
+- id
+- code                   1
+- name                 ! 1
+pk: name

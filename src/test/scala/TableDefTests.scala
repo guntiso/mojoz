@@ -55,6 +55,13 @@ class TableDefTests extends FlatSpec with Matchers {
         try statements foreach { statement.execute } finally statement.close()
       } finally conn.close()
     }
+    def skipSome(s: String) = {
+      // hsqldb ignores 'desc' on index cols, do not compare these lines
+      s.split(nl)
+        .filterNot(_.contains("uk_test_table1_code_col2"))
+        .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
+        .mkString(nl)
+    }
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements = SqlWriter.hsqldb().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
@@ -74,13 +81,11 @@ class TableDefTests extends FlatSpec with Matchers {
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
-    expected should be(produced)
+    skipSome(expected) should be(skipSome(produced))
     val jdbcTableDefs2 =
       rawJdbcTableDefs.map(_.unprefixTableNames(Prefx)).map(_.toLowerCase)
     val produced2 = YamlTableDefWriter.toYaml(jdbcTableDefs2)
-    if (expected != produced2)
-      toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced2)
-    expected should be(produced2)
+    skipSome(expected) should be(skipSome(produced2))
   }
   def fileToString(filename: String) = {
     val source = Source.fromFile(filename)
