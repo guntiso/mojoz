@@ -245,7 +245,8 @@ object JdbcTableDefLoader {
       case Types.JAVA_OBJECT => new Type("base64Binary")
       case Types.LONGNVARCHAR => new Type("string")
       case Types.LONGVARBINARY => new Type("base64Binary")
-      case Types.LONGVARCHAR => new Type("string", size)
+      case Types.LONGVARCHAR =>
+        if (size > 0) new Type("string", size) else new Type("string")
       case Types.NCHAR => new Type("string", size)
       case Types.NCLOB => new Type("string", size)
       case Types.NULL => new Type("string")
