@@ -57,7 +57,7 @@ class TableDefTests extends FlatSpec with Matchers {
     }
     def skipSome(s: String) = {
       // hsqldb ignores 'desc' on index cols, do not compare these lines
-      s.split(nl)
+      s.split("\\r?\\n")
         .filterNot(_.contains("- code, col2"))
         .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
         .mkString(nl)

@@ -21,7 +21,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     clearOracleDbSchema(getCfg("mojoz.oracle.dba."))
     def skipSome(s: String) = {
       // oracle fails to return column name for desc index
-      s.split(nl)
+      s.split("\\r?\\n")
         .filterNot(_.contains("uk_test_table1_code_col2"))
         .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
         .mkString(nl)
