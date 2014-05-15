@@ -127,11 +127,18 @@ trait SqlWriter { this: ConstraintNamingRules =>
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
   }
-  private def column(c: ColumnDef[Type]) =
+  private def column(c: ColumnDef[Type]) = {
+    // XXX FIXME!!! what if db default is function name?
+    val dbDefault = (c.type_.name, c.dbDefault) match {
+      case (_, null) => null
+      case ("string", d) if !(d startsWith ".") => s"'$d'"
+      case (_, d) => d
+    }
     c.name + " " + dbType(c) +
-      (if (c.dbDefault == null) "" else " default " + c.dbDefault) +
+      (if (dbDefault == null) "" else " default " + dbDefault) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
       check(c)
+  }
   def tableComment(t: TableDef[_]) = Option(t.comments).filter(_ != "").map(c =>
     s"comment on table ${t.name} is '$c';")
   def columnComments(t: TableDef[_]) =
