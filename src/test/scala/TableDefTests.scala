@@ -46,7 +46,7 @@ class TableDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "tables-out-hsqldb-produced.sql", produced)
     expected should be(produced)
   }
-  "generated hsqldb roundtrip file" should "equal sample file" in {
+  "generated hsqldb roundtrip file" should "almost equal sample file" in {
     val (url, user, password) = ("jdbc:hsqldb:mem:mymemdb", "SA", "")
     def executeStatements(statements: String*) {
       val conn = DriverManager.getConnection(url, user, password)

@@ -71,3 +71,18 @@ columns:
 - code                   1
 - name                 ! 1
 pk: name
+
+table:   test_table3
+columns:
+- int_col                int
+- int6_col               int 6
+- integer36_col          integer 36
+- long_col               long
+- long16_col             long 16
+- decimal266_col         decimal 26 6
+- date_col               date
+- datetime_col           dateTime
+- string60_col           60
+- string6k_col           6000
+- boolean_col            boolean
+- bytes_col              base64Binary

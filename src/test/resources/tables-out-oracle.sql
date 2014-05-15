@@ -97,6 +97,21 @@ create table test_table2(
   constraint pk_test_table2 primary key (name)
 );
 
+create table test_table3(
+  int_col numeric(9),
+  int6_col numeric(6),
+  integer36_col numeric(36),
+  long_col numeric(18),
+  long16_col numeric(16),
+  decimal266_col numeric(26, 6),
+  date_col date,
+  datetime_col timestamp,
+  string60_col varchar2(60 char),
+  string6k_col clob,
+  boolean_col char check (boolean_col in ('N','Y')),
+  bytes_col blob
+);
+
 alter table account add constraint fk_account_bank foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency foreign key (currency_code) references currency(code);
