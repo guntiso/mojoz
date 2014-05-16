@@ -46,7 +46,15 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-oracle-jdbc-produced.yaml", produced)
-    skipSome(expected) should be(skipSome(produced))
+
+    // accept short constraint names as default
+    val oraConventions =
+      new MdConventions(new SqlWriter.OracleConstraintNamingRules)
+    // ignore on update: no sql to set it & default is cascade unlike other dbs
+    val producedXXX = YamlTableDefWriter.toYaml(jdbcTableDefs.map(t =>
+      t.copy(refs = t.refs.map(_.copy(onUpdateAction = null)))),
+      oraConventions.toExternal)
+    skipSome(expected) should be(skipSome(producedXXX))
   }
   "generated postgresql roundtrip file" should "equal sample file" in {
     Class.forName("org.postgresql.Driver") //fix random No suitable driver found

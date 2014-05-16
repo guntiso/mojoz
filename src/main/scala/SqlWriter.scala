@@ -197,6 +197,10 @@ private[out] class OracleSqlWriter(
       case _ => super.check(c)
     }
   }
+  override def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
+    // oracle does not have on update rule
+    super.foreignKey(t)(
+      if (r.onUpdateAction != null) r.copy(onUpdateAction = null) else r)
 }
 
 private[out] class StandardSqlWriter(

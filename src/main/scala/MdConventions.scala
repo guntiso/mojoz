@@ -113,10 +113,12 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def toExternalIdx(table: TableDef[Type]): Seq[DbIndex] =
     table.idx.map(idx => toExternalIdx(naming.idxName(table.name, idx))(idx))
 
-  def toExternalRefs(table: TableDef[Type]) = {
-    // TODO check name, on-delete, on-update etc. mismatches!
-    table.refs.filter(_.cols.size > 1)
-  }
+  def toExternalRefs(table: TableDef[Type]) = table.refs
+    .map(r => if (r.onDeleteAction == "no action") r.copy(onDeleteAction = null) else r)
+    .map(r => if (r.onUpdateAction == "no action") r.copy(onUpdateAction = null) else r)
+    .filter(r => r.cols.size > 1 ||
+      r.onDeleteAction != null || r.onUpdateAction != null ||
+      r.name != null && r.name != naming.fkName(table.name, r))
 
   def toExternal(table: TableDef[Type], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
