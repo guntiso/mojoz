@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.0.1",
   // test
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
+  "com.h2database" % "h2" % "1.4.178" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it",
   "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it",
   "org.tresql" %% "tresql" % "6.0-M3-SNAPSHOT" % "it,test",
