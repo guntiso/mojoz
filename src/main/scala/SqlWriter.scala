@@ -94,6 +94,8 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
   new StandardSqlWriter(constraintNamingRules)
+def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
+  new HsqldbSqlWriter(constraintNamingRules)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
   new HsqldbSqlWriter(constraintNamingRules)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
