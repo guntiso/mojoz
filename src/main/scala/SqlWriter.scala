@@ -31,6 +31,7 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
   val fkPrefix = "fk_"
   val fkSuffix = ""
   val fkTableNameSep = "_"
+  val fkColNameSep = "_"
   def pkUsableLen =
     maxNameLen - pkPrefix.length - pkSuffix.length
   def usableLen(prefix: String, sep: String, suffix: String) =
@@ -82,8 +83,8 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
     tableName, idxTableNameSep, colsToName(idx.cols, idxColNameSep), idxSuffix)
   override def fkName(tableName: String, r: Ref) = makeName(fkPrefix,
     tableName, fkTableNameSep,
-    Option(r.defaultRefTableAlias).getOrElse(r.refTable), fkSuffix)
-}
+    colsToName(r.cols, fkColNameSep), fkSuffix)
+  }
 
 class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30

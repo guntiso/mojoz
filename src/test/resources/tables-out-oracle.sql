@@ -112,7 +112,7 @@ create table test_table3(
   bytes_col blob
 );
 
-alter table account add constraint fk_account_bank foreign key (bank_id) references bank(id);
-alter table account_currency add constraint fk_account_currency_account foreign key (account_id) references account(id);
-alter table account_currency add constraint fk_account_currency_currency foreign key (currency_code) references currency(code);
-alter table bank add constraint fk_bank_country foreign key (country_code) references country(code);
+alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
+alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
+alter table account_currency add constraint fk_accoun_rrency_currency_code foreign key (currency_code) references currency(code);
+alter table bank add constraint fk_bank_country_code foreign key (country_code) references country(code);
