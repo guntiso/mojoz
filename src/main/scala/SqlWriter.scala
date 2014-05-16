@@ -149,7 +149,9 @@ trait SqlWriter { this: ConstraintNamingRules =>
     t.refs map foreignKey(t)
   }.flatten
   def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
-    s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
+    s"alter table ${t.name} add constraint ${
+      Option(r.name) getOrElse fkName(t.name, r)
+    } foreign key (${
       r.cols mkString ", "
     }) references ${r.refTable}(${r.refCols mkString ", "})" +
       Option(r.onDeleteAction).map(" on delete " + _).getOrElse("") +
