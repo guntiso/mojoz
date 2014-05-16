@@ -145,13 +145,15 @@ trait SqlWriter { this: ConstraintNamingRules =>
     t.cols.filter(_.comments != null).filter(_.comments != "").map(c =>
       s"comment on column ${t.name}.${c.name} is '${c.comments}';")
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
-    t.refs map { r =>
-      // TODO cascade
-      s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
-        r.cols mkString ", "
-      }) references ${r.refTable}(${r.refCols mkString ", "});"
-    }
+    t.refs map foreignKey(t)
   }.flatten
+  def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
+    s"alter table ${t.name} add constraint ${fkName(t.name, r)} foreign key (${
+      r.cols mkString ", "
+    }) references ${r.refTable}(${r.refCols mkString ", "})" +
+      Option(r.onDeleteAction).map(" on delete " + _).getOrElse("") +
+      Option(r.onUpdateAction).map(" on update " + _).getOrElse("") +
+      ";"
   def dbType(c: ColumnDef[Type]): String
   def check(c: ColumnDef[Type]): String
 }
