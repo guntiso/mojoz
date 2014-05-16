@@ -73,16 +73,18 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
     }
     s"$prefix$ln$sep$rn$suffix"
   }
+  private def unprefix(s: String) =
+    if (s.indexOf(".") < 0) s else s.substring(s.lastIndexOf(".") + 1)
   private def colsToName(cols: Seq[String], sep: String) =
     cols.map(_.split("\\s+")(0)).mkString(sep)
   override def pkName(tableName: String) =
-    pkPrefix + shorten(tableName, pkUsableLen) + pkSuffix
+    pkPrefix + shorten(unprefix(tableName), pkUsableLen) + pkSuffix
   override def ukName(tableName: String, uk: DbIndex) = makeName(ukPrefix,
-    tableName, ukTableNameSep, colsToName(uk.cols, ukColNameSep), ukSuffix)
+    unprefix(tableName), ukTableNameSep, colsToName(uk.cols, ukColNameSep), ukSuffix)
   override def idxName(tableName: String, idx: DbIndex) = makeName(idxPrefix,
-    tableName, idxTableNameSep, colsToName(idx.cols, idxColNameSep), idxSuffix)
+    unprefix(tableName), idxTableNameSep, colsToName(idx.cols, idxColNameSep), idxSuffix)
   override def fkName(tableName: String, r: Ref) = makeName(fkPrefix,
-    tableName, fkTableNameSep,
+    unprefix(tableName), fkTableNameSep,
     colsToName(r.cols, fkColNameSep), fkSuffix)
   }
 
