@@ -16,7 +16,8 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     path = path, filter = _.getName == "tables-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val nl = System.getProperty("line.separator")
-  "generated oracle roundtrip file" should "almost equal sample file" in {
+  val hasOra = conf.getBoolean("mojoz.oracle.available")
+  if (hasOra) "generated oracle roundtrip file" should "almost equal sample file" in {
     Class.forName("oracle.jdbc.OracleDriver") //fix random No suitable driver found
     clearOracleDbSchema(getCfg("mojoz.oracle.dba."))
     def skipSome(s: String) = {
@@ -56,7 +57,8 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       oraConventions.toExternal)
     skipSome(expected) should be(skipSome(producedXXX))
   }
-  "generated postgresql roundtrip file" should "equal sample file" in {
+  val hasPostgres = conf.getBoolean("mojoz.postgresql.available")
+  if (hasPostgres) "generated postgresql roundtrip file" should "equal sample file" in {
     Class.forName("org.postgresql.Driver") //fix random No suitable driver found
     val cfg = getCfg("mojoz.postgresql.")
     clearPostgresqlDbSchema(cfg)

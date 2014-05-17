@@ -5,12 +5,14 @@ mojoz.oracle.dba {
   debug = false
 }
 mojoz.oracle {
+  available = true
   jdbc.url = "jdbc:oracle:thin:@localhost:1521:orcl"
   user = mojoz
   password = mojoz
   debug = false
 }
 mojoz.postgresql {
+  available = true
   jdbc.url = "jdbc:postgresql://localhost:5432/mojoz"
   user = mojoz
   password = mojoz
