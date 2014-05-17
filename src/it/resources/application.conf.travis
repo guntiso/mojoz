@@ -2,7 +2,7 @@ mojoz.oracle {
   available = false
 }
 mojoz.postgresql {
-  available = false
+  available = true
   jdbc.url = "jdbc:postgresql://localhost:5432/mojoz"
   user = mojoz
   password = mojoz
