@@ -13,7 +13,7 @@ class MdConventionsTests extends FlatSpec with Matchers {
   def tableDef(tableName: String, col: String, ref: Ref) =
     TableDef(tableName, null, Seq(colDef(col)), None, Nil, Nil, Seq(ref))
   def colDef(colName: String) =
-    ColumnDef(colName, null.asInstanceOf[Type], true, null, null, null)
+    ColumnDef(colName, new Type("test"), true, null, null, null)
   "metadata conventions" should "encode ref cols properly" in {
     val tests = List(
       "table, col, refTable, refCol -> col, refTable.refCol",

@@ -112,6 +112,18 @@ create table test_table3(
   bytes_col blob
 );
 
+create table test_table4(
+  int_col numeric(9) default 6,
+  int6_col7 numeric(6) default 7,
+  integer36_col8 numeric(36) default 8,
+  long_col numeric(18) default 6,
+  long16_col7 numeric(16) default 7,
+  decimal266_col8 numeric(26, 6) default 8.000000,
+  string_col varchar2(60 char) default 'default value',
+  boolean_col_f char default 'N' check (boolean_col_f in ('N','Y')),
+  boolean_col_t char default 'Y' check (boolean_col_t in ('N','Y'))
+);
+
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_accoun_rrency_currency_code foreign key (currency_code) references currency(code);
