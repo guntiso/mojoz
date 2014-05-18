@@ -37,7 +37,16 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def fromExternal(col: ColumnDef[IoColumnType]): ColumnDef[Type] = {
     val (typ, nullable) =
       fromExternal(col.name, col.type_.type_, col.type_.nullable)
-    col.copy(type_ = typ, nullable = nullable)
+    val dbDefault = (typ.name, col.dbDefault) match {
+      case (_, null) => null
+      case ("string", d) =>
+        if (d startsWith "'") d
+        else if (d startsWith "()") (d substring 2).trim
+        else if (d contains "(") d
+        else s"'$d'"
+      case (_, d) => d
+    }
+    col.copy(type_ = typ, dbDefault = dbDefault, nullable = nullable)
   }
   def fromExternal(name: String, type_ : Option[Type], nullable: Option[Boolean]) = {
     def defaultType(defaultName: String) =
@@ -126,6 +135,15 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       case (_, true) => None
       case (_, nullable) => Some(nullable)
     }
+    val dbDefault = (col.type_.name, col.dbDefault) match {
+      case (_, null) => null
+      case ("string", d) =>
+        if (d.startsWith("'") && d.endsWith("'"))
+          if (d.contains("(")) d else d.substring(1, d.length - 1)
+        else if (!(d contains "(")) s"() $d"
+        else d
+      case (_, d) => d
+    }
     val ref = table.refs
       .filter(_.cols.size == 1)
       .find(_.cols(0) == col.name)
@@ -154,6 +172,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
           (Some(new Type(refTypeName)), toRefColName(col.name, refCol))
       col.copy(
         name = refColName,
+        dbDefault = dbDefault,
         type_ = IoColumnType(nullOpt, typeOpt))
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
@@ -166,7 +185,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
           Some(new Type(null.asInstanceOf[String], len))
         case _ => Option(col.type_)
       }
-      col.copy(type_ = IoColumnType(nullOpt, typeOpt))
+      col.copy(dbDefault = dbDefault, type_ = IoColumnType(nullOpt, typeOpt))
     }
   }
 }

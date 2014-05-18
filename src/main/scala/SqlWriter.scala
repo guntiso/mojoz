@@ -132,15 +132,10 @@ trait SqlWriter { this: ConstraintNamingRules =>
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
   }
+  def dbDefault(c: ColumnDef[Type]) = c.dbDefault
   private def column(c: ColumnDef[Type]) = {
-    // XXX FIXME!!! what if db default is function name?
-    val dbDefault = (c.type_.name, c.dbDefault) match {
-      case (_, null) => null
-      case ("string", d) if !(d startsWith ".") => s"'$d'"
-      case (_, d) => d
-    }
     c.name + " " + dbType(c) +
-      (if (dbDefault == null) "" else " default " + dbDefault) +
+      (dbDefault(c) match { case null => "" case d => s" default $d" }) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
       check(c)
   }
@@ -191,6 +186,12 @@ private[out] class OracleSqlWriter(
       case "boolean" => "char"
       case _ => super.dbType(c)
     }
+  }
+  override def dbDefault(c: ColumnDef[Type]) = (c.type_.name, c.dbDefault) match {
+    case (_, null) => null
+    case ("boolean", f) if "false" equalsIgnoreCase f => "'N'"
+    case ("boolean", t) if "true" equalsIgnoreCase t => "'Y'"
+    case _ => super.dbDefault(c)
   }
   override def check(c: ColumnDef[Type]) = {
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)

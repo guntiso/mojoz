@@ -94,7 +94,20 @@ class JdbcTableDefLoader {
       val size = rs.getInt("COLUMN_SIZE")
       val fractionDigits = rs.getInt("DECIMAL_DIGITS")
       val nullable = rs.getInt("NULLABLE") == DM.columnNullable
-      val dbDefault = rs.getString("COLUMN_DEF")
+      val dbDefault = (jdbcTypeCode, rs.getString("COLUMN_DEF")) match {
+        case (_, null) => null
+        case (Types.BOOLEAN, "TRUE") => "true"
+        case (Types.BOOLEAN, "FALSE") => "false"
+        // XXX booleans emulated on oracle
+        // FIXME check enum = [Y, N], check db is oracle?
+        case (Types.CHAR, d) if size == 1 => d.trim match {
+          case "'N'" => "false" case "'Y'" => "true" case d => d
+        }
+        // XXX remove postgresql type safety garbage
+        // FIXME check db is postgresql?
+        case (_, d) if (d.indexOf("::") > 0) => d.substring(0, d.indexOf("::"))
+        case (_, d) => d
+      }
       val comment = rs.getString("REMARKS")
       val check = null // TODO check constraint for column (enum)!
       val dbType =
@@ -227,7 +240,7 @@ object JdbcTableDefLoader {
       case Types.BOOLEAN => new Type("boolean")
       case Types.CHAR =>
         // XXX booleans emulated on oracle
-        // FIXME check enum = [Y, N], check is boolean name?
+        // FIXME check enum = [Y, N], check db is oracle?
         if (size == 1) new Type("boolean")
         else new Type("string", size)
       case Types.CLOB => new Type("string", size)

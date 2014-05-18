@@ -30,6 +30,8 @@ class YamlTableDefWriter {
       .map(_.mkString("(", ", ", ")"))
       .getOrElse("")
 
+    val hasDefault = (dbDefault != null && dbDefault != "")
+    val default = if (hasDefault) " = " + dbDefault else ""
     val defString = List(
       (name, 20),
       (colDef.type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
@@ -37,7 +39,8 @@ class YamlTableDefWriter {
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (
         List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
-        r._2 + t._2 + 1))._1
+        r._2 + t._2 + 1))._1 +
+        default // TODO formatting?
 
     val hasComment = (comments != null && comments.trim != "")
     val slComment =
