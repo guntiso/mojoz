@@ -71,6 +71,9 @@ columns:
 - code                   1
 - name                 ! 1
 pk: name
+refs:
+- code, name -> test_table1(code, col1) on delete cascade
+- fk_tt2_spec_code_name(code, name) -> test_table1(code, col2)
 
 table:   test_table3
 columns:

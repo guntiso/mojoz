@@ -40,7 +40,7 @@ class TableDefTests extends FlatSpec with Matchers {
     expected should be(produced)
   }
   "generated h2 file" should "equal sample file" in {
-    val expected = fileToString(path + "/" + "tables-out-hsqldb.sql")
+    val expected = fileToString(path + "/" + "tables-out-h2.sql")
     val produced = SqlWriter.h2().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-produced.sql", produced)
@@ -65,9 +65,10 @@ class TableDefTests extends FlatSpec with Matchers {
     val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
-    }.map(t => t.copy( // h2-specific synthetic index cleanup
-      idx = t.idx.filterNot(_.name endsWith "_INDEX_E")
-        .filterNot(_.name endsWith "_INDEX_1")))
+    }.map(t => t.copy(idx = t.idx // h2-specific synthetic index cleanup
+      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_1"))
+      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_E"))
+      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_F"))))
 
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
@@ -89,7 +90,11 @@ class TableDefTests extends FlatSpec with Matchers {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
     }.map(t => t.copy( // hsqldb-specific synthetic index cleanup
-      uk = t.uk.filterNot(_.name startsWith "SYS_IDX_"),
+      uk = t.uk.map { uk =>
+        if (!(uk.name startsWith "SYS_IDX_")) uk
+        else uk.copy(name =
+          uk.name.substring("SYS_IDX_".length, uk.name.lastIndexOf("_")))
+      },
       idx = t.idx.filterNot(_.name startsWith "SYS_IDX_")))
 
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)

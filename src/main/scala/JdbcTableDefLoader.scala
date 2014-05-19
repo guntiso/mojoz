@@ -202,6 +202,7 @@ class JdbcTableDefLoader {
     refMap.values
       .map(r => r.copy(cols = r.cols.toList, refCols = r.refCols.toList))
       .toList
+      .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }
 }
 

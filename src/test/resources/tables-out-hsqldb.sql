@@ -78,11 +78,11 @@ create table test_table1(
   col5 varchar(1),
   constraint pk_tt1_spec_id_code primary key (id, code)
 );
-create unique index uk_test_table1_code on test_table1(code);
-create unique index uk_test_table1_code_col1 on test_table1(code, col1);
+alter table test_table1 add constraint uk_test_table1_code unique(code);
+alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
 create unique index uk_test_table1_code_col2 on test_table1(code, col2);
-create unique index uk_tt1_spec_col2 on test_table1(col2);
-create unique index uk_tt2_spec_code_col2 on test_table1(code, col2);
+alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
+alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
 create index idx_test_table1_id on test_table1(id);
 create index idx_test_table1_id_col1 on test_table1(id, col1);
 create index idx_tt1_spec_col3 on test_table1(col3);
@@ -128,3 +128,5 @@ alter table account add constraint fk_account_bank_id foreign key (bank_id) refe
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);
 alter table bank add constraint fk_bank_country_code foreign key (country_code) references country(code);
+alter table test_table2 add constraint fk_test_table2_code_name foreign key (code, name) references test_table1(code, col1) on delete cascade;
+alter table test_table2 add constraint fk_tt2_spec_code_name foreign key (code, name) references test_table1(code, col2);

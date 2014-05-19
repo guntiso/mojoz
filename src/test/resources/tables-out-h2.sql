@@ -42,8 +42,8 @@ create table country(
   name varchar(64) not null,
   name_eng varchar(64),
   name_rus varchar(64),
-  is_active bool not null,
-  is_eu bool not null,
+  is_active boolean not null,
+  is_eu boolean not null,
   constraint pk_country primary key (code)
 );
 comment on table country is 'Valstu klasifikators';
@@ -78,17 +78,17 @@ create table test_table1(
   col5 varchar(1),
   constraint pk_tt1_spec_id_code primary key (id, code)
 );
-alter table test_table1 add constraint uk_test_table1_code unique(code);
-alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
-create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
-alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
-alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
+create unique index uk_test_table1_code on test_table1(code);
+create unique index uk_test_table1_code_col1 on test_table1(code, col1);
+create unique index uk_test_table1_code_col2 on test_table1(code, col2);
+create unique index uk_tt1_spec_col2 on test_table1(col2);
+create unique index uk_tt2_spec_code_col2 on test_table1(code, col2);
 create index idx_test_table1_id on test_table1(id);
 create index idx_test_table1_id_col1 on test_table1(id, col1);
 create index idx_tt1_spec_col3 on test_table1(col3);
 create index idx_tt1_spec_col3_col4 on test_table1(col3, col4);
 create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
-create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
+create index idx_tt1_spec_col3_col5d on test_table1(col3, col5);
 
 create table test_table2(
   id bigint,
@@ -108,8 +108,8 @@ create table test_table3(
   datetime_col timestamp,
   string60_col varchar(60),
   string6k_col varchar(6000),
-  boolean_col bool,
-  bytes_col bytea
+  boolean_col boolean,
+  bytes_col blob
 );
 
 create table test_table4(
@@ -120,8 +120,8 @@ create table test_table4(
   long16_col7 numeric(16) default 7,
   decimal266_col8 numeric(26, 6) default 8.000000,
   string_col varchar(60) default 'default value',
-  boolean_col_f bool default false,
-  boolean_col_t bool default true
+  boolean_col_f boolean default false,
+  boolean_col_t boolean default true
 );
 
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
