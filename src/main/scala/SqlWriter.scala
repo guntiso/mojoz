@@ -86,7 +86,7 @@ class SimpleConstraintNamingRules extends ConstraintNamingRules {
   override def fkName(tableName: String, r: Ref) = makeName(fkPrefix,
     unprefix(tableName), fkTableNameSep,
     colsToName(r.cols, fkColNameSep), fkSuffix)
-  }
+}
 
 class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
@@ -95,7 +95,7 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
   new StandardSqlWriter(constraintNamingRules)
 def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new HsqldbSqlWriter(constraintNamingRules)
+  new H2SqlWriter(constraintNamingRules)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
   new HsqldbSqlWriter(constraintNamingRules)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
@@ -124,9 +124,18 @@ trait SqlWriter { this: ConstraintNamingRules =>
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + idxCols(pk.cols).mkString(", ") + ")"
   }
+  def uniqueIndex(t: TableDef[_])(uk: DbIndex) =
+    s"create unique index ${
+      Option(uk.name).getOrElse(ukName(t.name, uk))
+    } on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
+  def uniqueKey(t: TableDef[_])(uk: DbIndex) =
+    s"alter table ${t.name} add constraint ${
+      Option(uk.name).getOrElse(ukName(t.name, uk))
+    } unique(${idxCols(uk.cols).mkString(", ")});"
   def uniqueIndexes(t: TableDef[_]) = t.uk map { uk =>
-    "create unique index " + Option(uk.name).getOrElse(ukName(t.name, uk)) +
-      s" on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
+    if (uk.cols.exists(_.toLowerCase endsWith " desc")) uniqueIndex(t)(uk)
+    // on some dbs, unique constraint (not index) is required to add fk
+    else uniqueKey(t)(uk)
   }
   def indexes(t: TableDef[_]) = t.idx map { idx =>
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
@@ -166,6 +175,13 @@ private[out] class HsqldbSqlWriter(
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
     if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
+}
+
+private[out] class H2SqlWriter(
+  constraintNamingRules: ConstraintNamingRules)
+  extends HsqldbSqlWriter(constraintNamingRules) {
+  // for index name jdbc roundtrip
+  override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
 }
 
 private[out] class OracleSqlWriter(
