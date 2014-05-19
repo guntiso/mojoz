@@ -42,10 +42,20 @@ private[in] object YamlTableDefLoader {
   val idxName = qualifiedIdent
   val col = s"$ident(\\s+[aA][sS][cC]|\\s+[dD][eE][sS][cC])?"
   val cols = s"$col($s\\,$s$col)*"
+  val colsIdxDef = s"$s($s$cols)$s"
+  val namedIdxDef = s"$s($idxName)?$s\\($s($cols)$s\\)$s"
+  val onDelete = "on delete (restrict|cascade|no action)".replace(" ", "\\s+")
+  val onUpdate = "on update (restrict|cascade|no action)".replace(" ", "\\s+")
+
   private def regex(pattern: String) = ("^" + pattern + "$").r
 
-  val ColsIdxDef = regex(s"$s($s$cols)$s")
-  val NamedIdxDef = regex(s"$s($idxName)?$s\\($s($cols)$s\\)$s")
+  val ColsIdxDef = regex(colsIdxDef)
+  val NamedIdxDef = regex(namedIdxDef)
+  val FkDef = regex( // FIXME no asc, desc for ref cols!
+    s"($colsIdxDef|$namedIdxDef)->$namedIdxDef(?i)" +
+    s"($onDelete|($onDelete\\s+)?$onUpdate)?$s")
+  val OnDeleteDef = regex(s"$s$onDelete$s")
+  val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   conventions: MdConventions = new MdConventions) {
@@ -110,8 +120,6 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
         val refChain = baseRefChain(c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {
-          // TODO how about multi-col refs, how to define/use these?
-          // TODO PKs, FKs and their names? By conventions!
           val defaultRefTableAlias =
             if (c.type_.name == null || c.name.indexOf('.') < 0) null
             else c.name.substring(0, c.name.indexOf('.'))
@@ -129,13 +137,13 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       }
       r.copy(
         cols = resolvedColsAndRefs.map(_._1),
-        refs = resolvedColsAndRefs.flatMap(_._2))
+         // FIXME merge refs intelligently! Find by cols, override name, action
+        refs = r.refs ++ resolvedColsAndRefs.flatMap(_._2))
     }
     tableDefs
   }
   private def loadYamlIndexDef(src: Any) = {
     val ThisFail = "Failed to load index definition"
-    val PtA = ("^\\s*\\(.*?\\)$").r
     def dbIndex(name: String, cols: String) = DbIndex(name,
       Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil)
     src match {
@@ -147,6 +155,34 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       }
       case x => throw new RuntimeException(ThisFail +
         " - unexpected index definition class: " + x.getClass
+        + "\nentry: " + x.toString)
+    }
+  }
+  private def loadYamlRefDef(src: Any) = {
+    val ThisFail = "Failed to load ref definition"
+    src match {
+      case r: java.lang.String =>
+        if (FkDef.unapplySeq(r).isDefined) {
+          val parts = r.split("->")
+          val nameAndCols = loadYamlIndexDef(parts(0))
+          val refAndActions = parts(1).split("\\)")
+          val refTableRefCols = loadYamlIndexDef(refAndActions(0) + ")")
+          val (onDelete, onUpdate) =
+            if (refAndActions.size < 2) (null, null)
+            else refAndActions(1) match {
+              case OnDeleteDef(d) => (d, null)
+              case OnDeleteOnUpdateDef(_, d, u) => (d, u)
+              case x => throw new RuntimeException(ThisFail +
+                " - unexpected format: " + x.trim)
+            }
+          Ref(nameAndCols.name, nameAndCols.cols,
+            refTableRefCols.name, refTableRefCols.cols,
+            null, null,
+            onDelete, onUpdate)
+        } else throw new RuntimeException(ThisFail +
+          " - unexpected format: " + r.trim)
+      case x => throw new RuntimeException(ThisFail +
+        " - unexpected ref definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
   }
@@ -172,7 +208,11 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
       .map(loadYamlIndexDef)
-    val refs = Nil // FIXME REFS
+    val refs = tdMap.get("refs")
+      .filter(_ != null)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .getOrElse(Nil)
+      .map(loadYamlRefDef)
     YamlTableDef(table, comment, colDefs, pk, uk, idx, refs)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
