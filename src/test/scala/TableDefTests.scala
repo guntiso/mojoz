@@ -54,6 +54,7 @@ class TableDefTests extends FlatSpec with Matchers {
     expected should be(produced)
   }
   "generated h2 roundtrip file" should "almost equal sample file" in {
+    Class.forName("org.h2.Driver") // fix "sbt +test" - No suitable driver found
     implicit val ci = ("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "SA", "")
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements =
