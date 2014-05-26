@@ -12,7 +12,6 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   "org.yaml" % "snakeyaml" % "1.13",
-  "org.scala-lang.modules" %% "scala-xml" % "1.0.1",
   // test
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
   "com.h2database" % "h2" % "1.4.178" % "test",

@@ -6,7 +6,6 @@ import scala.annotation.tailrec
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
 import scala.io.Source
-import scala.xml.PrettyPrinter
 import mojoz.metadata._
 import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
@@ -254,7 +253,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
 private[in] object YamlMdLoader {
   val FieldDef = {
     val ident = "[_a-zA-z][_a-zA-Z0-9]*"
-    val qualifiedIdent = <a>{ ident }(\.{ ident })?</a>.text
+    val qualifiedIdent = s"$ident(\\.$ident)?"
     val int = "[0-9]+"
     val s = "\\s*"
 
@@ -268,9 +267,9 @@ private[in] object YamlMdLoader {
     val frac = int
     val expr = ".*"
     val pattern =
-      <a>
-        ({name})({s}{quant})?({s}{join})?({s}{typ})?({s}{len})?({s}{frac})?({s}{order})?({s}{enum})?({s}=({expr})?)?
-      </a>.text.trim
+        (s"($name)( $quant)?( $join)?( $typ)?" + 
+          s"( $len)?( $frac)?" +
+          s"( $order)?( $enum)?( =($expr)?)?").replace(" ", s)
 
     ("^" + pattern + "$").r
   }
