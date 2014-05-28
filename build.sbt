@@ -1,5 +1,7 @@
 name := "mojoz"
 
+organization := "org.mojoz"
+
 scalaVersion := "2.11.1"
 
 crossScalaVersions := Seq(
@@ -31,3 +33,39 @@ scalacOptions in (Compile, doc) <++= (baseDirectory in
    bd => Seq("-sourcepath", bd.getAbsolutePath,
              "-doc-source-url", "https://github.com/guntiso/mojoz/blob/develop€{FILE_PATH}.scala")
  }
+
+publishTo <<= version { v: String =>
+  val nexus = "https://oss.sonatype.org/"
+  if (v.trim.endsWith("SNAPSHOT"))
+    Some("snapshots" at nexus + "content/repositories/snapshots")
+  else
+    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+}
+
+publishMavenStyle := true
+
+publishArtifact in Test := false
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <url>https://github.com/guntiso/mojoz</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>http://www.opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>git@github.com:guntiso/mojoz.git</url>
+    <connection>scm:git:git@github.com:guntiso/mojoz.git</connection>
+  </scm>
+  <developers>
+    <developer>
+      <id>guntiso</id>
+      <name>Guntis Ozols</name>
+      <url>https://github.com/guntiso/</url>
+    </developer>
+  </developers>
+)
