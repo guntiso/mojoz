@@ -14,9 +14,11 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def isBooleanName(name: String) =
     name.toLowerCase.startsWith("is_") || name.toLowerCase.startsWith("has_")
   def isDateName(name: String) = name.toLowerCase.endsWith("_date")
+  def isDateTimeName(name: String) = name.toLowerCase.endsWith("_time")
   def isIdRefName(name: String) = name.toLowerCase.endsWith("_id")
   def isTypedName(name: String) =
-    isBooleanName(name) || isDateName(name) || isIdRefName(name)
+    isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
+    isIdRefName(name)
   def fromExternal(typeDef: TableDef[IoColumnType]): TableDef[Type] = {
     typeDef.copy(
       cols = typeDef.cols map fromExternal,
@@ -67,6 +69,8 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         (defaultType("boolean"), nullableOrTrue)
       case (name, _) if isDateName(name) =>
         (defaultType("date"), nullableOrTrue)
+      case (name, _) if isDateTimeName(name) =>
+        (defaultType("dateTime"), nullableOrTrue)
       case (name, _) if isIdRefName(name) =>
         (defaultType(idTypeName), nullableOrTrue)
       case _ =>
@@ -180,6 +184,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         case (name, type_, _) if isIdRefName(name) && type_ == idTypeName => None
         case (name, "boolean", _) if isBooleanName(name) => None
         case (name, "date", _) if isDateName(name) => None
+        case (name, "dateTime", _) if isDateTimeName(name) => None
         case (name, "string", None) if !isTypedName(name) => None
         case (name, "string", Some(len)) if !isTypedName(name) =>
           Some(new Type(null.asInstanceOf[String], len))
