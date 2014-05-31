@@ -243,6 +243,15 @@ class YamlViewDefLoader(
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
       val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
+      def reduceExpression[T](f: FieldDef[T]) =
+        if (f.isExpression && f.name.indexOf(".") < 0 && f.expression != null &&
+          YamlTableDefLoader.QualifiedIdentDef.pattern.matcher(f.expression).matches)
+          f.copy(isExpression = false, name = f.expression, alias = f.name)
+        else if (f.isExpression && f.expression != null &&
+          // escape syntax for no-arg functions and pseudo-columns
+          f.expression.startsWith("()"))
+          f.copy(expression = f.expression.substring(2).trim)
+        else f
       def resolveNameAndTable[T](f: FieldDef[T]) =
         if (f.name.indexOf(".") < 0)
           f.copy(table = dbName(t.table), name = dbName(f.name))
@@ -256,7 +265,8 @@ class YamlViewDefLoader(
             case -1 => fName
             case rmIdx => fName.substring(rmIdx + 2)
           }
-          val alias = dbName(maybeNoPrefix(f.name).replace(".", "_"))
+          val alias = Option(f.alias).map(dbName) getOrElse
+            dbName(maybeNoPrefix(f.name).replace(".", "_"))
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias)
         }
@@ -279,6 +289,7 @@ class YamlViewDefLoader(
         }
       }
       t.copy(fields = t.fields
+        .map(reduceExpression)
         .map(resolveNameAndTable)
         .map(resolveTypeFromDbMetadata))
     }

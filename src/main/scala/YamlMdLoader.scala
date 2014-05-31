@@ -50,6 +50,7 @@ private[in] object YamlTableDefLoader {
 
   val ColsIdxDef = regex(colsIdxDef)
   val NamedIdxDef = regex(namedIdxDef)
+  val QualifiedIdentDef = regex(qualifiedIdent)
   val FkDef = regex( // FIXME no asc, desc for ref cols!
     s"($colsIdxDef|$namedIdxDef)->$namedIdxDef(?i)" +
     s"($onDelete|($onDelete\\s+)?$onUpdate)?$s")
