@@ -124,9 +124,14 @@ create table test_table4(
   boolean_col_t boolean default true
 );
 
+create table test_table5(
+  bank_id bigint
+);
+
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);
 alter table bank add constraint fk_bank_country_code foreign key (country_code) references country(code);
 alter table test_table2 add constraint fk_test_table2_code_name foreign key (code, name) references test_table1(code, col1) on delete cascade;
 alter table test_table2 add constraint fk_tt2_spec_code_name foreign key (code, name) references test_table1(code, col2);
+alter table test_table5 add constraint fk_test_table5_bank_id foreign key (bank_id) references bank(id) on delete cascade;

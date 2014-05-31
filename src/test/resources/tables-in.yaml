@@ -101,3 +101,9 @@ columns:
 - string_col             60            = default value
 - boolean_col_f          boolean       = false
 - boolean_col_t          boolean       = true
+
+table:   test_table5
+columns:
+- bank.id
+refs:
+- bank_id -> bank(id) on delete cascade

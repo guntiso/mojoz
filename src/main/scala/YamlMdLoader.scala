@@ -134,10 +134,24 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
           (c.copy(name = colName, type_ = xsdType), List(ref))
         }
       }
+      def mergeRefs(implicitRefs: Seq[Ref], explicitRefs: Seq[Ref]) = {
+        def refKey(r: Ref) = (r.cols, r.refTable, r.refCols)
+        val explicitsMap = explicitRefs.map(r => (refKey(r), r)).toMap
+        val implicitsMap = implicitRefs.map(r => (refKey(r), r)).toMap
+        List(
+          implicitRefs.filterNot(r => explicitsMap.contains(refKey(r))),
+          implicitRefs.filter(r => explicitsMap.contains(refKey(r))).map { r =>
+            val x = explicitsMap(refKey(r))
+            r.copy(
+              name = x.name,
+              onDeleteAction = x.onDeleteAction,
+              onUpdateAction = x.onUpdateAction)
+          },
+          explicitRefs.filterNot(r => implicitsMap.contains(refKey(r)))).flatten
+      }
       r.copy(
         cols = resolvedColsAndRefs.map(_._1),
-         // FIXME merge refs intelligently! Find by cols, override name, action
-        refs = r.refs ++ resolvedColsAndRefs.flatMap(_._2))
+        refs = mergeRefs(resolvedColsAndRefs.flatMap(_._2), r.refs))
     }
     tableDefs
   }
