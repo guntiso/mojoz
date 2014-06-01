@@ -22,7 +22,7 @@ case class ViewDef[T](
   table: String,
   tableAlias: String,
   joins: String, // from clause
-  filter: String, // where clause
+  filter: Seq[String], // where clause
   groupBy: String,
   having: String,
   orderBy: String,
@@ -89,10 +89,22 @@ class YamlViewDefLoader(
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
     def get(name: String) = tdMap.get(name).map(_.toString) getOrElse null
+    def getStringSeq(name: String): Seq[String] = tdMap.get(name) match {
+      case Some(s: java.lang.String) => Seq(s)
+      case Some(a: java.util.ArrayList[_]) => a.toList.map {
+        case s: java.lang.String => s
+        case m: java.util.Map[_, _] =>
+          if (m.size == 1) m.entrySet.toList(0).getKey.toString
+          else m.toString // TODO error?
+        case x => x.toString
+      }
+      case None => Nil
+      case x => Seq(x.toString) // TODO error?
+    }
     val rawName = get("name")
     val rawTable = get("table")
     val joins = get("joins")
-    val filter = get("filter")
+    val filter = getStringSeq("filter")
     val group = get("group")
     val having = get("having")
     val order = get("order")
@@ -223,7 +235,7 @@ class YamlViewDefLoader(
 
     def inheritFilter(t: ViewDef[Type]) = {
       @tailrec
-      def inheritedFilter(t: ViewDef[Type]): String =
+      def inheritedFilter(t: ViewDef[Type]): Seq[String] =
         if (t.filter != null || t.extends_ == null) t.filter
         else inheritedFilter(m(t.extends_))
       if (t.extends_ == null) t
