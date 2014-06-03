@@ -4,7 +4,6 @@ import mojoz.metadata._
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 
 class XsdWriter(metadata: Metadata[Type]) {
-  // FIXME ensure valid xml - escape special chars!
   private val typedefs = metadata.viewDefs
   private val indentString: String = "  "
   private def indent(level: Int, s: String) = {
@@ -20,16 +19,21 @@ class XsdWriter(metadata: Metadata[Type]) {
     else if (s startsWith "\n") "\n" + i(s.substring(1))
     else i(s)
   }
+  private def esc(s: String) = s.replace("&", "&amp;")
+    .replace("\"", "&quot;").replace("'", "&apos;")
+    .replace("<", "&lt;").replace(">", "&gt;")
+  private def escAttr(s: String) = esc(s)
+    .replace("\t", "&#x9;").replace("\r", "&#xD;").replace("\n", "&#xA;")
   private def attribs(a: String, v: String*) =
     a.split("\\s+").toList.zip(v)
       .filter(_._2 != null)
-      .map(e => s"""${e._1}="${e._2}"""")
+      .map(e => s"""${e._1}="${escAttr(e._2)}"""")
       .mkString(" ")
   private def annotation(comment: String, level: Int) =
     if (comment != null && comment.trim.length > 0)
       indent(level, s"""
       <xs:annotation>
-        <xs:documentation>${ comment }</xs:documentation>
+        <xs:documentation>${ esc(comment) }</xs:documentation>
       </xs:annotation>
       """)
     else ""
@@ -72,7 +76,7 @@ class XsdWriter(metadata: Metadata[Type]) {
               totD.map(n => s"""<xs:totalDigits value="${ n.toString }"/>""").orNull,
               intD.map(n => s"""<xs:maxExclusive value="${("1" :: List.fill(n)("0")).mkString}"/>""").orNull,
               frcD.map(n => s"""<xs:fractionDigits value="${ n.toString }"/>""").orNull,
-              enum.getOrElse(Nil).map(op => s"""<xs:enumeration value="${ op }"/>""").mkString("\n"))
+              enum.getOrElse(Nil).map(op => s"""<xs:enumeration value="${ escAttr(op) }"/>""").mkString("\n"))
               .filter(_ != null)
               .mkString("\n")
               ).trim}

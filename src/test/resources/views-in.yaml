@@ -18,4 +18,4 @@ fields:
  - code
  - country_code (LT LV RU)
  - country.name
- - name
+ - name         : <p>special xml 'chars' & "strings" test</p>

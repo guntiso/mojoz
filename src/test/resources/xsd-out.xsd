@@ -116,7 +116,7 @@
       </xs:element>
       <xs:element name="Name">
         <xs:annotation>
-          <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+          <xs:documentation>&lt;p&gt;special xml &apos;chars&apos; &amp; &quot;strings&quot; test&lt;/p&gt;</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
