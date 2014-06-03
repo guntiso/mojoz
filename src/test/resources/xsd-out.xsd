@@ -96,6 +96,9 @@
         <xs:simpleType>
           <xs:restriction base="xs:string">
             <xs:maxLength value="2"/>
+            <xs:enumeration value="LT"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="RU"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>

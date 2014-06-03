@@ -16,6 +16,6 @@ table: bank
 fields:
  - id
  - code
- - country_code
+ - country_code (LT LV RU)
  - country.name
  - name

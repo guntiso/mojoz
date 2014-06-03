@@ -72,7 +72,7 @@ class XsdWriter(metadata: Metadata[Type]) {
               totD.map(n => s"""<xs:totalDigits value="${ n.toString }"/>""").orNull,
               intD.map(n => s"""<xs:maxExclusive value="${("1" :: List.fill(n)("0")).mkString}"/>""").orNull,
               frcD.map(n => s"""<xs:fractionDigits value="${ n.toString }"/>""").orNull,
-              enum.getOrElse(Nil).map(op => s"""<xs:enumeration value="{ op }"/>""").mkString("\n"))
+              enum.getOrElse(Nil).map(op => s"""<xs:enumeration value="${ op }"/>""").mkString("\n"))
               .filter(_ != null)
               .mkString("\n")
               ).trim}
