@@ -19,10 +19,10 @@ class XsdWriter(metadata: Metadata[Type]) {
     else if (s startsWith "\n") "\n" + i(s.substring(1))
     else i(s)
   }
-  private def esc(s: String) = s.replace("&", "&amp;")
-    .replace("\"", "&quot;").replace("'", "&apos;")
-    .replace("<", "&lt;").replace(">", "&gt;")
+  private def esc(s: String) =
+    s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
   private def escAttr(s: String) = esc(s)
+    .replace("\"", "&quot;").replace("'", "&apos;")
     .replace("\t", "&#x9;").replace("\r", "&#xD;").replace("\n", "&#xA;")
   private def attribs(a: String, v: String*) =
     a.split("\\s+").toList.zip(v)
