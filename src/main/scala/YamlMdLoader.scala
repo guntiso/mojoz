@@ -236,9 +236,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = y.pk
     val uk = y.uk
+    val ck = Nil // FIXME ck!
     val idx = y.idx
     val refs = y.refs
-    val exTypeDef = TableDef(name, comment, cols, pk, uk, idx, refs)
+    val exTypeDef = TableDef(name, comment, cols, pk, uk, ck, idx, refs)
     conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {

@@ -29,6 +29,11 @@ object TableDef {
     defaultRefTableAlias: String,
     onDeleteAction: String,
     onUpdateAction: String)
+  case class CheckConstraint(
+    name: String,
+    // TODO check constraint deferrability?
+    // TODO table check constraint or column check constraint?
+    expression: String)
 }
 import TableDef._
 case class TableDef[T](
@@ -37,6 +42,7 @@ case class TableDef[T](
   cols: Seq[ColumnDef[T]],
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
+  ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
   refs: Seq[Ref]) {
   def toLowerCase = mapTableNames(_.toLowerCase)

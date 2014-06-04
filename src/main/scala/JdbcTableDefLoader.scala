@@ -14,7 +14,7 @@ import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
 import mojoz.metadata.Type
 
-class JdbcTableDefLoader {
+abstract class JdbcTableDefLoader {
   import JdbcTableDefLoader._
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
@@ -33,10 +33,11 @@ class JdbcTableDefLoader {
       val (uk, idx) =
         ukAndIdx(dmd.getIndexInfo(catalog, schema, tableName, false, true))
       val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
+      val ck = this.checkConstraints(conn, catalog, schema, tableName)
       val tableFullName =
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
-      tableDefs += TableDef(tableFullName, comment, cols, pk, uk, idx, refs)
+      tableDefs += TableDef(tableFullName, comment, cols, pk, uk, ck, idx, refs)
     }
 
     // work around oracle bugs
@@ -76,6 +77,40 @@ class JdbcTableDefLoader {
       }
     }
     tableDefs.toList
+  }
+  def checkConstraints(conn: Connection, catalog: String,
+    schemaPattern: String, tableNamePattern: String): Seq[CheckConstraint]
+  def checkConstraints(rs: ResultSet) = {
+    var checks: List[CheckConstraint] = Nil
+    while (rs.next) {
+      val name = rs.getString("CONSTRAINT_NAME")
+      val expr = rs.getString("CHECK_CLAUSE")
+      checks = CheckConstraint(name, expr) :: checks
+    }
+    rs.close
+    checks
+  }
+  private[in] def standardCheckConstraints(conn: Connection,
+    catalog: String, schemaPattern: String, tableNamePattern: String) = {
+    val ps = conn.prepareStatement("""
+      |select c.constraint_name, c.check_clause
+      |  -- TODO? is_deferrable, initially_deferred
+      |from information_schema.check_constraints c
+      |join information_schema.table_constraints t
+      |on c.constraint_catalog = t.constraint_catalog
+      |and  c.constraint_schema = t.constraint_schema
+      |and  c.constraint_name = t.constraint_name
+      |where constraint_type = 'CHECK'
+      |  and table_catalog like ?
+      |  and table_schema like ?
+      |  and table_name like ?
+      """.stripMargin.trim)
+    ps.setString(1, catalog)
+    ps.setString(2, schemaPattern)
+    ps.setString(3, tableNamePattern)
+    val rs = ps.executeQuery()
+    val checks = checkConstraints(rs)
+    checks
   }
   def checkToEnum(check: String) =
     // TODO properly, regexp at least
@@ -213,15 +248,79 @@ object JdbcTableDefLoader {
     jdbcTypeCode: Int,
     size: Int,
     fractionDigits: Int)
+  class H2 extends JdbcTableDefLoader {
+    override def checkConstraints(conn: Connection,
+        catalog: String, schemaPattern: String, tableNamePattern: String) = {
+      // FIXME table def loaders: use like or equals (like may fail!)? escape _?
+      // FIXME table def loaders: ignore pars if null!
+      val ps = conn.prepareStatement("""
+        |select constraint_name, check_expression check_clause
+        |  from information_schema.constraints
+        | where constraint_type = 'CHECK'
+        |   and table_catalog like ?
+        |   and table_schema like ?
+        |   and table_name like ?
+        """.stripMargin.trim)
+      ps.setString(1, catalog)
+      ps.setString(2, schemaPattern)
+      ps.setString(3, tableNamePattern)
+      val rs = ps.executeQuery()
+      val checks = checkConstraints(rs)
+      checks
+    }
+  }
+  class Hsqldb extends JdbcTableDefLoader {
+    override def checkConstraints(conn: Connection,
+      catalog: String, schemaPattern: String, tableNamePattern: String) =
+      standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
+  }
+  class Oracle extends JdbcTableDefLoader {
+    override def checkConstraints(conn: Connection,
+        catalog: String, schemaPattern: String, tableNamePattern: String) = {
+      val ps = conn.prepareStatement("""
+        |select constraint_name, search_condition check_clause
+        |  from all_constraints
+        |  where constraint_type = 'C' and owner like ? and table_name like ?
+        """.stripMargin.trim)
+      ps.setString(1, schemaPattern)
+      ps.setString(2, tableNamePattern)
+      val rs = ps.executeQuery()
+      val checks = checkConstraints(rs)
+      // TODO filter sys not null constraints, or not here?
+      checks
+    }
+  }
+  class Postgresql extends JdbcTableDefLoader {
+    override def checkConstraints(conn: Connection,
+      catalog: String, schemaPattern: String, tableNamePattern: String) =
+      standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
+  }
+  private[in] class Other extends JdbcTableDefLoader {
+    override def checkConstraints(conn: Connection,
+        catalog: String, schemaPattern: String, tableNamePattern: String) = {
+      Nil
+    }
+  }
   private[in] def integerOrSubtype(len: Int) =
     if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
     else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
     else new Type("int", None, Some(len.toInt), None, false)
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
-    types: String*) =
-    (new JdbcTableDefLoader).jdbcTableDefs(
+    types: String*) = {
+    val loader = conn.getMetaData.getDatabaseProductName match {
+      case "H2" => new H2
+      case "HSQL Database Engine" => new Hsqldb
+      case "Oracle" => new Oracle
+      case "PostgreSQL" => new Postgresql
+      case x =>
+        println("JdbcTableDefLoader - unsupported database " + x +
+          ", ignoring check constraints!")
+        new Other
+    }
+    loader.jdbcTableDefs(
       conn, catalog, schemaPattern, tableNamePattern, types: _*)
+  }
   def tableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) =
