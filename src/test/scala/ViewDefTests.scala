@@ -22,7 +22,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   "generated xsd file" should "equal sample file" in {
     // TODO xsd needs some cleanup!
     val expected = fileToString(path + "/" + "xsd-out.xsd")
-    val produced = (new XsdWriter(metadata)).createSchemaString // TODO api
+    val produced = (new XsdWriter(metadata)).createSchemaString("kps.ldz.lv") // TODO api
     if (expected != produced)
       toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)

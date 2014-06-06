@@ -144,12 +144,11 @@ class XsdWriter(metadata: Metadata[Type]) {
       </xs:complexContent>
     </xs:complexType>
     """)
-  def createSchema = {
-    // FIXME namespaces etc.
+  def createSchema(targetNamespace: String = "my.tns.com") = {
     // TODO elementFormDefault="qualified">
     (indent(0, s"""
     <xs:schema ${attribs("version targetNamespace xmlns:xs xmlns:tns",
-        "1.0", "kps.ldz.lv", "http://www.w3.org/2001/XMLSchema", "kps.ldz.lv")}>
+        "1.0", targetNamespace, "http://www.w3.org/2001/XMLSchema", targetNamespace)}>
       ${
           (typedefs.map(createComplexType(_, 3)) ++ Seq(listWrapper(3)) ++
           typedefs.filter(_.name.endsWith("_list_row")).map(createListWrapper(_, 3)))
@@ -159,15 +158,16 @@ class XsdWriter(metadata: Metadata[Type]) {
     """).trim)
     .replace("\r\n", "\n")
   }
-  def createSchemaString = createSchema
-  def createBindings = indent(0, s"""
+  def createSchemaString(targetNamespace: String = "my.tns.com") =
+    createSchema(targetNamespace)
+  def createBindings(schemaLocation: String = "my-schema.xsd") = indent(0, s"""
     <jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
         xmlns:xs="http://www.w3.org/2001/XMLSchema">
       <jaxb:globalBindings generateElementProperty="false">
         <xjc:simple/>
       </jaxb:globalBindings>
-      <jaxb:bindings schemaLocation="kpsws.xsd" node="/xs:schema">
+      <jaxb:bindings schemaLocation="$schemaLocation" node="/xs:schema">
         ${
           val names = typedefs.map(_.name) ++ List("list_wrapper") ++
             typedefs.filter(_.name.endsWith("_list_row")).map(listWrapperName)
@@ -186,5 +186,6 @@ class XsdWriter(metadata: Metadata[Type]) {
       </jaxb:bindings>
     </jaxb:bindings>
     """)
-  def createBindingsString = createBindings
+  def createBindingsString(schemaLocation: String = "my-schema.xsd") =
+    createBindings(schemaLocation)
 }
