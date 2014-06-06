@@ -59,6 +59,8 @@ class YamlTableDefWriter {
     Option(name).filter(_ != "")
       .map(_ + cols.mkString("(", ", ", ")"))
       .getOrElse(cols.mkString(", "))
+  private def toYaml(ck: TableDef.CheckConstraint): String =
+    Option(ck.name).map(n => s"$n = ${ck.expression}") getOrElse ck.expression
   private def toYaml(index: TableDef.DbIndex): String =
     toYaml(index.name, index.cols)
   private def toYaml(ref: TableDef.Ref): String =
@@ -78,6 +80,9 @@ class YamlTableDefWriter {
       tableDef.pk.map(pk => "pk: " + toYaml(pk)),
       Option(tableDef.uk).filter(_.size > 0).map(x => "uk:"),
       Option(tableDef.uk).filter(_.size > 0)
+        .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
+      Option(tableDef.ck).filter(_.size > 0).map(x => "ck:"),
+      Option(tableDef.ck).filter(_.size > 0)
         .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
       Option(tableDef.idx).filter(_.size > 0).map(x => "idx:"),
       Option(tableDef.idx).filter(_.size > 0)

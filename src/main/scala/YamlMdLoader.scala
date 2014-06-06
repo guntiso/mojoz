@@ -59,6 +59,7 @@ private[in] object YamlTableDefLoader {
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   conventions: MdConventions = new MdConventions) {
+  // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
   private def checkTableDefs(td: Seq[TableDef[_]]) = {
