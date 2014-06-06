@@ -118,7 +118,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
       uniqueIndexes(t), indexes(t))
       .flatten.mkString("\n")
   def table(t: TableDef[Type]) =
-    (t.cols.map(column) ++ primaryKey(t))
+    (t.cols.map(column) ++ tableChecks(t) ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
   def primaryKey(t: TableDef[_]) = t.pk map { pk =>
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
@@ -146,7 +146,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
     c.name + " " + dbType(c) +
       (dbDefault(c) match { case null => "" case d => s" default $d" }) +
       (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
-      check(c)
+      colCheck(c)
   }
   def tableComment(t: TableDef[_]) = Option(t.comments).filter(_ != "").map(c =>
     s"comment on table ${t.name} is '$c';")
@@ -166,7 +166,10 @@ trait SqlWriter { this: ConstraintNamingRules =>
       Option(r.onUpdateAction).map(" on update " + _).getOrElse("") +
       ";"
   def dbType(c: ColumnDef[Type]): String
-  def check(c: ColumnDef[Type]): String
+  def colCheck(c: ColumnDef[Type]): String
+  def tableChecks(t: TableDef[Type]): Seq[String] =
+    // TODO do not lose check constraint name!
+    t.ck.map("check " + _.expression)
 }
 
 private[out] class HsqldbSqlWriter(
@@ -182,6 +185,18 @@ private[out] class H2SqlWriter(
   extends HsqldbSqlWriter(constraintNamingRules) {
   // for index name jdbc roundtrip
   override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
+  // how to retrieve column check constraint for h2? add to table instead 
+  override def colCheck(c: ColumnDef[Type]): String = ""
+  override def tableChecks(t: TableDef[Type]): Seq[String] = t.cols.map { c =>
+    val xt = c.type_
+    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    xt.name match {
+      case "string" if c.enum != null =>
+        c.enum.map("'" + _ + "'")
+          .mkString("check " + dbColumnName + " in (", ", ", ")")
+      case _ => ""
+    }
+  }.filter(_ != "") ++ super.tableChecks(t)
 }
 
 private[out] class OracleSqlWriter(
@@ -209,13 +224,13 @@ private[out] class OracleSqlWriter(
     case ("boolean", t) if "true" equalsIgnoreCase t => "'Y'"
     case _ => super.dbDefault(c)
   }
-  override def check(c: ColumnDef[Type]) = {
+  override def colCheck(c: ColumnDef[Type]) = {
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     c.type_.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
-      case _ => super.check(c)
+      case _ => super.colCheck(c)
     }
   }
   override def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
@@ -265,7 +280,7 @@ private[out] class StandardSqlWriter(
         throw new RuntimeException("Unexpected type: " + xt + " for " + c.name)
     }
   }
-  override def check(c: ColumnDef[Type]) = {
+  override def colCheck(c: ColumnDef[Type]) = {
     val xt = c.type_
     def dbColumnName = DbConventions.xsdNameToDbName(c.name)
     xt.name match {

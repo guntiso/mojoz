@@ -34,10 +34,31 @@ abstract class JdbcTableDefLoader {
         ukAndIdx(dmd.getIndexInfo(catalog, schema, tableName, false, true))
       val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
       val ck = this.checkConstraints(conn, catalog, schema, tableName)
+        .filterNot(c => CkParser.isNotNullCheck(c.expression))
+      def findCol(name: String) =
+        cols.find(c => name.equalsIgnoreCase(c.name) ||
+          name.equalsIgnoreCase(tableName + "." + c.name) ||
+          name.equalsIgnoreCase(schema + "." + tableName + "." + c.name))
+      val checkColEnum = ck
+        .map(c => (c, CkParser.colAndEnum(c.expression)))
+        .filter(_._2.isDefined)
+        .map(cce => (cce._1, findCol(cce._2.get._1), cce._2.get._2))
+        .filter(_._2.isDefined)
+        .map(cce => (cce._1, cce._2.get, cce._3))
+      // FIXME if multiple matching checks on the same column
+      val enumCk = checkColEnum.map(_._1).toSet
+      val unmappedCk = ck.filterNot(enumCk.contains)
+      val colToEnum = checkColEnum.map(cce => (cce._2, cce._3)).toMap
+      val mappedCols = cols map {c =>
+        val enum = colToEnum.get(c)
+        if (enum.isDefined) c.copy(enum = enum.get) else c
+      }
+
       val tableFullName =
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
-      tableDefs += TableDef(tableFullName, comment, cols, pk, uk, ck, idx, refs)
+      tableDefs += TableDef(tableFullName, comment, mappedCols,
+          pk, uk, unmappedCk, idx, refs)
     }
 
     // work around oracle bugs
@@ -75,6 +96,27 @@ abstract class JdbcTableDefLoader {
             c.copy(comments = cMap.get(c.name).orNull)))
         }
       }
+      // XXX booleans emulated on oracle
+      val emulatedBooleanEnums = Set(
+        List("N", "Y"), List("Y", "N"))
+      def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
+        c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
+          emulatedBooleanEnums.contains(c.enum.toList)
+      tableDefs transform { td =>
+        if (td.cols.exists(isEmulatedBoolean))
+          td.copy(cols = td.cols.map { c =>
+            if (isEmulatedBoolean(c)) c.copy(
+              type_ = c.type_.copy(jdbcTypeCode = Types.BOOLEAN),
+              enum = null,
+              dbDefault =
+                if (c.dbDefault == null) null
+                else c.dbDefault.trim match {
+                  case "'N'" => "false" case "'Y'" => "true" case d => d
+                })
+            else c
+          })
+        else td
+      }
     }
     tableDefs.toList
   }
@@ -105,21 +147,13 @@ abstract class JdbcTableDefLoader {
       |  and table_schema like ?
       |  and table_name like ?
       """.stripMargin.trim)
-    ps.setString(1, catalog)
+    ps.setString(1, if (catalog == null) "%" else catalog)
     ps.setString(2, schemaPattern)
     ps.setString(3, tableNamePattern)
     val rs = ps.executeQuery()
     val checks = checkConstraints(rs)
     checks
   }
-  def checkToEnum(check: String) =
-    // TODO properly, regexp at least
-    Option(check).map(_ split "[\\s'\\(\\),]+")
-      .map(_.toList.filter(_ != ""))
-      .map {
-        case "check" :: _ :: "in" :: tail => tail
-        case x => Nil
-      }.filter(_.size > 0).orNull
   def colDefs(rs: ResultSet) = {
     val cols = ListBuffer[ColumnDef[JdbcColumnType]]()
     while (rs.next) {
@@ -133,18 +167,13 @@ abstract class JdbcTableDefLoader {
         case (_, null) => null
         case (Types.BOOLEAN, "TRUE") => "true"
         case (Types.BOOLEAN, "FALSE") => "false"
-        // XXX booleans emulated on oracle
-        // FIXME check enum = [Y, N], check db is oracle?
-        case (Types.CHAR, d) if size == 1 => d.trim match {
-          case "'N'" => "false" case "'Y'" => "true" case d => d
-        }
         // XXX remove postgresql type safety garbage
         // FIXME check db is postgresql?
         case (_, d) if (d.indexOf("::") > 0) => d.substring(0, d.indexOf("::"))
         case (_, d) => d
       }
       val comment = rs.getString("REMARKS")
-      val check = null // TODO check constraint for column (enum)!
+      val check = null
       val dbType =
         JdbcColumnType(dbTypeName, jdbcTypeCode, size, fractionDigits)
       cols += ColumnDef(name, dbType, nullable, dbDefault, check, comment)
@@ -286,7 +315,6 @@ object JdbcTableDefLoader {
       ps.setString(2, tableNamePattern)
       val rs = ps.executeQuery()
       val checks = checkConstraints(rs)
-      // TODO filter sys not null constraints, or not here?
       checks
     }
   }
@@ -380,4 +408,42 @@ object JdbcTableDefLoader {
       case Types.VARCHAR => new Type("string", size)
       case x => sys.error("Unexpected jdbc type code: " + x)
     }
+}
+
+private[in] object CkParser {
+  val s = "\\s*"
+  val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+  val qi = s"$ident(\\.$ident)*"
+  val aposQi = s"'$qi'"
+  val quotQi = s""""$qi""""
+  val in = "[iI][nN]"
+  val checkIn = s"$s($qi|$quotQi)\\s+$in$s\\($s($aposQi($s\\,$s$aposQi)*)$s\\)$s"
+  val checkIn2 = s"$s\\($checkIn\\)$s"
+  val checkIn3 = s"$s\\($s($qi|$quotQi)$s\\)\\s+$in$s" +
+    s"\\($s(\\($s$aposQi$s\\)($s\\,$s\\($s$aposQi$s\\))*)$s\\)$s"
+  val checkIn4 = s"$s\\(\\(\\(($qi|$quotQi)\\)::text = ANY \\(\\(ARRAY\\[" +
+    s"($aposQi::character varying(, $aposQi::character varying)*)" +
+    s"\\]\\)::text\\[\\]\\)\\)\\)$s"
+  val checkNotNull = s"$s($qi|$quotQi)(?i) is not null$s".replace(" ", "\\s+")
+  private def regex(pattern: String) = ("^" + pattern + "$").r
+  val CheckIn = regex(checkIn)
+  val CheckIn2 = regex(checkIn2)
+  val CheckIn3 = regex(checkIn3)
+  val CheckIn4 = regex(checkIn4)
+  val CheckNotNull = regex(checkNotNull)
+  private def toColEnum(col: String, values: String) =
+    (col.replace(""""""", ""),
+      values.split("""[\\s\\(',\\)]+""").toList.filter(_.trim != ""))
+  def colAndEnum(ck: String) = ck match {
+    case CheckIn(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
+    case CheckIn2(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
+    case CheckIn3(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
+    case CheckIn4(col, _, _, values, _, _, _) =>
+      Some(toColEnum(col, values.replace("::character varying", "")))
+    case _ => None
+  }
+  def isNotNullCheck(ck: String) = ck match {
+    case CheckNotNull(_, _, _) => true
+    case _ => false
+  }
 }

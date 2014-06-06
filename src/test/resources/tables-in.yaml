@@ -24,7 +24,7 @@ columns:
 table:   country
 comment: Valstu klasifikators
 columns:
-- code                 ! 2             : ISO 3166-1 divu burtu valsts kods
+- code                 ! 2  (LV TO LT) : ISO 3166-1 divu burtu valsts kods
 - code3                ! 3             : ISO 3-burtu valsts kods
 - code_n3              ! 3             : ISO 3166-1 trīsciparu valsts kods
 - name                 ! 64            : Valsts nosaukums.
@@ -36,7 +36,7 @@ columns:
 table:   currency
 comment: Sistēmā uzturēto valūtu klasifikators.
 columns:
-- code                 ! 3             : Starptautiski pieņemtais valūtas apzīmējums (burti).
+- code                 ! 3   (USD EUR) : Starptautiski pieņemtais valūtas apzīmējums (burti).
 - name                 ! 100           : Valūtas nosaukums.
 - name_eng             ! 100           : Valūtas nosaukums angliski.
 - name_rus             ! 100           : Valūtas nosaukums krieviski.

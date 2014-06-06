@@ -44,6 +44,7 @@ create table country(
   name_rus varchar(64),
   is_active boolean not null,
   is_eu boolean not null,
+  check code in ('LV', 'TO', 'LT'),
   constraint pk_country primary key (code)
 );
 comment on table country is 'Valstu klasifikators';
@@ -60,6 +61,7 @@ create table currency(
   name varchar(100) not null,
   name_eng varchar(100) not null,
   name_rus varchar(100) not null,
+  check code in ('USD', 'EUR'),
   constraint pk_currency primary key (code)
 );
 comment on table currency is 'Sistēmā uzturēto valūtu klasifikators.';

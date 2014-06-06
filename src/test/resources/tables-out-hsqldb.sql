@@ -36,7 +36,7 @@ comment on column bank.name_eng is 'Bankas pilnais nosaukums, angliski.';
 comment on column bank.name_rus is 'Bankas pilnais nosaukums, transliterēts krieviski.';
 
 create table country(
-  code varchar(2) not null,
+  code varchar(2) not null check (code in ('LV', 'TO', 'LT')),
   code3 varchar(3) not null,
   code_n3 varchar(3) not null,
   name varchar(64) not null,
@@ -56,7 +56,7 @@ comment on column country.name_rus is 'Valsts nosaukums krieviski.';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
 
 create table currency(
-  code varchar(3) not null,
+  code varchar(3) not null check (code in ('USD', 'EUR')),
   name varchar(100) not null,
   name_eng varchar(100) not null,
   name_rus varchar(100) not null,
