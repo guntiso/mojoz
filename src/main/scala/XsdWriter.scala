@@ -176,16 +176,17 @@ class XsdWriter(metadata: Metadata[Type]) {
             .map { name =>
               val path = "//xs:complexType[@name='" + xsdTypeName(name) + "']"
               val className = xsdName(name)
-              s"""
-              <jaxb:bindings node=${ path }>
-                <jaxb:class name=${ className }/>
+              indent(4  , s"""
+              <jaxb:bindings node="${ path }">
+                <jaxb:class name="${ className }"/>
               </jaxb:bindings>
-              """
-            }
+              """)
+            }.map(_.trim).mkString("\n" + indentString * 4)
         }
       </jaxb:bindings>
     </jaxb:bindings>
-    """)
+    """).trim
+    .replace("\r\n", "\n") + "\n"
   def createBindingsString(schemaLocation: String = "my-schema.xsd") =
     createBindings(schemaLocation)
 }

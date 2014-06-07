@@ -1,0 +1,24 @@
+<jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+    xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <jaxb:globalBindings generateElementProperty="false">
+    <xjc:simple/>
+  </jaxb:globalBindings>
+  <jaxb:bindings schemaLocation="my-ws-schema.xsd" node="/xs:schema">
+    <jaxb:bindings node="//xs:complexType[@name='AccountType']">
+      <jaxb:class name="Account"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='AccountDetailsType']">
+      <jaxb:class name="AccountDetails"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='BankListRowType']">
+      <jaxb:class name="BankListRow"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ListWrapperType']">
+      <jaxb:class name="ListWrapper"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='BankListWrapperType']">
+      <jaxb:class name="BankListWrapper"/>
+    </jaxb:bindings>
+  </jaxb:bindings>
+</jaxb:bindings>

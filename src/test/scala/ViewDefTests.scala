@@ -27,6 +27,13 @@ class ViewDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)
   }
+  "generated bindings file" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "xsd-bindings-out.xjb")
+    val produced = (new XsdWriter(metadata)).createBindingsString("my-ws-schema.xsd")
+    if (expected != produced)
+      toFile(path + "/" + "xsd-bindings-out-produced.xjb", produced)
+    expected should be(produced)
+  }
   // TODO visualizer tests
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
