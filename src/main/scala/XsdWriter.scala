@@ -1,9 +1,15 @@
 package mojoz.metadata.out
 
 import mojoz.metadata._
-import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata.DbConventions.dbNameToXsdName
 
-class XsdWriter(metadata: Metadata[Type]) {
+class XsdWriter(metadata: Metadata[Type],
+    xsdName: String => String = dbNameToXsdName,
+    xsdTypeName: String => String = dbNameToXsdName(_) + "Type",
+    createListWrapper: ViewDef[Type] => Boolean = _.name endsWith "_list_row",
+    listWrapperBaseName: String = "list_wrapper",
+    listWrapperName: String => String =
+      Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull) {
   private val typedefs = metadata.viewDefs
   private val indentString: String = "  "
   private def indent(level: Int, s: String) = {
@@ -37,7 +43,6 @@ class XsdWriter(metadata: Metadata[Type]) {
       </xs:annotation>
       """)
     else ""
-  private def xsdTypeName(name: String) = xsdName(name) + "Type"
   private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
@@ -86,7 +91,7 @@ class XsdWriter(metadata: Metadata[Type]) {
         """)
     }
   }
-  def createComplexType(typeDef: ViewDef[Type], level: Int = 1) = {
+  def complexType(typeDef: ViewDef[Type], indentLevel: Int = 1) = {
     val tableComment = metadata.tableDefOption(typeDef).map(_.comments)
     def createFields(level: Int) = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
@@ -100,7 +105,7 @@ class XsdWriter(metadata: Metadata[Type]) {
       </xs:sequence>
       """)
     }
-    indent(level, s"""
+    indent(indentLevel, s"""
     <xs:complexType name="${ xsdTypeName(typeDef.name) }">
       ${List(
       annotation(Option(typeDef.comments).orElse(tableComment).orNull, 3),
@@ -117,9 +122,9 @@ class XsdWriter(metadata: Metadata[Type]) {
     </xs:complexType>
     """)
   }
-  val listWrapperXsdTypeName = xsdTypeName("list_wrapper")
-  def listWrapper(level: Int = 1) = // XXX
-    indent(level, s"""
+  private def listWrapperXsdTypeName = xsdTypeName(listWrapperBaseName)
+  def listWrapperBase(indentLevel: Int = 1) =
+    indent(indentLevel, s"""
     <xs:complexType name="${ listWrapperXsdTypeName }">
       <xs:sequence>
         <xs:element type="xs:int" name="Count"/>
@@ -128,11 +133,9 @@ class XsdWriter(metadata: Metadata[Type]) {
       </xs:sequence>
     </xs:complexType>
     """)
-  def listWrapperName(typeDef: ViewDef[Type]) =
-    typeDef.name.replace("_list_row", "_list_wrapper")
-  def createListWrapper(typeDef: ViewDef[Type], level: Int = 1) = // XXX
-    indent(level, s"""
-    <xs:complexType name="${ xsdTypeName(listWrapperName(typeDef)) }">
+  def listWrapper(typeDef: ViewDef[Type], indentLevel: Int = 1) =
+    indent(indentLevel, s"""
+    <xs:complexType name="${ xsdTypeName(listWrapperName(typeDef.name)) }">
       <xs:complexContent>
         <xs:extension base="${ "tns:" + listWrapperXsdTypeName }">
           <xs:sequence>
@@ -144,23 +147,22 @@ class XsdWriter(metadata: Metadata[Type]) {
       </xs:complexContent>
     </xs:complexType>
     """)
-  def createSchema(targetNamespace: String = "my.tns.com") = {
+  def schema(targetNamespace: String = "my.tns.com") = {
     // TODO elementFormDefault="qualified">
     (indent(0, s"""
     <xs:schema ${attribs("version targetNamespace xmlns:xs xmlns:tns",
         "1.0", targetNamespace, "http://www.w3.org/2001/XMLSchema", targetNamespace)}>
       ${
-          (typedefs.map(createComplexType(_, 3)) ++ Seq(listWrapper(3)) ++
-          typedefs.filter(_.name.endsWith("_list_row")).map(createListWrapper(_, 3)))
+          (typedefs.map(complexType(_, 3)) ++
+          (if (typedefs.exists(createListWrapper)) Seq(listWrapperBase(3)) else Nil) ++
+          typedefs.filter(createListWrapper).map(listWrapper(_, 3)))
           .map(_.trim).mkString("\n" + indentString)
       }
     </xs:schema>
     """).trim)
     .replace("\r\n", "\n")
   }
-  def createSchemaString(targetNamespace: String = "my.tns.com") =
-    createSchema(targetNamespace)
-  def createBindings(schemaLocation: String = "my-schema.xsd") = indent(0, s"""
+  def jaxbBindings(schemaLocation: String = "my-schema.xsd") = indent(0, s"""
     <jaxb:bindings version="2.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
         xmlns:xjc="http://java.sun.com/xml/ns/jaxb/xjc"
         xmlns:xs="http://www.w3.org/2001/XMLSchema">
@@ -169,8 +171,9 @@ class XsdWriter(metadata: Metadata[Type]) {
       </jaxb:globalBindings>
       <jaxb:bindings schemaLocation="$schemaLocation" node="/xs:schema">
         ${
-          val names = typedefs.map(_.name) ++ List("list_wrapper") ++
-            typedefs.filter(_.name.endsWith("_list_row")).map(listWrapperName)
+          val names = typedefs.map(_.name) ++
+          (if (typedefs.exists(createListWrapper)) List(listWrapperBaseName) else Nil) ++
+            typedefs.filter(createListWrapper).map(t => listWrapperName(t.name))
           names
             .filter(name => xsdName(name) != xsdTypeName(name))
             .map { name =>
@@ -187,6 +190,4 @@ class XsdWriter(metadata: Metadata[Type]) {
     </jaxb:bindings>
     """).trim
     .replace("\r\n", "\n") + "\n"
-  def createBindingsString(schemaLocation: String = "my-schema.xsd") =
-    createBindings(schemaLocation)
 }

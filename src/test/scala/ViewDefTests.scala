@@ -20,16 +20,15 @@ class ViewDefTests extends FlatSpec with Matchers {
     I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
   "generated xsd file" should "equal sample file" in {
-    // TODO xsd needs some cleanup!
     val expected = fileToString(path + "/" + "xsd-out.xsd")
-    val produced = (new XsdWriter(metadata)).createSchemaString("kps.ldz.lv") // TODO api
+    val produced = (new XsdWriter(metadata)).schema("kps.ldz.lv")
     if (expected != produced)
       toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)
   }
   "generated bindings file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-bindings-out.xjb")
-    val produced = (new XsdWriter(metadata)).createBindingsString("my-ws-schema.xsd")
+    val produced = (new XsdWriter(metadata)).jaxbBindings("my-ws-schema.xsd")
     if (expected != produced)
       toFile(path + "/" + "xsd-bindings-out-produced.xjb", produced)
     expected should be(produced)
