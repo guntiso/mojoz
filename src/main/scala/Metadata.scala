@@ -3,6 +3,10 @@ package mojoz.metadata
 import scala.annotation.tailrec
 
 import mojoz.metadata.in.I18nRules
+import TableDef._
+import ColumnDef._
+import ViewDef._
+import FieldDef._
 
 case class Type(name: String, length: Option[Int],
   totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
@@ -34,9 +38,19 @@ object TableDef {
     // TODO check constraint deferrability?
     // TODO table check constraint or column check constraint?
     expression: String)
+  trait TableDefBase[+T] {
+    val name: String
+    val comments: String
+    val cols: Seq[ColumnDefBase[T]]
+    val pk: Option[DbIndex]
+    val uk: Seq[DbIndex]
+    val ck: Seq[CheckConstraint]
+    val idx: Seq[DbIndex]
+    val refs: Seq[Ref]
+  }
 }
-import TableDef._
-case class TableDef[T](
+
+case class TableDef[+T](
   name: String,
   comments: String,
   cols: Seq[ColumnDef[T]],
@@ -44,7 +58,7 @@ case class TableDef[T](
   uk: Seq[DbIndex],
   ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
-  refs: Seq[Ref]) {
+  refs: Seq[Ref]) extends TableDefBase[T] {
   def toLowerCase = mapTableNames(_.toLowerCase)
     .mapColumnNames(_.toLowerCase)
     .mapConstraintNames(_.toLowerCase)
@@ -74,17 +88,27 @@ case class TableDef[T](
       refs = refs.map(r => r.copy(name = safeTransform(r.name))))
   }
 }
-case class ColumnDef[T](
+object ColumnDef {
+  trait ColumnDefBase[+T] {
+    val name: String
+    val type_ : T
+    val nullable: Boolean
+    val dbDefault: String
+    val enum: Seq[String]
+    val comments: String
+  }
+}
+case class ColumnDef[+T](
   name: String,
   type_ : T,
   nullable: Boolean,
   dbDefault: String,
   enum: Seq[String],
-  comments: String)
+  comments: String) extends ColumnDefBase[T]
 
 class Metadata[T](
-  val tableDefs: Seq[TableDef[T]],
-  val viewDefs: Seq[ViewDef[T]] = Nil,
+  val tableDefs: Seq[TableDefBase[T]],
+  val viewDefs: Seq[ViewDefBase[FieldDefBase[T]]] = Nil,
   i18nRules: I18nRules = I18nRules.noI18n) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap
 
@@ -92,16 +116,16 @@ class Metadata[T](
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
-  def tableDefOption(typeDef: ViewDef[_]) =
+  def tableDefOption(typeDef: ViewDefBase[_]) =
     md.get(typeDef.table)
 
-  def tableDef(typeDef: ViewDef[_]) =
+  def tableDef(typeDef: ViewDefBase[_]) =
     // TODO get line, file info from xsd type def
     md.get(typeDef.table) getOrElse
       sys.error("table not found: " + typeDef.table +
         ", type def: " + typeDef.name)
 
-  def columnDef(viewDef: ViewDef[_], fieldDef: FieldDef[_]) = {
+  def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
     val typeDef = viewDef
     val f = fieldDef
     val tableMd = tableDef(typeDef)
@@ -128,10 +152,10 @@ class Metadata[T](
   lazy val extendedViewDef = viewDefs.map(t =>
     if (t.extends_ == null) t else {
       @tailrec
-      def baseFields(t: ViewDef[T], fields: Seq[FieldDef[T]]): Seq[FieldDef[T]] =
+      def baseFields(t: ViewDefBase[FieldDefBase[T]], fields: Seq[FieldDefBase[T]]): Seq[FieldDefBase[T]] =
         if (t.extends_ == null) t.fields ++ fields
         else baseFields(viewDef(t.extends_), t.fields ++ fields)
-      t.copy(fields = baseFields(t, Nil))
+      t.copyWithFields(fields = baseFields(t, Nil))
     })
     .map(i18nRules.setI18n(this, _))
     .map(t => (t.name, t)).toMap

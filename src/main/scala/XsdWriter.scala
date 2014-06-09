@@ -2,11 +2,13 @@ package mojoz.metadata.out
 
 import mojoz.metadata._
 import mojoz.metadata.DbConventions.dbNameToXsdName
+import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
 class XsdWriter(metadata: Metadata[Type],
     xsdName: String => String = dbNameToXsdName,
     xsdTypeName: String => String = dbNameToXsdName(_) + "Type",
-    createListWrapper: ViewDef[Type] => Boolean = _.name endsWith "_list_row",
+    createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =
       Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull) {
@@ -90,7 +92,7 @@ class XsdWriter(metadata: Metadata[Type],
         """)
     }
   }
-  def complexType(typeDef: ViewDef[Type], indentLevel: Int = 1) = {
+  def complexType(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) = {
     val tableComment = metadata.tableDefOption(typeDef).map(_.comments)
     def createFields(level: Int) = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
@@ -132,7 +134,7 @@ class XsdWriter(metadata: Metadata[Type],
       </xs:sequence>
     </xs:complexType>
     """)
-  def listWrapper(typeDef: ViewDef[Type], indentLevel: Int = 1) =
+  def listWrapper(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) =
     indent(indentLevel, s"""
     <xs:complexType name="${ xsdTypeName(listWrapperName(typeDef.name)) }">
       <xs:complexContent>

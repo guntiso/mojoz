@@ -5,6 +5,8 @@ import mojoz.metadata._
 import mojoz.metadata.in._
 import mojoz.metadata.out._
 import java.io.PrintWriter
+import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 
 class ViewDefTests extends FlatSpec with Matchers {
   val path = "src/test/resources"
@@ -38,7 +40,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     val expected = fileToString(path + "/" + "classes-out.scala")
     // TODO api sucks
     object ScalaBuilder extends ScalaClassWriter {
-      override def scalaClassTraits(typeDef: ViewDef[Type]) =
+      override def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]) =
         if (typeDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
           List("DtoWithId")
         else List("Dto")

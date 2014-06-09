@@ -1,8 +1,10 @@
 package mojoz.metadata.out
 
-import scala.Option.option2Iterable
 import scala.annotation.tailrec
+
 import mojoz.metadata._
+import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
+import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
 import mojoz.metadata.io._
 
 class YamlTableDefWriter {

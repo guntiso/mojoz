@@ -5,6 +5,8 @@ import scala.math.max
 import mojoz.metadata._
 import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
+import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
+import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
 import SqlWriter._
 
 object SqlWriter {

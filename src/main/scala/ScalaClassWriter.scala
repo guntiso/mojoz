@@ -1,7 +1,9 @@
 package mojoz.metadata.out
 
-import mojoz.metadata._
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import mojoz.metadata.Type
+import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
 trait ScalaClassWriter {
   def nl = System.getProperty("line.separator")
@@ -39,14 +41,14 @@ trait ScalaClassWriter {
     if (col.isCollection) "Nil" else "null"
   private def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
     s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  def scalaClassExtends(typeDef: ViewDef[Type]) =
+  def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) =
     Option(typeDef.extends_).filter(_ != "").map(scalaClassName)
-  def scalaClassTraits(typeDef: ViewDef[Type]): Seq[String] = Seq()
+  def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(typeDef: ViewDef[Type]) =
+  def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) =
     typeDef.fields.map(f => scalaFieldString(
       scalaFieldName(Option(f.alias) getOrElse f.name), f))
-  def createScalaClassString(typeDef: ViewDef[Type]) = {
+  def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
     val fieldsString = scalaFieldsStrings(typeDef)
       .map(scalaFieldsIndent + _ + nl).mkString
     val extendsString = Option(scalaClassTraits(typeDef))
@@ -58,7 +60,7 @@ trait ScalaClassWriter {
     s"class ${scalaClassName(typeDef.name)}$extendsString {$nl$fieldsString}"
   }
   def createScalaClassesString(
-    headers: Seq[String], typedefs: Seq[ViewDef[Type]], footers: Seq[String]) =
+    headers: Seq[String], typedefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
     List(headers, typedefs map createScalaClassString, footers)
       .flatMap(x => x)
       .mkString("", nl, nl)

@@ -16,8 +16,28 @@ import mojoz.metadata.in._
 import mojoz.metadata.in.JoinsParser.Join
 import mojoz.metadata.io._
 import mojoz.metadata.DbConventions.{ xsdNameToDbName => dbName }
+import ViewDef._
+import FieldDef._
 
-case class ViewDef[T](
+object ViewDef {
+  trait ViewDefBase[+F] {
+    val name: String
+    val table: String
+    val tableAlias: String
+    val joins: String // from clause
+    val filter: Seq[String] // where clause
+    val groupBy: String
+    val having: String
+    val orderBy: String
+    val extends_ : String
+    val draftOf: String
+    val detailsOf: String
+    val comments: String
+    val fields: Seq[F]
+    def copyWithFields[F](fields: Seq[F]): ViewDefBase[F]
+  }
+}
+case class ViewDef[+F](
   name: String,
   table: String,
   tableAlias: String,
@@ -30,9 +50,32 @@ case class ViewDef[T](
   draftOf: String,
   detailsOf: String,
   comments: String,
-  fields: Seq[FieldDef[T]])
+  fields: Seq[F]) extends ViewDefBase[F] {
+  override def copyWithFields[F](fields: Seq[F]) =
+    copy(fields = fields)
+}
 
-case class FieldDef[T](
+object FieldDef {
+  trait FieldDefBase[+T] {
+    val table: String
+    val tableAlias: String
+    val name: String
+    val alias: String
+    val isCollection: Boolean
+    val maxOccurs: String
+    val isExpression: Boolean
+    val expression: String
+    val nullable: Boolean
+    val type_ : T
+    val enum: Seq[String]
+    val joinToParent: String
+    val orderBy: String
+    val isI18n: Boolean
+    val comments: String
+    def copyWithI18n(isI18n: Boolean): FieldDefBase[T] // TODO ???
+  }
+}
+case class FieldDef[+T](
   table: String,
   tableAlias: String,
   name: String,
@@ -49,8 +92,9 @@ case class FieldDef[T](
   joinToParent: String,
   orderBy: String,
   isI18n: Boolean,
-  comments: String) {
-}
+  comments: String) extends FieldDefBase[T] {
+  override def copyWithI18n(isI18n: Boolean) = copy(isI18n = isI18n) // TODO ???
+} 
 
 package in {
 
@@ -173,7 +217,7 @@ class YamlViewDefLoader(
       xtnds, draftOf, detailsOf, comment,
       yamlFieldDefs map toXsdFieldDef)
   }
-  private def checkTypedefs(td: Seq[ViewDef[_]]) = {
+  private def checkTypedefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
@@ -192,14 +236,14 @@ class YamlViewDefLoader(
     }
     td.foreach(t => checkExtends(t, m, Nil))
     def propName(f: FieldDef[_]) = Option(f.alias) getOrElse f.name
-    def checkRepeatingFieldNames(t: ViewDef[_]) =
+    def checkRepeatingFieldNames(t: ViewDef[FieldDef[_]]) =
       if (t.fields.map(propName).toSet.size < t.fields.size) sys.error(
         "Type " + t.name + " defines multiple fields named " + t.fields
           .groupBy(propName).filter(_._2.size > 1).map(_._1).mkString(", "))
     td foreach checkRepeatingFieldNames
     // check field names not repeating on extends? or overwrite instead?
   }
-  private def checkTypedefMapping(td: Seq[ViewDef[Type]]) = {
+  private def checkTypedefMapping(td: Seq[ViewDef[FieldDef[Type]]]) = {
     val m = td.map(t => (t.name, t)).toMap
     td foreach { t =>
       t.fields.foreach { f =>
@@ -214,28 +258,28 @@ class YamlViewDefLoader(
     if (n endsWith "_details") n.replace("_details", "_draft_details")
     else n + "_draft"
   def detailsName(n: String) = n + "_details"
-  private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[Type]]) = {
+  private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[FieldDef[Type]]]) = {
     //checkTypedefs(rawTypeDefs) FIXME does not allow draft names in type hierarchy
-    val rawTypesMap: Map[String, ViewDef[Type]] = rawTypeDefs.map(t => (t.name, t)).toMap
-    val resolvedTypes = new collection.mutable.ArrayBuffer[ViewDef[Type]]()
-    val resolvedTypesMap = collection.mutable.Map[String, ViewDef[Type]]()
+    val rawTypesMap: Map[String, ViewDef[FieldDef[Type]]] = rawTypeDefs.map(t => (t.name, t)).toMap
+    val resolvedTypes = new collection.mutable.ArrayBuffer[ViewDef[FieldDef[Type]]]()
+    val resolvedTypesMap = collection.mutable.Map[String, ViewDef[FieldDef[Type]]]()
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
       else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
 
-    def inheritJoins(t: ViewDef[Type]) = {
+    def inheritJoins(t: ViewDef[FieldDef[Type]]) = {
       @tailrec
-      def inheritedJoins(t: ViewDef[Type]): String =
+      def inheritedJoins(t: ViewDef[FieldDef[Type]]): String =
         if (t.joins != null || t.extends_ == null) t.joins
         else inheritedJoins(m(t.extends_))
       if (t.extends_ == null) t
       else t.copy(joins = inheritedJoins(t))
     }
 
-    def inheritFilter(t: ViewDef[Type]) = {
+    def inheritFilter(t: ViewDef[FieldDef[Type]]) = {
       @tailrec
-      def inheritedFilter(t: ViewDef[Type]): Seq[String] =
+      def inheritedFilter(t: ViewDef[FieldDef[Type]]): Seq[String] =
         if (t.filter != null || t.extends_ == null) t.filter
         else inheritedFilter(m(t.extends_))
       if (t.extends_ == null) t
@@ -249,7 +293,7 @@ class YamlViewDefLoader(
         case _ => "b" // default base table alias 
       })
 
-    def resolveFieldNamesAndTypes(t: ViewDef[Type]) = {
+    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
       val joins = parseJoins(t.table, t.joins)
       val aliasToTable =
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
@@ -308,8 +352,8 @@ class YamlViewDefLoader(
     }
 
     // drafts logic
-    def resolveDraft(draft: ViewDef[Type], addMissing: (ViewDef[Type]) => Any) = {
-      def canReuseSimpleFieldsForDraft(t: ViewDef[Type]) = {
+    def resolveDraft(draft: ViewDef[FieldDef[Type]], addMissing: (ViewDef[FieldDef[Type]]) => Any) = {
+      def canReuseSimpleFieldsForDraft(t: ViewDef[FieldDef[Type]]) = {
         // FIXME this is not exactly correct, or should be pluggable
         !t.fields
           .filter(isSimpleType)
@@ -317,17 +361,17 @@ class YamlViewDefLoader(
           .filter(!_.nullable)
           .exists(_.isForcedCardinality)
       }
-      def canReuseComplexFieldsForDraft(t: ViewDef[Type]) = {
+      def canReuseComplexFieldsForDraft(t: ViewDef[FieldDef[Type]]) = {
         !t.fields
           .filter(isComplexType)
           .exists(f => !canReuseAsDraft(m(f.type_.name)))
       }
-      def canReuseFieldsForDraft(t: ViewDef[Type]) =
+      def canReuseFieldsForDraft(t: ViewDef[FieldDef[Type]]) =
         canReuseSimpleFieldsForDraft(t) && canReuseComplexFieldsForDraft(t)
-      def canReuseAsDraft(t: ViewDef[Type]): Boolean =
+      def canReuseAsDraft(t: ViewDef[FieldDef[Type]]): Boolean =
         canReuseFieldsForDraft(t) &&
           (t.extends_ == null || canReuseAsDraft(m(t.extends_)))
-      def addMissingDraftOf(draftOf: ViewDef[Type]) = addMissing(
+      def addMissingDraftOf(draftOf: ViewDef[FieldDef[Type]]) = addMissing(
         draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
           extends_ = null, draftOf = draftOf.name, fields = Nil))
       def draftField(f: FieldDef[Type]) =
@@ -359,19 +403,19 @@ class YamlViewDefLoader(
     }
 
     // details logic
-    def resolveDetails(details: ViewDef[Type], addMissing: (ViewDef[Type]) => Any) = {
-      def hasChildrenWithDetails(t: ViewDef[Type]): Boolean =
+    def resolveDetails(details: ViewDef[FieldDef[Type]], addMissing: (ViewDef[FieldDef[Type]]) => Any) = {
+      def hasChildrenWithDetails(t: ViewDef[FieldDef[Type]]): Boolean =
         t.fields
           .filter(isComplexType)
           .map(_.type_)
           .filter(t =>
             isDefined(detailsName(t.name)) || hasChildrenWithDetails(m(t.name)))
           .size > 0
-      def canReuseFieldsForDetails(t: ViewDef[Type]) = !hasChildrenWithDetails(t)
-      def canReuseAsDetailsSuper(t: ViewDef[Type]): Boolean =
+      def canReuseFieldsForDetails(t: ViewDef[FieldDef[Type]]) = !hasChildrenWithDetails(t)
+      def canReuseAsDetailsSuper(t: ViewDef[FieldDef[Type]]): Boolean =
         canReuseFieldsForDetails(t) &&
           (t.extends_ == null || canReuseAsDetails(m(t.extends_)))
-      def canReuseAsDetails(t: ViewDef[Type]): Boolean =
+      def canReuseAsDetails(t: ViewDef[FieldDef[Type]]): Boolean =
         !isDefined(detailsName(t.name)) && canReuseAsDetailsSuper(t)
       def addMissingDetailsOf(dtOf: ViewDef[_]) = addMissing(
         dtOf.copy(name = detailsName(dtOf.name), table = null, joins = null,
@@ -404,23 +448,23 @@ class YamlViewDefLoader(
     }
 
     def isDefined(tName: String) = rawTypesMap.contains(tName)
-    def typeResolved(t: ViewDef[Type]) = {
+    def typeResolved(t: ViewDef[FieldDef[Type]]) = {
       resolvedTypes += t
       resolvedTypesMap(t.name) = t
       t
     }
-    def addMissing(t: ViewDef[Type]) = {
+    def addMissing(t: ViewDef[FieldDef[Type]]) = {
       // println("Adding missing type: " + t.name) // TODO not distinct
       resolveType(t)
     }
     // TODO add stack overflow protection
     def m(tName: String) = resolveTypeByName(tName)
-    def resolveTypeByName(tName: String): ViewDef[Type] =
+    def resolveTypeByName(tName: String): ViewDef[FieldDef[Type]] =
       resolvedTypesMap.getOrElse(tName,
         resolveUnresolvedType(rawTypesMap(tName)))
-    def resolveType(t: ViewDef[Type]): ViewDef[Type] =
+    def resolveType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
       resolvedTypesMap.getOrElse(t.name, resolveUnresolvedType(t))
-    def resolveUnresolvedType(t: ViewDef[Type]): ViewDef[Type] = typeResolved {
+    def resolveUnresolvedType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] = typeResolved {
       (t.draftOf, t.detailsOf) match {
         case (null, null) => t
         case (draftOf, null) => resolveDraft(t, addMissing)
