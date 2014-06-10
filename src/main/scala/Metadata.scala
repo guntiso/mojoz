@@ -38,10 +38,10 @@ object TableDef {
     // TODO check constraint deferrability?
     // TODO table check constraint or column check constraint?
     expression: String)
-  trait TableDefBase[+T] {
+  trait TableDefBase[+C <: ColumnDefBase[_]] { // TODO bound too tight?
     val name: String
     val comments: String
-    val cols: Seq[ColumnDefBase[T]]
+    val cols: Seq[C]
     val pk: Option[DbIndex]
     val uk: Seq[DbIndex]
     val ck: Seq[CheckConstraint]
@@ -50,34 +50,34 @@ object TableDef {
   }
 }
 
-case class TableDef[+T](
+case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
   name: String,
   comments: String,
-  cols: Seq[ColumnDef[T]],
+  cols: Seq[C],
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
   ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
-  refs: Seq[Ref]) extends TableDefBase[T] {
-  def toLowerCase = mapTableNames(_.toLowerCase)
+  refs: Seq[Ref]) extends TableDefBase[C] {
+  def toLowerCase: this.type = mapTableNames(_.toLowerCase)
     .mapColumnNames(_.toLowerCase)
     .mapConstraintNames(_.toLowerCase)
-  def toSimpleNames = mapTableNames((s: String) =>
+  def toSimpleNames: this.type = mapTableNames((s: String) =>
     if (s.indexOf(".") < 0) s else s.substring(s.lastIndexOf(".") + 1))
-  def unprefixTableNames(prefix: String) = mapTableNames((s: String) =>
+  def unprefixTableNames(prefix: String): this.type = mapTableNames((s: String) =>
     if (s startsWith prefix) s.substring(prefix.length) else s)
-  def mapTableNames(transform: (String) => String) = copy(
+  def mapTableNames(transform: (String) => String): this.type = copy(
     name = transform(name),
-    refs = refs.map(r => r.copy(refTable = transform(r.refTable))))
-  def mapColumnNames(transform: (String) => String): TableDef[T] = copy(
-    cols = cols.map(c => c.copy(name = transform(c.name))),
+    refs = refs.map(r => r.copy(refTable = transform(r.refTable)))).asInstanceOf[this.type]
+  def mapColumnNames(transform: (String) => String): this.type = copy(
+    cols = cols.map(c => c.rename(transform(c.name))),
     pk = pk.map(x => x.copy(cols = x.cols.map(transform))),
     uk = uk.map(x => x.copy(cols = x.cols.map(transform))),
     idx = idx.map(x => x.copy(cols = x.cols.map(transform))),
     refs = refs.map(r => r.copy(
       cols = r.cols.map(transform),
-      refCols = r.refCols.map(transform))))
-  def mapConstraintNames(transform: (String) => String): TableDef[T] = {
+      refCols = r.refCols.map(transform)))).asInstanceOf[this.type]
+  def mapConstraintNames(transform: (String) => String): this.type = {
     def safeTransform(s: String) = if (s == null) s else transform(s)
     def idxTransform(idx: TableDef.DbIndex) =
       idx.copy(name = safeTransform(idx.name))
@@ -85,7 +85,7 @@ case class TableDef[+T](
       pk = pk.map(idxTransform),
       uk = uk.map(idxTransform),
       idx = idx.map(idxTransform),
-      refs = refs.map(r => r.copy(name = safeTransform(r.name))))
+      refs = refs.map(r => r.copy(name = safeTransform(r.name)))).asInstanceOf[this.type]
   }
 }
 object ColumnDef {
@@ -96,6 +96,7 @@ object ColumnDef {
     val dbDefault: String
     val enum: Seq[String]
     val comments: String
+    def rename(name: String): this.type
   }
 }
 case class ColumnDef[+T](
@@ -104,10 +105,12 @@ case class ColumnDef[+T](
   nullable: Boolean,
   dbDefault: String,
   enum: Seq[String],
-  comments: String) extends ColumnDefBase[T]
+  comments: String) extends ColumnDefBase[T] {
+  override def rename(name: String) = copy(name = name).asInstanceOf[this.type]
+}
 
 class Metadata[T](
-  val tableDefs: Seq[TableDefBase[T]],
+  val tableDefs: Seq[TableDefBase[ColumnDefBase[T]]],
   val viewDefs: Seq[ViewDefBase[FieldDefBase[T]]] = Nil,
   i18nRules: I18nRules = I18nRules.noI18n) {
   private lazy val md = tableDefs.map(e => (e.name, e)).toMap

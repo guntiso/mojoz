@@ -11,6 +11,7 @@ import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
 import org.yaml.snakeyaml.Yaml
 
+// TODO remove yaml table def
 private[in] case class YamlTableDef(
   table: String,
   comments: String,
@@ -62,7 +63,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
-  private def checkTableDefs(td: Seq[TableDef[_]]) = {
+  private def checkTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
     val m: Map[String, _] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
@@ -71,7 +72,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     def checkHasColumns(t: TableDef[_]) =
       if (t.cols == null || t.cols.size == 0) sys.error(
         "Table " + t.name + " has no columns")
-    def checkRepeatingColumnNames(t: TableDef[_]) =
+    def checkRepeatingColumnNames(t: TableDef[ColumnDef[_]]) =
       if (t.cols.map(_.name).toSet.size < t.cols.size) sys.error(
         "Table " + t.name + " defines multiple columns named " + t.cols
           .groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))

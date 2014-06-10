@@ -22,7 +22,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
     isIdRefName(name)
-  def fromExternal(table: TableDef[IoColumnType]): metadata.TableDef[Type] =
+  def fromExternal(table: TableDef[ColumnDef[IoColumnType]]): metadata.TableDef[metadata.ColumnDef[Type]] =
     mojoz.metadata.TableDef(
       name = table.name,
       comments = table.comments,
@@ -32,7 +32,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       ck = table.ck,
       idx = table.idx,
       refs = table.refs)
-  def fromExternalPk(typeDef: TableDef[_]) = {
+  def fromExternalPk(typeDef: TableDef[ColumnDef[_]]) = {
     import scala.language.existentials
     val cols = typeDef.cols.map(_.name)
     if (typeDef.pk.isDefined) typeDef.pk
@@ -91,7 +91,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         (defaultType("string"), nullableOrTrue)
     }
   }
-  def toExternal(table: TableDefBase[Type]): metadata.TableDef[IoColumnType] =
+  def toExternal(table: TableDefBase[ColumnDef[Type]]): metadata.TableDef[metadata.ColumnDef[IoColumnType]] =
     metadata.TableDef(
       name = table.name,
       comments = table.comments,
@@ -110,7 +110,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     case idx if idx.name == defaultName => idx.copy(name = null)
     case idx => idx
   }
-  def toExternalPk(typeDef: TableDef[Type]) = {
+  def toExternalPk(typeDef: TableDef[ColumnDef[Type]]) = {
     val cols = typeDef.cols.map(_.name)
     // TODO pk: <missing>!
     // TODO overridable isDefaultPkName(name), use ConstraintNamingRules!
@@ -134,24 +134,24 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     else None
   }.map(toExternalIdx(naming.pkName(typeDef.name)))
 
-  def toExternalUk(table: TableDef[Type]) = {
+  def toExternalUk(table: TableDef[ColumnDef[Type]]) = {
     if (table.pk.isDefined) {
       val pkCols = toExternalIdx("")(table.pk.get).cols
       table.uk.filter(toExternalIdx("")(_).cols != pkCols)
     } else table.uk
   }.map(uk => toExternalIdx(naming.ukName(table.name, uk))(uk))
 
-  def toExternalIdx(table: TableDef[Type]): Seq[DbIndex] =
+  def toExternalIdx(table: TableDef[ColumnDef[Type]]): Seq[DbIndex] =
     table.idx.map(idx => toExternalIdx(naming.idxName(table.name, idx))(idx))
 
-  def toExternalRefs(table: TableDef[Type]) = table.refs
+  def toExternalRefs(table: TableDef[ColumnDef[Type]]) = table.refs
     .map(r => if (r.onDeleteAction == "no action") r.copy(onDeleteAction = null) else r)
     .map(r => if (r.onUpdateAction == "no action") r.copy(onUpdateAction = null) else r)
     .map(r => if (r.name == naming.fkName(table.name, r)) r.copy(name = null) else r)
     .filter(r => r.cols.size > 1 ||
       r.onDeleteAction != null || r.onUpdateAction != null || r.name != null)
 
-  def toExternal(table: TableDef[Type], col: ColumnDef[Type]): metadata.ColumnDef[IoColumnType] = {
+  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): metadata.ColumnDef[IoColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
       case (name, false) if isIdName(name) => None
       case (_, true) => None

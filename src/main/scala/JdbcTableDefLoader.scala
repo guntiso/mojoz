@@ -19,7 +19,7 @@ abstract class JdbcTableDefLoader {
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
-    val tableDefs = ListBuffer[TableDef[JdbcColumnType]]()
+    val tableDefs = ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]()
     val dmd = conn.getMetaData
     val rs = dmd.getTables(catalog, schemaPattern, tableNamePattern,
       if (types.size == 0) null else types.toArray)
@@ -356,7 +356,7 @@ object JdbcTableDefLoader {
       .map(mapType)
   def mapType(jdbcColumnType: JdbcColumnType): Type =
     map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def mapType(tableDef: TableDef[JdbcColumnType]): TableDef[Type] =
+  def mapType(tableDef: TableDef[ColumnDef[JdbcColumnType]]): TableDef[ColumnDef[Type]] =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = mapType(c.type_))))
   private[in] def map(jdbcTypeCode: Int, size: Int, fractionDigits: Int) =
     jdbcTypeCode match {
