@@ -132,7 +132,10 @@ class YamlViewDefLoader(
   def loadRawTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
-    def get(name: String) = tdMap.get(name).map(_.toString) getOrElse null
+    def get(name: String) = getStringSeq(name) match {
+      case Nil => null
+      case x => x mkString ""
+    }
     def getStringSeq(name: String): Seq[String] = tdMap.get(name) match {
       case Some(s: java.lang.String) => Seq(s)
       case Some(a: java.util.ArrayList[_]) => a.toList.map {
@@ -147,11 +150,11 @@ class YamlViewDefLoader(
     }
     val rawName = get("name")
     val rawTable = get("table")
-    val joins = get("joins")
+    val joins = getStringSeq("joins") mkString ";\n"
     val filter = getStringSeq("filter")
-    val group = get("group")
+    val group = getStringSeq("group") mkString ", "
     val having = get("having")
-    val order = get("order")
+    val order = getStringSeq("order") mkString ", "
     val xtnds = get("extends")
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
