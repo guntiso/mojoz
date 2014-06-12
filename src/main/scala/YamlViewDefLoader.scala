@@ -150,6 +150,7 @@ class YamlViewDefLoader(
     }
     val rawName = get("name")
     val rawTable = get("table")
+    // TODO separators are language-specific!
     val joins = getStringSeq("joins") mkString ";\n"
     val filter = getStringSeq("filter")
     val group = getStringSeq("group") mkString ", "
@@ -257,9 +258,11 @@ class YamlViewDefLoader(
       }
     }
   }
+  // TODO draftName to inputs!
   def draftName(n: String) = // XXX
     if (n endsWith "_details") n.replace("_details", "_draft_details")
     else n + "_draft"
+  // TODO detailsName to inputs!
   def detailsName(n: String) = n + "_details"
   private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[FieldDef[Type]]]) = {
     //checkTypedefs(rawTypeDefs) FIXME does not allow draft names in type hierarchy
