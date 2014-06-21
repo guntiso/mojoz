@@ -274,6 +274,13 @@ class YamlViewDefLoader(
       if (t.table != null) t
       else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
 
+    def inheritTableComments[T](t: ViewDef[T]) =
+      if (t.comments != null) t
+      else tableMetadata.tableDef(t.table).comments match {
+        case null => t
+        case tableComments => t.copy(comments = tableComments)
+      }
+
     def inheritJoins(t: ViewDef[FieldDef[Type]]) = {
       @tailrec
       def inheritedJoins(t: ViewDef[FieldDef[Type]]): String =
@@ -485,6 +492,7 @@ class YamlViewDefLoader(
       .map(inheritFilter)
       .map(resolveBaseTableAlias)
       .map(resolveFieldNamesAndTypes)
+      .map(inheritTableComments)
     checkTypedefs(result)
     checkTypedefMapping(result)
     result

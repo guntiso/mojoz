@@ -93,7 +93,6 @@ class XsdWriter(metadata: Metadata[Type],
     }
   }
   def complexType(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) = {
-    val tableComment = metadata.tableDefOption(typeDef).map(_.comments)
     def createFields(level: Int) = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
@@ -109,7 +108,7 @@ class XsdWriter(metadata: Metadata[Type],
     indent(indentLevel, s"""
     <xs:complexType name="${ xsdTypeName(typeDef.name) }">
       ${List(
-      annotation(Option(typeDef.comments).orElse(tableComment).orNull, 3),
+      annotation(typeDef.comments, 3),
       if (typeDef.extends_ == null) createFields(3)
       else indent(3, s"""
         <xs:complexContent>
