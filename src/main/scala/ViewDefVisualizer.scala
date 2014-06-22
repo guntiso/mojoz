@@ -2,12 +2,11 @@ package mojoz.metadata.out
 
 import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
-import mojoz.metadata.Metadata
 import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
-class ViewDefVisualizer(metadata: Metadata[Type]) {
-  private def getType(s: String) = metadata.extendedViewDef(s)
+class ViewDefVisualizer(nameToExtendedViewDef: Map[String, ViewDef[FieldDef[Type]]]) {
+  private def getType(s: String) = nameToExtendedViewDef(s)
   private def printComplexType(indent: String, typeDef: ViewDef[FieldDef[Type]]) {
     val nextIndent = indent + "  "
     typeDef.fields.foreach(f => {

@@ -13,24 +13,23 @@ class ViewDefTests extends FlatSpec with Matchers {
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
-  val tableMd = new Metadata(tableDefs)
+  val tableMd = new TableMetadata(tableDefs)
   val viewDefs = (new YamlViewDefLoader(tableMd, mdDefs) with JoinsParser {
     // TODO api sucks
     override def parseJoins(baseTable: String, joins: String) = Nil
   }).viewDefs
-  val metadata = new Metadata(tableDefs, viewDefs,
-    I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
+    // TODO I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
   "generated xsd file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-out.xsd")
-    val produced = (new XsdWriter(metadata)).schema("kps.ldz.lv")
+    val produced = (new XsdWriter(viewDefs)).schema("kps.ldz.lv")
     if (expected != produced)
       toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)
   }
   "generated bindings file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-bindings-out.xjb")
-    val produced = (new XsdWriter(metadata)).jaxbBindings("my-ws-schema.xsd")
+    val produced = (new XsdWriter(viewDefs)).jaxbBindings("my-ws-schema.xsd")
     if (expected != produced)
       toFile(path + "/" + "xsd-bindings-out-produced.xjb", produced)
     expected should be(produced)
@@ -47,7 +46,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     }
     // TODO api sucks
     val produced = ScalaBuilder.createScalaClassesString(
-      List("package some.pack", ""), metadata.viewDefs, Seq("// end"))
+      List("package some.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
     if (expected != produced)
       toFile(path + "/" + "classes-out-produced.scala", produced)

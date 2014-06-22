@@ -109,11 +109,9 @@ case class ColumnDef[+T](
   override def rename(name: String) = copy(name = name).asInstanceOf[this.type]
 }
 
-class Metadata[T](
-  val tableDefs: Seq[TableDefBase[ColumnDefBase[T]]],
-  val viewDefs: Seq[ViewDefBase[FieldDefBase[T]]] = Nil,
-  i18nRules: I18nRules = I18nRules.noI18n) {
-  private lazy val md = tableDefs.map(e => (e.name, e)).toMap
+class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
+  val tableDefs: Seq[T]) {
+  private val md = tableDefs.map(e => (e.name, e)).toMap
 
   def tableDef(tableName: String) =
     md.get(tableName) getOrElse
@@ -148,18 +146,4 @@ class Metadata[T](
             + ", joins: " + typeDef.joins, ex)
     }
   }
-
-  // typedef name to typedef
-  val viewDef = viewDefs.map(t => (t.name, t)).toMap
-  // typedef name to typedef with extended field list
-  lazy val extendedViewDef = viewDefs.map(t =>
-    if (t.extends_ == null) t else {
-      @tailrec
-      def baseFields(t: ViewDefBase[FieldDefBase[T]], fields: Seq[FieldDefBase[T]]): Seq[FieldDefBase[T]] =
-        if (t.extends_ == null) t.fields ++ fields
-        else baseFields(viewDef(t.extends_), t.fields ++ fields)
-      t.copyWithFields(fields = baseFields(t, Nil))
-    })
-    .map(i18nRules.setI18n(this, _))
-    .map(t => (t.name, t)).toMap
 }

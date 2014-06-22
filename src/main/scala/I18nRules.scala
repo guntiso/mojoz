@@ -1,25 +1,24 @@
 package mojoz.metadata.in
 
-import mojoz.metadata.Metadata
+import mojoz.metadata.TableMetadata
+import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
+import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
+import scala.language.higherKinds
 
-trait I18nRules {
-  def setI18n[T](tableMetadata: Metadata[_], view: ViewDef[FieldDef[T]]): ViewDef[FieldDef[T]]
-}
+object I18nRules {
 
-private[in] class NoI18n extends I18nRules {
-  override def setI18n[T](md: Metadata[_], t: ViewDef[FieldDef[T]]) = t
-}
-
-private[in] class SuffixI18nRules(
+class SuffixI18nRules(
+  val tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]],
   val i18nSuffixes: Set[String],
   val noI18nFields: Set[String],
-  val iI8nForcedViews: Set[String]) extends I18nRules {
-  override def setI18n[T](tableMetadata: Metadata[_], t: ViewDef[FieldDef[T]]) = {
-    val fMap = t.fields.filter(!_.isExpression).filter(!_.isCollection)
+  val iI8nForcedViews: Set[String]) {
+  def i18nFields[F[T] <: FieldDef[T], T](tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]], view: ViewDef[F[T]]): Set[F[T]] = {
+    val fMap = view.fields.filter(!_.isExpression).filter(!_.isCollection)
       .map(f => (f.table + "." + f.name, f)).toMap
-    val i18n = t.fields.filter(!_.isExpression).filter(!_.isCollection)
+    val i18n = view.fields.filter(!_.isExpression).filter(!_.isCollection)
       .filter(f => !i18nSuffixes.exists(f.name.endsWith))
       .filter(f => !i18nSuffixes.exists(sx =>
         fMap.contains(f.table + "." + f.name + sx)))
@@ -27,18 +26,22 @@ private[in] class SuffixI18nRules(
         tableMetadata.tableDef(f.table).cols.exists(_.name == f.name + sx)))
       .toSet
       .filter(f =>
-        !noI18nFields(f.table + "." + f.name) || iI8nForcedViews(t.name))
-    if (i18n.size == 0) t
-    else t.copyWithFields(t.fields.map(f =>
-      if (i18n contains f) f.copyWithI18n(isI18n = true) else f))
+        !noI18nFields(f.table + "." + f.name) || iI8nForcedViews(view.name))
+    i18n
+  }
+  def setI18n[T](view: mojoz.metadata.ViewDef[mojoz.metadata.FieldDef[T]]) = {
+    val i18n = i18nFields(tableMetadata, view)
+    if (i18n.size == 0) view
+    else view.copy(fields = view.fields.map(f =>
+      if (i18n contains f) f.copy(isI18n = true) else f))
   }
 }
 
-object I18nRules {
-  def noI18n: I18nRules = new NoI18n
   def suffixI18n(
+    tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]],
     i18nSuffixes: Set[String],
     noI18nFields: Set[String] = Set(),
-    iI8nForcedViews: Set[String] = Set()): I18nRules =
-    new SuffixI18nRules(i18nSuffixes, noI18nFields, iI8nForcedViews)
+    iI8nForcedViews: Set[String] = Set()) =
+    new SuffixI18nRules(
+      tableMetadata, i18nSuffixes, noI18nFields, iI8nForcedViews)
 }

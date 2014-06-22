@@ -34,7 +34,6 @@ object ViewDef {
     val detailsOf: String
     val comments: String
     val fields: Seq[F]
-    def copyWithFields[F](fields: Seq[F]): ViewDefBase[F]
   }
 }
 case class ViewDef[+F](
@@ -50,10 +49,7 @@ case class ViewDef[+F](
   draftOf: String,
   detailsOf: String,
   comments: String,
-  fields: Seq[F]) extends ViewDefBase[F] {
-  override def copyWithFields[F](fields: Seq[F]) =
-    copy(fields = fields)
-}
+  fields: Seq[F]) extends ViewDefBase[F]
 
 object FieldDef {
   trait FieldDefBase[+T] {
@@ -72,7 +68,6 @@ object FieldDef {
     val orderBy: String
     val isI18n: Boolean
     val comments: String
-    def copyWithI18n(isI18n: Boolean): FieldDefBase[T] // TODO ???
   }
 }
 case class FieldDef[+T](
@@ -83,7 +78,6 @@ case class FieldDef[+T](
   isCollection: Boolean,
   maxOccurs: String,
   isExpression: Boolean,
-  isFilterable: Boolean,
   expression: String,
   nullable: Boolean,
   isForcedCardinality: Boolean,
@@ -92,17 +86,15 @@ case class FieldDef[+T](
   joinToParent: String,
   orderBy: String,
   isI18n: Boolean,
-  comments: String) extends FieldDefBase[T] {
-  override def copyWithI18n(isI18n: Boolean) = copy(isI18n = isI18n) // TODO ???
-} 
+  comments: String) extends FieldDefBase[T]
 
 package in {
 
 class YamlViewDefLoader(
-    tableMetadata: Metadata[Type],
+    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
-    isExpressionFilterable: (String) => Boolean = (_) => true) {
+    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
   this: JoinsParser =>
 
   val sources = yamlMd.filter(YamlMd.isViewDef)
@@ -129,6 +121,18 @@ class YamlViewDefLoader(
       .getOrElse(sys.error("base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
   val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
+  private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
+  val extendedViewDefs = viewDefs.map(t =>
+    if (t.extends_ == null) t else {
+      @tailrec
+      def baseFields(v: ViewDef[FieldDef[Type]], fields: t.fields.type): t.fields.type =
+        if (v.extends_ == null) (v.fields ++ fields).asInstanceOf[t.fields.type]
+        else baseFields(nameToViewDef(v.extends_),
+          (v.fields ++ fields).asInstanceOf[t.fields.type])
+      t.copy(fields = baseFields(t, Nil.asInstanceOf[t.fields.type]))
+    })
+    .map(extendedViewDefTransformer)
+    .map(t => (t.name, t)).toMap
   def loadRawTypeDef(typeDef: String) = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
@@ -188,21 +192,6 @@ class YamlViewDefLoader(
       val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
       val isExpression = yfd.isExpression
       val expression = yfd.expression
-      val isFilterable = if (!isExpression) true
-      else if (expression == null) false
-      else isExpressionFilterable(expression)
-      /*
-      // if expression consists of a call to function attached to Env,
-      // then we consider is not filterable,
-      // otherwise consider it db function and filterable
-      QueryParser.parseExp(expression) match {
-        case QueryParser.Fun(f, p, _) if Env.isDefined(f) && Env.functions.flatMap {
-          _.getClass.getMethods.filter(
-            m => m.getName == f && m.getParameterTypes.length == p.size).headOption
-        } != None => false
-        case _ => true
-      }
-      */
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = yfd.cardinality != null
@@ -219,7 +208,7 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
-        isExpression, isFilterable, expression, nullable, isForcedCardinality,
+        isExpression, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
     ViewDef(name, table, null, joins, filter, group, having, order,

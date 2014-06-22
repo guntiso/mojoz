@@ -5,14 +5,14 @@ import mojoz.metadata.DbConventions.dbNameToXsdName
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
-class XsdWriter(metadata: Metadata[Type],
+class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     xsdName: String => String = dbNameToXsdName,
     xsdTypeName: String => String = dbNameToXsdName(_) + "Type",
     createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =
       Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull) {
-  private val typedefs = metadata.viewDefs
+  private val typedefs = viewDefs
   private val indentString: String = "  "
   private def indent(level: Int, s: String) = {
     def i(s: String) = {
