@@ -148,14 +148,19 @@ class YamlViewDefLoader(
       case None => Nil
       case x => Seq(x.toString) // TODO error?
     }
+    def getStringSeqMkString(name: String, sep: String = ", ") =
+      getStringSeq(name) match {
+        case Nil => null
+        case x => x mkString sep
+      }
     val rawName = get("name")
     val rawTable = get("table")
     // TODO separators are language-specific!
-    val joins = getStringSeq("joins") mkString ";\n"
+    val joins = getStringSeqMkString("joins", ";\n")
     val filter = getStringSeq("filter")
-    val group = getStringSeq("group") mkString ", "
+    val group = getStringSeqMkString("group")
     val having = get("having")
-    val order = getStringSeq("order") mkString ", "
+    val order = getStringSeqMkString("order")
     val xtnds = get("extends")
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
