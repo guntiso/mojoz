@@ -66,7 +66,6 @@ object FieldDef {
     val enum: Seq[String]
     val joinToParent: String
     val orderBy: String
-    val isI18n: Boolean
     val comments: String
   }
 }
