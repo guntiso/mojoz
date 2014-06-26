@@ -13,7 +13,6 @@ import scala.io.Source
 import org.yaml.snakeyaml.Yaml
 
 import mojoz.metadata.in._
-import mojoz.metadata.in.JoinsParser.Join
 import mojoz.metadata.io._
 import mojoz.metadata.DbConventions.{ xsdNameToDbName => dbName }
 import ViewDef._
@@ -93,8 +92,8 @@ class YamlViewDefLoader(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     conventions: MdConventions = new MdConventions,
+    parseJoins: JoinsParser = (_, _) => Nil, 
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
-  this: JoinsParser =>
 
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawTypeDefs = sources map { md =>
@@ -490,5 +489,16 @@ class YamlViewDefLoader(
     checkTypedefMapping(result)
     result
   }
+}
+
+object YamlViewDefLoader {
+  def apply(
+    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
+    yamlMd: Seq[YamlMd],
+    conventions: MdConventions = new MdConventions,
+    parseJoins: JoinsParser = (_, _) => Nil,
+    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) =
+    new YamlViewDefLoader(
+      tableMetadata, yamlMd, conventions, parseJoins, extendedViewDefTransformer)
 }
 }

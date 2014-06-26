@@ -14,10 +14,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     path = path, filter = _.getName endsWith "-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
-  val viewDefs = (new YamlViewDefLoader(tableMd, mdDefs) with JoinsParser {
-    // TODO api sucks
-    override def parseJoins(baseTable: String, joins: String) = Nil
-  }).viewDefs
+  val viewDefs = YamlViewDefLoader(tableMd, mdDefs).viewDefs
     // TODO I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
   "generated xsd file" should "equal sample file" in {
