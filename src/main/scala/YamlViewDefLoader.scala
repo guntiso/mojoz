@@ -92,7 +92,7 @@ class YamlViewDefLoader(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil, 
-    conventions: MdConventions = new MdConventions,
+    conventions: MdConventions = MdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
 
   val parseJoins = joinsParser
@@ -505,7 +505,7 @@ object YamlViewDefLoader {
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
-    conventions: MdConventions = new MdConventions,
+    conventions: MdConventions = MdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) =
     new YamlViewDefLoader(
       tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer)

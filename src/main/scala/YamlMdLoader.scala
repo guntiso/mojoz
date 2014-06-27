@@ -59,7 +59,7 @@ private[in] object YamlTableDefLoader {
   val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd],
-  conventions: MdConventions = new MdConventions) {
+  conventions: MdConventions = MdConventions) {
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
