@@ -91,10 +91,11 @@ package in {
 class YamlViewDefLoader(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
+    joinsParser: JoinsParser = (_, _) => Nil, 
     conventions: MdConventions = new MdConventions,
-    parseJoins: JoinsParser = (_, _) => Nil, 
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
 
+  val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawTypeDefs = sources map { md =>
     try loadRawTypeDef(md.body) catch {
@@ -503,10 +504,10 @@ object YamlViewDefLoader {
   def apply(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
+    joinsParser: JoinsParser = (_, _) => Nil,
     conventions: MdConventions = new MdConventions,
-    parseJoins: JoinsParser = (_, _) => Nil,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) =
     new YamlViewDefLoader(
-      tableMetadata, yamlMd, conventions, parseJoins, extendedViewDefTransformer)
+      tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer)
 }
 }
