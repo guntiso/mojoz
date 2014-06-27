@@ -157,7 +157,7 @@ class YamlViewDefLoader(
       }
     val rawName = get("name")
     val rawTable = get("table")
-    // TODO separators are language-specific!
+    // FIXME separators are language-specific!
     val joins = getStringSeqMkString("joins", ";\n")
     val filter = getStringSeq("filter")
     val group = getStringSeqMkString("group")
@@ -291,12 +291,20 @@ class YamlViewDefLoader(
       else t.copy(filter = inheritedFilter(t))
     }
 
-    def resolveBaseTableAlias[T](t: ViewDef[T]) = t.copy(tableAlias =
-      parseJoins(t.table, t.joins).filter(_.table == t.table).toList match {
-        case Join(a, _, _) :: Nil => // if only one base table encountered return alias
-          Option(a) getOrElse t.table
-        case _ => "b" // default base table alias 
-      })
+    def resolveBaseTableAlias[T](t: ViewDef[T]) = {
+      val (table, joins, tableAlias) = t.table.split("\\s+").toList match {
+        case List(table, tableAlias) =>
+          // FIXME configurable joins separator or joins to seq!
+          (table, t.table + ";\n" + t.joins, tableAlias)
+        case _ => (t.table, t.joins,
+          parseJoins(t.table, t.joins).filter(_.table == t.table).toList match {
+            case Join(a, _, _) :: Nil => // if only one base table encountered return alias
+              Option(a) getOrElse t.table
+            case _ => "b" // default base table alias 
+          })
+      }
+      t.copy(table = table, joins = joins, tableAlias = tableAlias)
+    }
 
     def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
       val joins = parseJoins(t.table, t.joins)
