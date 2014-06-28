@@ -296,7 +296,8 @@ class YamlViewDefLoader(
       val (table, joins, tableAlias) = t.table.split("\\s+").toList match {
         case List(table, tableAlias) =>
           // FIXME configurable joins separator or joins to seq!
-          (table, t.table + ";\n" + t.joins, tableAlias)
+          //       or don't mess with joins here!
+          (table, List(t.table, t.joins).filter(_ != null).mkString(";\n"), tableAlias)
         case _ => (t.table, t.joins,
           parseJoins(t.table, t.joins).filter(_.table == t.table).toList match {
             case Join(a, _, _) :: Nil => // if only one base table encountered return alias
