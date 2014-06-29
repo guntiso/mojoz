@@ -112,7 +112,11 @@ case class ColumnDef[+T](
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   val tableDefs: Seq[T]) {
   private val md = tableDefs.map(e => (e.name, e)).toMap
-
+  private val refTableAliasToRef = tableDefs.map(t => t.refs
+    .filter(_.defaultRefTableAlias != null)
+    .map(r => ((t.name, r.defaultRefTableAlias), r)))
+    .flatMap(x => x)
+    .toMap
   def tableDef(tableName: String) =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
@@ -146,4 +150,7 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
             + ", joins: " + typeDef.joins, ex)
     }
   }
+
+  def ref(table: String, refTableAlias: String): Option[Ref] =
+    refTableAliasToRef.get((table, refTableAlias))
 }

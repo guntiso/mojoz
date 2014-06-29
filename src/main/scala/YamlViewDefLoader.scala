@@ -328,9 +328,13 @@ class YamlViewDefLoader(
         if (f.name.indexOf(".") < 0)
           f.copy(table = dbName(t.table), name = dbName(f.name))
         else {
+          // TODO support name chain!
           val parts = f.name.split("\\.")
           val tableOrAlias = dbName(parts(0))
-          val table = dbName(aliasToTable.getOrElse(tableOrAlias, tableOrAlias))
+          val table = dbName(
+            aliasToTable.get(tableOrAlias)
+              .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
+                .getOrElse(tableOrAlias)))
           val tableAlias = if (table == tableOrAlias) null else tableOrAlias
           val name = dbName(parts(1))
           def maybeNoPrefix(fName: String) = fName.indexOf("_.") match {
