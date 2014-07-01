@@ -318,7 +318,7 @@ private[in] object YamlMdLoader {
           val entry = m.entrySet.toList(0)
           val nameEtc = entry.getKey
           val comment = entry.getValue
-          colDef(nameEtc.toString, comment.toString)
+          colDef(nameEtc.toString, Option(comment).map(_.toString).orNull)
         } else throw new RuntimeException(ThisFail +
           " - more than one entry for column: " + m.toMap.toString())
       case x => throw new RuntimeException(ThisFail +
