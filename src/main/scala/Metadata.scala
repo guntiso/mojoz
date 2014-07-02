@@ -117,6 +117,8 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     .map(r => ((t.name, r.defaultRefTableAlias), r)))
     .flatMap(x => x)
     .toMap
+  private val colNameToCol =
+    tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
   def tableDef(tableName: String) =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
@@ -133,13 +135,8 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
     val typeDef = viewDef
     val f = fieldDef
-    val tableMd = tableDef(typeDef)
-    val cols = tableMd.cols.map(c => (c.name, c)).toMap // TODO cache col map for all tables!
     val colName = DbConventions.xsdNameToDbName(f.name)
-    try {
-      (if (f.table == typeDef.table) cols
-      else md(f.table).cols.map(c => (c.name, c)).toMap)(colName)
-    } catch {
+    try colNameToCol((f.table, colName)) catch {
       case ex: Exception =>
         // TODO print filename, lineNr, colNr, too!
         throw new RuntimeException(
@@ -151,6 +148,8 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     }
   }
 
+  def col(table: String, column: String) =
+    colNameToCol.get((table, column))
   def ref(table: String, refTableAlias: String): Option[Ref] =
     refTableAliasToRef.get((table, refTableAlias))
 }
