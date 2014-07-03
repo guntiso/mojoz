@@ -328,23 +328,34 @@ class YamlViewDefLoader(
         if (f.name.indexOf(".") < 0)
           f.copy(table = dbName(t.table), name = dbName(f.name))
         else {
-          // TODO support name chain!
           val parts = f.name.split("\\.")
           val tableOrAlias = dbName(parts(0))
-          val table = dbName(
+          var table = dbName(
             aliasToTable.get(tableOrAlias)
               .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
                 .getOrElse(tableOrAlias)))
-          val tableAlias = if (table == tableOrAlias) null else tableOrAlias
-          val name = dbName(parts(1))
+          val tableAlias =
+            if (table == tableOrAlias || parts.size > 2) null else tableOrAlias
+          val partsReverseList = parts.toList.reverse
+          val name = dbName(partsReverseList.head)
+          val path = partsReverseList.tail.reverse
+          path.tail foreach { step =>
+            table = tableMetadata.ref(table, step) match {
+              case Some(ref) => ref.refTable
+              case None => step
+            }
+          }
           def maybeNoPrefix(fName: String) = fName.indexOf("_.") match {
             case -1 => fName
             case rmIdx => fName.substring(rmIdx + 2)
           }
           val alias = Option(f.alias).map(dbName) getOrElse
             dbName(maybeNoPrefix(f.name).replace(".", "_"))
+          val expression =
+            if (f.expression != null || parts.size < 3) f.expression
+            else parts.map(dbName).mkString(".")
           f.copy(table = table, tableAlias = tableAlias,
-            name = name, alias = alias)
+            name = name, alias = alias, expression = expression)
         }
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
         if (f.isExpression || f.isCollection) f
