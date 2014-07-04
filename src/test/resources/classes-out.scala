@@ -26,4 +26,16 @@ class NoTable extends Dto {
   var isBooleanExpr: java.lang.Boolean = null
   var isNotBoolean: java.sql.Date = null
 }
+class Person extends Dto {
+  var name: String = null
+  var surname: String = null
+  var motherName: String = null
+  var fatherName: String = null
+  var maternalGrandmotherName: String = null
+  var maternalGrandfatherName: String = null
+  var maternalGrandfatherSurname: String = null
+  var fatherMotherName: String = null
+  var fatherFatherName: String = null
+  var fatherFatherFatherSurname: String = null
+}
 // end

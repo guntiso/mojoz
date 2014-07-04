@@ -68,6 +68,15 @@ comment on column currency.name is 'Valūtas nosaukums.';
 comment on column currency.name_eng is 'Valūtas nosaukums angliski.';
 comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
 
+create table person(
+  id bigint,
+  name varchar(51),
+  surname varchar(52),
+  mother_id bigint,
+  father_id bigint,
+  constraint pk_person primary key (id)
+);
+
 create table test_table1(
   id bigint,
   code varchar(1) not null,
@@ -132,6 +141,8 @@ alter table account add constraint fk_account_bank_id foreign key (bank_id) refe
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);
 alter table bank add constraint fk_bank_country_code foreign key (country_code) references country(code);
+alter table person add constraint fk_person_mother_id foreign key (mother_id) references person(id);
+alter table person add constraint fk_person_father_id foreign key (father_id) references person(id);
 alter table test_table2 add constraint fk_test_table2_code_name foreign key (code, name) references test_table1(code, col1) on delete cascade;
 alter table test_table2 add constraint fk_tt2_spec_code_name foreign key (code, name) references test_table1(code, col2);
 alter table test_table5 add constraint fk_test_table5_bank_id foreign key (bank_id) references bank(id) on delete cascade;

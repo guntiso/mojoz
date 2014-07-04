@@ -20,6 +20,19 @@ fields:
  - country.name
  - name         : <p>special xml 'chars' & "strings" test</p>
 
+name: person
+fields:
+- name
+- surname
+- mother.name
+- father.name
+- maternal_grandmother_name    = mother.mother.name
+- maternal_grandfather_name    = mother.father.name
+- maternal_grandfather_surname = mother.father.surname
+- father.mother.name
+- father.father.name
+- father.father.father.surname
+
 name: no_table
 table:
 fields:

@@ -41,6 +41,14 @@ columns:
 - name_eng             ! 100           : Valūtas nosaukums angliski.
 - name_rus             ! 100           : Valūtas nosaukums krieviski.
 
+table:   person
+columns:
+- id
+- name                   51
+- surname                52
+- mother.id              person.id
+- father.id              person.id
+
 table:   test_table1
 columns:
 - id
