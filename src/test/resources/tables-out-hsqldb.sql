@@ -70,7 +70,7 @@ comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
 
 create table person(
   id bigint,
-  name varchar(51),
+  name varchar(51) not null,
   surname varchar(52),
   mother_id bigint,
   father_id bigint,

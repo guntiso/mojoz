@@ -157,9 +157,11 @@
   </xs:complexType>
   <xs:complexType name="PersonType">
     <xs:sequence>
-      <xs:element name="Name" nillable="true" minOccurs="0">
+      <xs:element name="Name">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
@@ -171,30 +173,38 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MotherName" nillable="true" minOccurs="0">
+      <xs:element name="MotherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherName" nillable="true" minOccurs="0">
+      <xs:element name="FatherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MaternalGrandmotherName" nillable="true" minOccurs="0">
+      <xs:element name="MaternalGrandmotherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MaternalGrandfatherName" nillable="true" minOccurs="0">
+      <xs:element name="MaternalGrandfatherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
@@ -206,16 +216,20 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherMotherName" nillable="true" minOccurs="0">
+      <xs:element name="FatherMotherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherFatherName" nillable="true" minOccurs="0">
+      <xs:element name="FatherFatherName">
         <xs:simpleType>
           <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>

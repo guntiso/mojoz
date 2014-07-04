@@ -70,7 +70,7 @@ comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
 
 create table person(
   id numeric(18),
-  name varchar2(51 char),
+  name varchar2(51 char) not null,
   surname varchar2(52 char),
   mother_id numeric(18),
   father_id numeric(18),
