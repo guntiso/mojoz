@@ -17,4 +17,13 @@ class BankListRow extends DtoWithId {
   var countryName: String = null
   var name: String = null
 }
+class NoTable extends Dto {
+  var someId: java.lang.Long = null
+  var someName: String = null
+  var someDate: java.sql.Date = null
+  var someDateTime: java.sql.Timestamp = null
+  var isBoolean: java.lang.Boolean = null
+  var isBooleanExpr: java.lang.Boolean = null
+  var isNotBoolean: java.sql.Date = null
+}
 // end

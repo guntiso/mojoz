@@ -14,6 +14,9 @@
     <jaxb:bindings node="//xs:complexType[@name='BankListRowType']">
       <jaxb:class name="BankListRow"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NoTableType']">
+      <jaxb:class name="NoTable"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ListWrapperType']">
       <jaxb:class name="ListWrapper"/>
     </jaxb:bindings>

@@ -19,3 +19,14 @@ fields:
  - country_code (LT LV RU)
  - country.name
  - name         : <p>special xml 'chars' & "strings" test</p>
+
+name: no_table
+table:
+fields:
+- some_id
+- some_name
+- some_date
+- some_date_time
+- is_boolean
+- is_boolean_expr =
+- is_not_boolean date : should be date

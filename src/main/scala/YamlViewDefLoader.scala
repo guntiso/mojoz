@@ -149,6 +149,7 @@ class YamlViewDefLoader(
         case x => x.toString
       }
       case None => Nil
+      case Some(null) => Seq("")
       case x => Seq(x.toString) // TODO error?
     }
     def getStringSeqMkString(name: String, sep: String = ", ") =
@@ -200,7 +201,7 @@ class YamlViewDefLoader(
       val comment = yfd.comments
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
       val xsdTypeFe =
-        if (isExpression)
+        if (isExpression || rawTable == "")
           conventions.fromExternal(name, rawXsdType, None)._1
         else null
       val xsdType =
@@ -247,7 +248,8 @@ class YamlViewDefLoader(
         if (f.type_.isComplexType)
           m.get(f.type_.name) getOrElse sys.error("Type " + f.type_.name +
             " referenced from " + t.name + " is not found")
-        else if (!f.isExpression) tableMetadata.columnDef(t, f)
+        else if (!f.isExpression && t.table != null)
+          tableMetadata.columnDef(t, f)
       }
     }
   }
@@ -268,7 +270,7 @@ class YamlViewDefLoader(
       else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
 
     def inheritTableComments[T](t: ViewDef[T]) =
-      if (t.comments != null) t
+      if (t.table == null || t.comments != null) t
       else tableMetadata.tableDef(t.table).comments match {
         case null => t
         case tableComments => t.copy(comments = tableComments)
@@ -293,7 +295,15 @@ class YamlViewDefLoader(
     }
 
     def resolveBaseTableAlias[T](t: ViewDef[T]) = {
-      val (table, joins, tableAlias) = t.table.split("\\s+").toList match {
+      val partsList =
+        Option(t.table).filter(_ != "").map(_.split("\\s+").toList).orNull
+      val (table, joins, tableAlias) = partsList match {
+        case null =>
+          parseJoins(null, t.joins).toList match {
+            case Nil => (null, t.joins, null) 
+            case List(join) => (join.table, t.joins, join.alias) 
+            case _ => (null, t.joins, null) 
+          }
         case List(table, tableAlias) =>
           // FIXME configurable joins separator or joins to seq!
           //       or don't mess with joins here!
@@ -326,7 +336,8 @@ class YamlViewDefLoader(
         else f
       def resolveNameAndTable[T](f: FieldDef[T]) =
         if (f.name.indexOf(".") < 0)
-          f.copy(table = dbName(t.table), name = dbName(f.name))
+          if (f.isExpression || t.table == null) f
+          else f.copy(name = dbName(f.name), table = dbName(t.table))
         else {
           val parts = f.name.split("\\.")
           val tableOrAlias = dbName(parts(0))
@@ -358,7 +369,7 @@ class YamlViewDefLoader(
             name = name, alias = alias, expression = expression)
         }
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
-        if (f.isExpression || f.isCollection) f
+        if (f.isExpression || f.isCollection || t.table == null) f
         else {
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
