@@ -63,13 +63,12 @@ class TableDefTests extends FlatSpec with Matchers {
     executeStatements(statements: _*)
     val conn = getConn
     val Schema = "PUBLIC"
+    val idxNames = indexNames(statements).map(_.toUpperCase)
     val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
-    }.map(t => t.copy(idx = t.idx // h2-specific synthetic index cleanup
-      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_1"))
-      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_E"))
-      .filterNot(i => i.name.startsWith("FK_") && i.name.endsWith("_INDEX_F"))))
+    }.map(t => t.copy( // h2-specific synthetic index cleanup
+      idx = t.idx.filter(i => idxNames.contains(i.name))))
 
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
@@ -87,6 +86,7 @@ class TableDefTests extends FlatSpec with Matchers {
     val Catalog = "PUBLIC"
     val Schema = "PUBLIC"
     val Prefx = Catalog + "." + Schema + "."
+    val idxNames = indexNames(statements).map(_.toUpperCase)
     val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
@@ -96,7 +96,7 @@ class TableDefTests extends FlatSpec with Matchers {
         else uk.copy(name =
           uk.name.substring("SYS_IDX_".length, uk.name.lastIndexOf("_")))
       },
-      idx = t.idx.filterNot(_.name startsWith "SYS_IDX_")))
+      idx = t.idx.filter(i => idxNames.contains(i.name))))
 
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
@@ -119,6 +119,12 @@ object TableDefTests {
       .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
       .mkString(nl)
   }
+  def indexNames(statements: Seq[String]) =
+    statements.map(_.split("\\s+").toList match {
+      case ("create" :: "index" :: index :: tail) => List(index)
+      case ("create" :: "unique" :: "index" :: index :: tail) => List(index)
+      case _ => Nil
+    }).flatten.toSet
   def getConn(implicit ci: (String, String, String)) =
     DriverManager.getConnection(ci._1, ci._2, ci._3)
   def executeStatements(statements: String*)(implicit ci: (String, String, String)) {
