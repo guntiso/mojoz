@@ -271,7 +271,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
 private[in] object YamlMdLoader {
   val FieldDef = {
     val ident = "[_a-zA-z][_a-zA-Z0-9]*"
-    val qualifiedIdent = s"$ident(\\.$ident)?"
+    val qualifiedIdent = s"$ident(\\.$ident)*"
     val int = "[0-9]+"
     val s = "\\s*"
 
