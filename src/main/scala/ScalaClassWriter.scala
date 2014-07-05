@@ -65,3 +65,5 @@ trait ScalaClassWriter {
       .flatMap(x => x)
       .mkString("", nl, nl)
 }
+
+object ScalaClassWriter extends ScalaClassWriter
