@@ -17,6 +17,9 @@
     <jaxb:bindings node="//xs:complexType[@name='NoTableType']">
       <jaxb:class name="NoTable"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='OneFielderType']">
+      <jaxb:class name="OneFielder"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='PersonType']">
       <jaxb:class name="Person"/>
     </jaxb:bindings>

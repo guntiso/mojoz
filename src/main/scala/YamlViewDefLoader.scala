@@ -139,18 +139,21 @@ class YamlViewDefLoader(
       case Nil => null
       case x => x mkString ""
     }
-    def getStringSeq(name: String): Seq[String] = tdMap.get(name) match {
-      case Some(s: java.lang.String) => Seq(s)
-      case Some(a: java.util.ArrayList[_]) => a.toList.map {
+    def getStringSeq(name: String): Seq[String] = {
+      getSeq(name) map {
         case s: java.lang.String => s
         case m: java.util.Map[_, _] =>
           if (m.size == 1) m.entrySet.toList(0).getKey.toString
           else m.toString // TODO error?
         case x => x.toString
       }
+    }
+    def getSeq(name: String): Seq[_] = tdMap.get(name) match {
+      case Some(s: java.lang.String) => Seq(s)
+      case Some(a: java.util.ArrayList[_]) => a.toList
       case None => Nil
       case Some(null) => Seq("")
-      case x => Seq(x.toString) // TODO error?
+      case x => Seq(x)
     }
     def getStringSeqMkString(name: String, sep: String = ", ") =
       getStringSeq(name) match {
@@ -169,9 +172,7 @@ class YamlViewDefLoader(
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
     val comment = get("comment")
-    val fieldsSrc = tdMap.get("fields")
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
-      .getOrElse(Nil)
+    val fieldsSrc = getSeq("fields").toList
     val extendsOrModifies =
       Option(xtnds).orElse(Option(detailsOf)).getOrElse(draftOf)
     val (name, table) = (rawName, rawTable, extendsOrModifies) match {

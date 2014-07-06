@@ -43,3 +43,7 @@ fields:
 - is_boolean
 - is_boolean_expr =
 - is_not_boolean date : should be date
+
+name:   one_fielder
+table:
+fields: the_one

@@ -155,6 +155,13 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="OneFielderType">
+    <xs:sequence>
+      <xs:element name="TheOne" nillable="true" minOccurs="0" type="xs:string">
+        
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="PersonType">
     <xs:sequence>
       <xs:element name="Name">
