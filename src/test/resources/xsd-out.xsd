@@ -131,22 +131,16 @@
   <xs:complexType name="NoTableType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
-        
       </xs:element>
       <xs:element name="SomeName" nillable="true" minOccurs="0" type="xs:string">
-        
       </xs:element>
       <xs:element name="SomeDate" nillable="true" minOccurs="0" type="xs:date">
-        
       </xs:element>
       <xs:element name="SomeDateTime" nillable="true" minOccurs="0" type="xs:dateTime">
-        
       </xs:element>
       <xs:element name="IsBoolean" nillable="true" minOccurs="0" type="xs:boolean">
-        
       </xs:element>
       <xs:element name="IsBooleanExpr" nillable="true" minOccurs="0" type="xs:boolean">
-        
       </xs:element>
       <xs:element name="IsNotBoolean" nillable="true" minOccurs="0" type="xs:date">
         <xs:annotation>
@@ -158,7 +152,6 @@
   <xs:complexType name="OneFielderType">
     <xs:sequence>
       <xs:element name="TheOne" nillable="true" minOccurs="0" type="xs:string">
-        
       </xs:element>
     </xs:sequence>
   </xs:complexType>

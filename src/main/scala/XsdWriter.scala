@@ -63,16 +63,17 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       case (None, None, None, None, None, None) =>
         indent(level, s"""
         <xs:element ${attribs("name nillable minOccurs maxOccurs type",
-            elName, nillable, minOccurs, maxOccurs, typeName)}>
-          ${ annotation(col.comments, 5).trim }
+            elName, nillable, minOccurs, maxOccurs, typeName)}>${
+          Some(annotation(col.comments, 5))
+            .filter(_ != "").map("\n" + indentString * 5 + _.trim) getOrElse ""}
         </xs:element>
         """)
       case (minL, maxL, totD, frcD, intD, enum) =>
         indent(level, s"""
         <xs:element ${attribs("name nillable minOccurs maxOccurs",
             elName, nillable, minOccurs, maxOccurs)}>${
-              Some(annotation(col.comments, 5))
-              .filter(_ != "").map("\n" + indentString * 5 + _.trim) getOrElse ""}
+          Some(annotation(col.comments, 5))
+            .filter(_ != "").map("\n" + indentString * 5 + _.trim) getOrElse ""}
           <xs:simpleType>
             <xs:restriction base="${ typeName }">
               ${indent(7, List(
