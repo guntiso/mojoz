@@ -97,12 +97,12 @@ class YamlViewDefLoader(
 
   val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
-  private val rawTypeDefs = sources map { md =>
-    try loadRawTypeDef(md.body) catch {
+  private val rawTypeDefs = sources.map { md: YamlMd =>
+    try loadRawTypeDefs(md.body) catch {
       case e: Exception => throw new RuntimeException(
         "Failed to load viewdef from " + md.filename, e) // TODO line number
     }
-  }
+  }.flatten
   private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
   private def isSimpleType(f: FieldDef[Type]) =
     f.type_ == null || !f.type_.isComplexType
@@ -132,9 +132,12 @@ class YamlViewDefLoader(
     })
     .map(extendedViewDefTransformer)
     .map(t => (t.name, t)).toMap
-  def loadRawTypeDef(typeDef: String) = {
+  def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
     val tdMap = mapAsScalaMap(
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
+    loadRawTypeDefs(tdMap)
+  }
+  def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
     def get(name: String) = getStringSeq(name) match {
       case Nil => null
       case x => x mkString ""
@@ -184,6 +187,9 @@ class YamlViewDefLoader(
     if (List(xtnds, draftOf, detailsOf).filter(_ != null).size > 1) sys.error(
       "extends, draft-of, details-of are not supported simultaneously, type: " + name)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
+    def typeName(v: Map[String, Any], defaultSuffix: String) =
+      if (v.containsKey("name")) "" + v("name")
+      else name + "_" + defaultSuffix
     def toXsdFieldDef(yfd: YamlFieldDef) = {
       val table = null
       val tableAlias = null
@@ -202,7 +208,9 @@ class YamlViewDefLoader(
       val comment = yfd.comments
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
       val xsdTypeFe =
-        if (isExpression || rawTable == "")
+        if (yfd.typeName == null && isViewDef(yfd.child))
+          new Type(typeName(yfd.child, name), true)
+        else if (isExpression || rawTable == "")
           conventions.fromExternal(name, rawXsdType, None)._1
         else null
       val xsdType =
@@ -212,9 +220,18 @@ class YamlViewDefLoader(
         isExpression, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment)
     }
+    def isViewDef(m: Map[String, Any]) =
+      m != null && m.containsKey("fields")
+    val fieldDefs = yamlFieldDefs map toXsdFieldDef
     ViewDef(name, table, null, joins, filter, group, having, order,
-      xtnds, draftOf, detailsOf, comment,
-      yamlFieldDefs map toXsdFieldDef)
+      xtnds, draftOf, detailsOf, comment, fieldDefs) ::
+      yamlFieldDefs
+      .map(_.child)
+      .zip(fieldDefs)
+      .filter(f => isViewDef(f._1))
+      .map(f => f._1 + (("name", f._2.type_.name)))
+      .map(loadRawTypeDefs)
+      .flatten
   }
   private def checkTypedefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap

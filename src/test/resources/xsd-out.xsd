@@ -128,6 +128,14 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="NamedInlineViewType">
+    <xs:sequence>
+      <xs:element name="ChildId" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="ChildName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="NoTableType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
@@ -240,6 +248,34 @@
             <xs:maxLength value="52"/>
           </xs:restriction>
         </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithAnonymousInlineViewType">
+    <xs:sequence>
+      <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="SomeName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="SomeChildren" minOccurs="0" maxOccurs="unbounded" type="tns:WithAnonymousInlineViewSomeChildrenType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithAnonymousInlineViewSomeChildrenType">
+    <xs:sequence>
+      <xs:element name="ChildId" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="ChildName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithNamedInlineViewType">
+    <xs:sequence>
+      <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="SomeName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="SomeChildren" minOccurs="0" maxOccurs="unbounded" type="tns:NamedInlineViewType">
       </xs:element>
     </xs:sequence>
   </xs:complexType>

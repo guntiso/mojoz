@@ -14,6 +14,9 @@
     <jaxb:bindings node="//xs:complexType[@name='BankListRowType']">
       <jaxb:class name="BankListRow"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NamedInlineViewType']">
+      <jaxb:class name="NamedInlineView"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NoTableType']">
       <jaxb:class name="NoTable"/>
     </jaxb:bindings>
@@ -22,6 +25,15 @@
     </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='PersonType']">
       <jaxb:class name="Person"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewType']">
+      <jaxb:class name="WithAnonymousInlineView"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewSomeChildrenType']">
+      <jaxb:class name="WithAnonymousInlineViewSomeChildren"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineViewType']">
+      <jaxb:class name="WithNamedInlineView"/>
     </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ListWrapperType']">
       <jaxb:class name="ListWrapper"/>

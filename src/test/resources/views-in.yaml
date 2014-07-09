@@ -47,3 +47,26 @@ fields:
 name:   one_fielder
 table:
 fields: the_one
+
+name: with_anonymous_inline_view
+table:
+fields:
+- some_id
+- some_name
+- some_children *:
+    table:
+    fields:
+    - child_id
+    - child_name
+
+name: with_named_inline_view
+table:
+fields:
+- some_id
+- some_name
+- some_children *:
+    name: named_inline_view
+    table:
+    fields:
+    - child_id
+    - child_name

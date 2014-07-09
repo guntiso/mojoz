@@ -17,6 +17,10 @@ class BankListRow extends DtoWithId {
   var countryName: String = null
   var name: String = null
 }
+class NamedInlineView extends Dto {
+  var childId: java.lang.Long = null
+  var childName: String = null
+}
 class NoTable extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null
@@ -40,5 +44,19 @@ class Person extends Dto {
   var fatherMotherName: String = null
   var fatherFatherName: String = null
   var fatherFatherFatherSurname: String = null
+}
+class WithAnonymousInlineView extends Dto {
+  var someId: java.lang.Long = null
+  var someName: String = null
+  var someChildren: List[WithAnonymousInlineViewSomeChildren] = Nil
+}
+class WithAnonymousInlineViewSomeChildren extends Dto {
+  var childId: java.lang.Long = null
+  var childName: String = null
+}
+class WithNamedInlineView extends Dto {
+  var someId: java.lang.Long = null
+  var someName: String = null
+  var someChildren: List[NamedInlineView] = Nil
 }
 // end

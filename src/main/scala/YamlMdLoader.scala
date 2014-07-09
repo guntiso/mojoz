@@ -33,7 +33,8 @@ private[in] case class YamlFieldDef(
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
-  comments: String)
+  comments: String,
+  child: Map[String, Any])
 
 private[in] object YamlTableDefLoader {
   val ident = "[_a-zA-z][_a-zA-Z0-9]*"
@@ -294,7 +295,8 @@ private[in] object YamlMdLoader {
 
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
-    def colDef(nameEtc: String, comment: String) = nameEtc match {
+    def colDef(nameEtc: String, comment: String,
+        child: Map[String, Any]) = nameEtc match {
       case FieldDef(name, _, quant, _, _, _, maxOcc, joinToParent, typ, _,
         len, frac, order, _, enum, isExpr, expr) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
@@ -305,21 +307,30 @@ private[in] object YamlMdLoader {
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
         YamlFieldDef(name, cardinality, i(maxOcc), t(typ), i(len), i(frac),
-          isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment)
+          isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment,
+          child)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
     }
     src match {
       case nameEtc: java.lang.String =>
-        colDef(nameEtc.toString, null)
+        colDef(nameEtc.toString, null, null)
       case x: java.util.Map[_, _] =>
         val m = x.asInstanceOf[java.util.Map[_, _]]
         if (m.size == 1) {
           val entry = m.entrySet.toList(0)
           val nameEtc = entry.getKey
-          val comment = entry.getValue
-          colDef(nameEtc.toString, Option(comment).map(_.toString).orNull)
+          val (comment, child) = entry.getValue match {
+            case s: String => (s, null)
+            case m: java.util.Map[_, _] =>
+              (null, mapAsScalaMap(m.asInstanceOf[java.util.Map[String, _]]).toMap)
+            case x => sys.error(ThisFail +
+              " - unexpected child definition class: " + x.getClass
+              + "\nvalue: " + x.toString)
+          }
+          colDef(nameEtc.toString, Option(comment).map(_.toString).orNull, child)
         } else throw new RuntimeException(ThisFail +
+          // TODO do not throw, allow decomposed or with custom extras instead
           " - more than one entry for column: " + m.toMap.toString())
       case x => throw new RuntimeException(ThisFail +
         " - unexpected field definition class: " + x.getClass
