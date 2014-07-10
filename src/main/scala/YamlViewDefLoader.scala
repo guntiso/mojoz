@@ -207,6 +207,12 @@ class YamlViewDefLoader(
       val orderBy = yfd.orderBy
       val comment = yfd.comments
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
+      if (isViewDef(yfd.child))
+        (yfd.typeName, yfd.child.get("name").orNull) match {
+          case (null, null) | (null, _) | (_, null) =>
+          case (fType, cType) => if (fType != cType)
+            sys.error(s"Name conflict for inline view: $fType != $cType")
+        }
       val xsdTypeFe =
         if (yfd.typeName == null && isViewDef(yfd.child))
           new Type(typeName(yfd.child, name), true)

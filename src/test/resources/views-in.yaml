@@ -70,3 +70,11 @@ fields:
     fields:
     - child_id
     - child_name
+
+name: with_named_inline_view2
+table:
+fields:
+- some_children * named_inline_view2:
+    table:
+    fields:
+    - child_name

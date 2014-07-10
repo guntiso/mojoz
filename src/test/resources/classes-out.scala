@@ -21,6 +21,9 @@ class NamedInlineView extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null
 }
+class NamedInlineView2 extends Dto {
+  var childName: String = null
+}
 class NoTable extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null
@@ -58,5 +61,8 @@ class WithNamedInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null
   var someChildren: List[NamedInlineView] = Nil
+}
+class WithNamedInlineView2 extends Dto {
+  var someChildren: List[NamedInlineView2] = Nil
 }
 // end

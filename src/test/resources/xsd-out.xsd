@@ -136,6 +136,12 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="NamedInlineView2Type">
+    <xs:sequence>
+      <xs:element name="ChildName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="NoTableType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
@@ -276,6 +282,12 @@
       <xs:element name="SomeName" nillable="true" minOccurs="0" type="xs:string">
       </xs:element>
       <xs:element name="SomeChildren" minOccurs="0" maxOccurs="unbounded" type="tns:NamedInlineViewType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithNamedInlineView2Type">
+    <xs:sequence>
+      <xs:element name="SomeChildren" minOccurs="0" maxOccurs="unbounded" type="tns:NamedInlineView2Type">
       </xs:element>
     </xs:sequence>
   </xs:complexType>
