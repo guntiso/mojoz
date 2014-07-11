@@ -365,10 +365,10 @@ class YamlViewDefLoader(
         else {
           val parts = f.name.split("\\.")
           val tableOrAlias = dbName(parts(0))
-          var table = dbName(
+          var table = Option(
             aliasToTable.get(tableOrAlias)
               .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
-                .getOrElse(tableOrAlias)))
+                .getOrElse(tableOrAlias))).map(dbName).orNull
           val tableAlias =
             if (table == tableOrAlias || parts.size > 2) null else tableOrAlias
           val partsReverseList = parts.toList.reverse
@@ -393,7 +393,10 @@ class YamlViewDefLoader(
             name = name, alias = alias, expression = expression)
         }
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
-        if (f.isExpression || f.isCollection || t.table == null) f
+        if (f.isExpression || f.isCollection) f
+        else if (f.table == null && f.type_.name == null)
+          f.copy(type_ = conventions.fromExternal(f.name, Option(f.type_), None)._1)
+        else if (t.table == null) f
         else {
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table

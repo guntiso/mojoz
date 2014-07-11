@@ -16,9 +16,9 @@ class SuffixI18nRules(
   val noI18nFields: Set[String],
   val iI8nForcedViews: Set[String]) {
   def i18nFields[F[T] <: FieldDef[T], T](tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]], view: ViewDef[F[T]]): Set[F[T]] = {
-    val fMap = view.fields.filter(!_.isExpression).filter(!_.isCollection)
+    val fMap = view.fields.filter(_.table != null)
       .map(f => (f.table + "." + f.name, f)).toMap
-    val i18n = view.fields.filter(!_.isExpression).filter(!_.isCollection)
+    val i18n = view.fields.filter(_.table != null)
       .filter(f => !i18nSuffixes.exists(f.name.endsWith))
       .filter(f => !i18nSuffixes.exists(sx =>
         fMap.contains(f.table + "." + f.name + sx)))
