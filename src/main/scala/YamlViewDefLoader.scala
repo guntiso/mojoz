@@ -272,7 +272,7 @@ class YamlViewDefLoader(
         if (f.type_.isComplexType)
           m.get(f.type_.name) getOrElse sys.error("Type " + f.type_.name +
             " referenced from " + t.name + " is not found")
-        else if (!f.isExpression && t.table != null)
+        else if (f.table != null)
           tableMetadata.columnDef(t, f)
       }
     }
@@ -394,7 +394,7 @@ class YamlViewDefLoader(
         }
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
         if (f.isExpression || f.isCollection) f
-        else if (f.table == null && f.type_.name == null)
+        else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.fromExternal(f.name, Option(f.type_), None)._1)
         else if (t.table == null) f
         else {
