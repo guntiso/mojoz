@@ -321,25 +321,13 @@ class YamlViewDefLoader(
     def resolveBaseTableAlias[T](t: ViewDef[T]) = {
       val partsList =
         Option(t.table).filter(_ != "").map(_.split("\\s+").toList).orNull
-      val (table, joins, tableAlias) = partsList match {
-        case null =>
-          parseJoins(null, t.joins).toList match {
-            case Nil => (null, t.joins, null) 
-            case List(join) => (join.table, t.joins, join.alias) 
-            case _ => (null, t.joins, null) 
-          }
-        case List(table, tableAlias) =>
-          // FIXME configurable joins separator or joins to seq!
-          //       or don't mess with joins here!
-          (table, List(t.table, t.joins).filter(_ != null).mkString(";\n"), tableAlias)
-        case _ => (t.table, t.joins,
-          parseJoins(t.table, t.joins).filter(_.table == t.table).toList match {
-            case Join(a, _, _) :: Nil => // if only one base table encountered return alias
-              Option(a) getOrElse t.table
-            case _ => "b" // default base table alias 
-          })
+      val (table, tableAlias) = partsList match {
+        case Nil | null => (null, null)
+        case List(table) => (table, null)
+        case List(table, tableAlias) => (table, tableAlias)
+        case _ => sys.error("Unexpected format for base table: " + t.table)
       }
-      t.copy(table = table, joins = joins, tableAlias = tableAlias)
+      t.copy(table = table, tableAlias = tableAlias)
     }
 
     def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
