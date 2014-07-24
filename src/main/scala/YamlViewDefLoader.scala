@@ -23,11 +23,11 @@ object ViewDef {
     val name: String
     val table: String
     val tableAlias: String
-    val joins: String // from clause
+    val joins: Seq[String] // from clause
     val filter: Seq[String] // where clause
-    val groupBy: String
-    val having: String
-    val orderBy: String
+    val groupBy: Seq[String]
+    val having: Seq[String]
+    val orderBy: Seq[String]
     val extends_ : String
     val draftOf: String
     val detailsOf: String
@@ -39,11 +39,11 @@ case class ViewDef[+F](
   name: String,
   table: String,
   tableAlias: String,
-  joins: String, // from clause
+  joins: Seq[String], // from clause
   filter: Seq[String], // where clause
-  groupBy: String,
-  having: String,
-  orderBy: String,
+  groupBy: Seq[String],
+  having: Seq[String],
+  orderBy: Seq[String],
   extends_ : String,
   draftOf: String,
   detailsOf: String,
@@ -158,19 +158,13 @@ class YamlViewDefLoader(
       case Some(null) => Seq("")
       case x => Seq(x)
     }
-    def getStringSeqMkString(name: String, sep: String = ", ") =
-      getStringSeq(name) match {
-        case Nil => null
-        case x => x mkString sep
-      }
     val rawName = get("name")
     val rawTable = get("table")
-    // FIXME separators are language-specific!
-    val joins = getStringSeqMkString("joins", ";\n")
+    val joins = getStringSeq("joins")
     val filter = getStringSeq("filter")
-    val group = getStringSeqMkString("group")
-    val having = get("having")
-    val order = getStringSeqMkString("order")
+    val group = getStringSeq("group")
+    val having = getStringSeq("having")
+    val order = getStringSeq("order")
     val xtnds = get("extends")
     val draftOf = get("draft-of")
     val detailsOf = get("details-of")
@@ -302,7 +296,7 @@ class YamlViewDefLoader(
 
     def inheritJoins(t: ViewDef[FieldDef[Type]]) = {
       @tailrec
-      def inheritedJoins(t: ViewDef[FieldDef[Type]]): String =
+      def inheritedJoins(t: ViewDef[FieldDef[Type]]): Seq[String] =
         if (t.joins != null || t.extends_ == null) t.joins
         else inheritedJoins(m(t.extends_))
       if (t.extends_ == null) t
