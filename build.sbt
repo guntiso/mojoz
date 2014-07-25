@@ -2,10 +2,10 @@ name := "mojoz"
 
 organization := "org.mojoz"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.2"
 
 crossScalaVersions := Seq(
-  "2.11.1",
+  "2.11.2",
   "2.10.4"
 )
 
