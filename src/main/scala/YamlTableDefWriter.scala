@@ -3,8 +3,6 @@ package mojoz.metadata.out
 import scala.annotation.tailrec
 
 import mojoz.metadata._
-import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
-import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
 import mojoz.metadata.io._
 
 class YamlTableDefWriter {

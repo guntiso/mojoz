@@ -1,10 +1,7 @@
 package mojoz.metadata.io
 
-import mojoz.metadata
 import mojoz.metadata._
 import mojoz.metadata.TableDef._
-import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
-import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
 import mojoz.metadata.out.SqlWriter
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
@@ -22,16 +19,10 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
     isIdRefName(name)
-  def fromExternal(table: TableDef[ColumnDef[IoColumnType]]): metadata.TableDef[metadata.ColumnDef[Type]] =
-    mojoz.metadata.TableDef(
-      name = table.name,
-      comments = table.comments,
+  def fromExternal(table: TableDef[ColumnDef[IoColumnType]]): TableDef[ColumnDef[Type]] =
+    table.copy(
       cols = table.cols map fromExternal,
-      pk = fromExternalPk(table),
-      uk = table.uk,
-      ck = table.ck,
-      idx = table.idx,
-      refs = table.refs)
+      pk = fromExternalPk(table))
   def fromExternalPk(typeDef: TableDef[ColumnDef[_]]) = {
     import scala.language.existentials
     val cols = typeDef.cols.map(_.name)
@@ -44,7 +35,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       Some(DbIndex(null, cols))
     else None
   }
-  def fromExternal(col: ColumnDef[IoColumnType]): metadata.ColumnDef[Type] = {
+  def fromExternal(col: ColumnDef[IoColumnType]): ColumnDef[Type] = {
     val (typ, nullable) =
       fromExternal(col.name, col.type_.type_, col.type_.nullable)
     val dbDefault = (typ.name, col.dbDefault) match {
@@ -56,13 +47,10 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         else s"'$d'"
       case (_, d) => d
     }
-    metadata.ColumnDef(
-      name = col.name,
+    col.copy(
       type_ = typ,
       nullable = nullable,
-      dbDefault = dbDefault,
-      enum = col.enum,
-      comments = col.comments)
+      dbDefault = dbDefault)
   }
   def fromExternal(name: String, type_ : Option[Type], nullable: Option[Boolean]) = {
     def defaultType(defaultName: String) =
@@ -91,14 +79,11 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         (defaultType("string"), nullableOrTrue)
     }
   }
-  def toExternal(table: TableDefBase[ColumnDef[Type]]): metadata.TableDef[metadata.ColumnDef[IoColumnType]] =
-    metadata.TableDef(
-      name = table.name,
-      comments = table.comments,
+  def toExternal(table: TableDef[ColumnDef[Type]]): TableDef[ColumnDef[IoColumnType]] =
+    table.copy(
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table),
       uk = toExternalUk(table),
-      ck = table.ck,
       idx = toExternalIdx(table),
       refs = toExternalRefs(table))
 
@@ -151,7 +136,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     .filter(r => r.cols.size > 1 ||
       r.onDeleteAction != null || r.onUpdateAction != null || r.name != null)
 
-  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): metadata.ColumnDef[IoColumnType] = {
+  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
     val nullOpt = (col.name, col.nullable) match {
       case (name, false) if isIdName(name) => None
       case (_, true) => None
@@ -192,13 +177,10 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
           (None, refTypeName)
         else
           (Some(new Type(refTypeName)), toRefColName(col.name, refCol))
-      metadata.ColumnDef(
+      col.copy(
         name = refColName,
         type_ = IoColumnType(nullOpt, typeOpt),
-        nullable = col.nullable,
-        dbDefault = dbDefault,
-        enum = col.enum,
-        comments = col.comments)
+        dbDefault = dbDefault)
     } else {
       val typeOpt = (col.name, col.type_.name, col.type_.length) match {
         case (name, type_, _) if isIdName(name) && type_ == idTypeName => None
@@ -211,13 +193,9 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
           Some(new Type(null.asInstanceOf[String], len))
         case _ => Option(col.type_)
       }
-      metadata.ColumnDef(
-        name = col.name,
+      col.copy(
         type_ = IoColumnType(nullOpt, typeOpt),
-        nullable = col.nullable,
-        dbDefault = dbDefault,
-        enum = col.enum,
-        comments = col.comments)
+        dbDefault = dbDefault)
     }
   }
 }
