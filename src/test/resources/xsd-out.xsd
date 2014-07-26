@@ -151,6 +151,9 @@
       <xs:element name="SomeDate" nillable="true" minOccurs="0" type="xs:date">
       </xs:element>
       <xs:element name="SomeDateTime" nillable="true" minOccurs="0" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>comments (with extra) for some_date_time</xs:documentation>
+        </xs:annotation>
       </xs:element>
       <xs:element name="IsBoolean" nillable="true" minOccurs="0" type="xs:boolean">
       </xs:element>

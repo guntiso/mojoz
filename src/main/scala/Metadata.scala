@@ -58,7 +58,8 @@ case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
   uk: Seq[DbIndex],
   ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
-  refs: Seq[Ref]) extends TableDefBase[C] {
+  refs: Seq[Ref],
+  extras: Map[String, Any]) extends TableDefBase[C] {
   def toLowerCase: this.type = mapTableNames(_.toLowerCase)
     .mapColumnNames(_.toLowerCase)
     .mapConstraintNames(_.toLowerCase)
@@ -105,7 +106,8 @@ case class ColumnDef[+T](
   nullable: Boolean,
   dbDefault: String,
   enum: Seq[String],
-  comments: String) extends ColumnDefBase[T] {
+  comments: String,
+  extras: Map[String, Any]) extends ColumnDefBase[T] {
   override def rename(name: String) = copy(name = name).asInstanceOf[this.type]
 }
 

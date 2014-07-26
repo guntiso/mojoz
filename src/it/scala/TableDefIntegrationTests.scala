@@ -26,6 +26,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .filterNot(_ startsWith "- uk_test_table1_code_col2")
         .filterNot(_ startsWith "- idx_tt1_spec_col3_col5d")
         .filterNot(_ startsWith "- code, col2 desc")
+        // do not compara extras-dependent lines
+        .filterNot(_ == "- code                 ! 16            :")
+        .filterNot(_ contains "SWIFT")
+        .filterNot(_ contains "extra-for-bank")
         // jdbc roundtrip fails on oracle:
         .filterNot(_ startsWith "- int_col ") // inexact length mapping
         .filterNot(_ startsWith "- long_col ") // inexact length mapping
@@ -62,6 +66,14 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     Class.forName("org.postgresql.Driver") //fix random No suitable driver found
     val cfg = getCfg("mojoz.postgresql.")
     clearPostgresqlDbSchema(cfg)
+    def skipSome(s: String) = {
+      s.split("\\r?\\n")
+        // do not compara extras-dependent lines
+        .filterNot(_ == "- code                 ! 16            :")
+        .filterNot(_ contains "SWIFT")
+        .filterNot(_ contains "extra-for-bank")
+        .mkString(nl)
+    }
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements = SqlWriter.postgresql().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
@@ -75,7 +87,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
-    expected should be(produced)
+    skipSome(expected) should be(skipSome(produced))
   }
   def getCfg(prefix: String) = Cfg(
     url = conf.getString(prefix + "jdbc.url"),

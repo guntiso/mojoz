@@ -57,8 +57,9 @@ abstract class JdbcTableDefLoader {
       val tableFullName =
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
+      val extras = Map[String, Any]()
       tableDefs += TableDef(tableFullName, comment, mappedCols,
-          pk, uk, unmappedCk, idx, refs)
+          pk, uk, unmappedCk, idx, refs, extras)
     }
 
     // work around oracle bugs
@@ -176,7 +177,8 @@ abstract class JdbcTableDefLoader {
       val check = null
       val dbType =
         JdbcColumnType(dbTypeName, jdbcTypeCode, size, fractionDigits)
-      cols += ColumnDef(name, dbType, nullable, dbDefault, check, comment)
+      val extras = Map[String, Any]()
+      cols += ColumnDef(name, dbType, nullable, dbDefault, check, comment, extras)
     }
     rs.close
     cols.toList

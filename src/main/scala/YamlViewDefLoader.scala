@@ -48,7 +48,8 @@ case class ViewDef[+F](
   draftOf: String,
   detailsOf: String,
   comments: String,
-  fields: Seq[F]) extends ViewDefBase[F]
+  fields: Seq[F],
+  extras: Map[String, Any]) extends ViewDefBase[F]
 
 object FieldDef {
   trait FieldDefBase[+T] {
@@ -84,7 +85,8 @@ case class FieldDef[+T](
   joinToParent: String,
   orderBy: String,
   isI18n: Boolean,
-  comments: String) extends FieldDefBase[T]
+  comments: String,
+  extras: Map[String, Any]) extends FieldDefBase[T]
 
 package in {
 
@@ -94,6 +96,7 @@ class YamlViewDefLoader(
     joinsParser: JoinsParser = (_, _) => Nil, 
     conventions: MdConventions = MdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
+  import YamlViewDefLoader._
 
   val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
@@ -138,11 +141,11 @@ class YamlViewDefLoader(
     loadRawTypeDefs(tdMap)
   }
   def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
-    def get(name: String) = getStringSeq(name) match {
+    def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
       case Nil => null
       case x => x mkString ""
     }
-    def getStringSeq(name: String): Seq[String] = {
+    def getStringSeq(name: ViewDefKeys.ViewDefKeys): Seq[String] = {
       getSeq(name) map {
         case s: java.lang.String => s
         case m: java.util.Map[_, _] =>
@@ -151,25 +154,27 @@ class YamlViewDefLoader(
         case x => x.toString
       }
     }
-    def getSeq(name: String): Seq[_] = tdMap.get(name) match {
+    def getSeq(name: ViewDefKeys.ViewDefKeys): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
       case Some(a: java.util.ArrayList[_]) => a.toList
       case None => Nil
       case Some(null) => Seq("")
       case x => Seq(x)
     }
-    val rawName = get("name")
-    val rawTable = get("table")
-    val joins = getStringSeq("joins")
-    val filter = getStringSeq("filter")
-    val group = getStringSeq("group")
-    val having = getStringSeq("having")
-    val order = getStringSeq("order")
-    val xtnds = get("extends")
-    val draftOf = get("draft-of")
-    val detailsOf = get("details-of")
-    val comment = get("comment")
-    val fieldsSrc = getSeq("fields").toList
+    val k = ViewDefKeys
+    val rawName = get(k.name)
+    val rawTable = get(k.table)
+    val joins = getStringSeq(k.joins)
+    val filter = getStringSeq(k.filter)
+    val group = getStringSeq(k.group)
+    val having = getStringSeq(k.having)
+    val order = getStringSeq(k.order)
+    val xtnds = get(k.extends_)
+    val draftOf = get(k.draftOf)
+    val detailsOf = get(k.detailsOf)
+    val comment = get(k.comment)
+    val fieldsSrc = getSeq(k.fields).toList
+    val extras = tdMap -- ViewDefKeyStrings
     val extendsOrModifies =
       Option(xtnds).orElse(Option(detailsOf)).getOrElse(draftOf)
     val (name, table) = (rawName, rawTable, extendsOrModifies) match {
@@ -200,16 +205,17 @@ class YamlViewDefLoader(
       val enum = yfd.enum
       val orderBy = yfd.orderBy
       val comment = yfd.comments
+      val extras = yfd.extras
       val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
-      if (isViewDef(yfd.child))
-        (yfd.typeName, yfd.child.get("name").orNull) match {
+      if (isViewDef(yfd.extras))
+        (yfd.typeName, yfd.extras.get("name").orNull) match {
           case (null, null) | (null, _) | (_, null) =>
           case (fType, cType) => if (fType != cType)
             sys.error(s"Name conflict for inline view: $fType != $cType")
         }
       val xsdTypeFe =
-        if (yfd.typeName == null && isViewDef(yfd.child))
-          new Type(typeName(yfd.child, name), true)
+        if (yfd.typeName == null && isViewDef(yfd.extras))
+          new Type(typeName(yfd.extras, name), true)
         else if (isExpression || rawTable == "")
           conventions.fromExternal(name, rawXsdType, None)._1
         else null
@@ -218,15 +224,15 @@ class YamlViewDefLoader(
 
       FieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
         isExpression, expression, nullable, isForcedCardinality,
-        xsdType, enum, joinToParent, orderBy, false, comment)
+        xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.containsKey("fields")
     val fieldDefs = yamlFieldDefs map toXsdFieldDef
     ViewDef(name, table, null, joins, filter, group, having, order,
-      xtnds, draftOf, detailsOf, comment, fieldDefs) ::
+      xtnds, draftOf, detailsOf, comment, fieldDefs, extras) ::
       yamlFieldDefs
-      .map(_.child)
+      .map(_.extras)
       .zip(fieldDefs)
       .filter(f => isViewDef(f._1))
       .map(f => f._1 + (("name", f._2.type_.name)))
@@ -537,6 +543,15 @@ class YamlViewDefLoader(
 }
 
 object YamlViewDefLoader {
+  private object ViewDefKeys extends Enumeration {
+    type ViewDefKeys = Value
+    val name, table, joins, filter, group, having, order = Value
+    val extends_ = Value("extends")
+    val draftOf = Value("draft-of")
+    val detailsOf = Value("details-of")
+    val comment, fields = Value
+  }
+  private val ViewDefKeyStrings = ViewDefKeys.values.map(_.toString)
   def apply(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],

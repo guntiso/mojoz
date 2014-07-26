@@ -39,7 +39,9 @@ fields:
 - some_id
 - some_name
 - some_date
-- some_date_time
+- some_date_time:
+  - comments (with extra) for some_date_time
+  - extra-for-some-date-time: some-date-time
 - is_boolean
 - is_boolean_expr =
 - is_not_boolean date : should be date
@@ -47,6 +49,7 @@ fields:
 name:   one_fielder
 table:
 fields: the_one
+extra: some extra
 
 name: with_anonymous_inline_view
 table:

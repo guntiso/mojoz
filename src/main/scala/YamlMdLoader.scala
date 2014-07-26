@@ -19,7 +19,8 @@ private[in] case class YamlTableDef(
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
   idx: Seq[DbIndex],
-  refs: Seq[Ref])
+  refs: Seq[Ref],
+  extras: Map[String, Any])
 
 private[in] case class YamlFieldDef(
   name: String,
@@ -34,7 +35,7 @@ private[in] case class YamlFieldDef(
   joinToParent: String,
   orderBy: String,
   comments: String,
-  child: Map[String, Any])
+  extras: Map[String, Any])
 
 private[in] object YamlTableDefLoader {
   val ident = "[_a-zA-z][_a-zA-Z0-9]*"
@@ -58,6 +59,11 @@ private[in] object YamlTableDefLoader {
     s"($onDelete|($onDelete\\s+)?$onUpdate)?$s")
   val OnDeleteDef = regex(s"$s$onDelete$s")
   val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
+  object TableDefKeys extends Enumeration {
+    type TableDefKeys = Value
+    val table, comment, columns, pk, uk, idx, refs = Value
+  }
+  private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   conventions: MdConventions = MdConventions) {
@@ -230,7 +236,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
       .getOrElse(Nil)
       .map(loadYamlRefDef)
-    YamlTableDef(table, comment, colDefs, pk, uk, idx, refs)
+    val extras = tdMap -- TableDefKeyStrings
+    YamlTableDef(table, comment, colDefs, pk, uk, idx, refs, extras)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     // TODO cleanup?
@@ -242,7 +249,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     val ck = Nil // FIXME ck!
     val idx = y.idx
     val refs = y.refs
-    val exTypeDef = TableDef(name, comment, cols, pk, uk, ck, idx, refs)
+    val extras = y.extras
+    val exTypeDef = TableDef(name, comment, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
@@ -264,8 +272,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
       sys.error("orderBy not supported for table columns")
     val comment = yfd.comments
     val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
+    val extras = yfd.extras
     ColumnDef(name, IoColumnType(nullable, rawXsdType),
-      nullable getOrElse true, dbDefault, enum, comment)
+      nullable getOrElse true, dbDefault, enum, comment, extras)
   }
 }
 
@@ -324,6 +333,16 @@ private[in] object YamlMdLoader {
             case s: String => (s, null)
             case m: java.util.Map[_, _] =>
               (null, mapAsScalaMap(m.asInstanceOf[java.util.Map[String, _]]).toMap)
+            case a: java.util.ArrayList[_] =>
+              val l = a.toList
+              val comments =
+                a.filter(_.isInstanceOf[java.lang.String]).mkString("/n")
+              val child =
+                a.filter(_.isInstanceOf[java.util.Map[_, _]])
+                  .map(_.asInstanceOf[java.util.Map[String, Any]])
+                  .foldLeft(Map[String, Any]())(_ ++ _)
+              // TODO handle (raise error for?) other cases
+              (comments, child)
             case x => sys.error(ThisFail +
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)

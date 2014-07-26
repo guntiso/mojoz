@@ -43,10 +43,19 @@ class YamlTableDefWriter {
         default // TODO formatting?
 
     val hasComment = (comments != null && comments.trim != "")
+    val hasExtras = extras != null && !extras.isEmpty
     val slComment =
       if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
     if (!hasComment) defString.trim
-    else if (MaxLineLength >= defString.length + slComment.length)
+    else if (hasExtras) {
+      // TODO handle various types of extras
+      val prefix = "  -"
+      val indent = "    "
+      val comment = wrapped(escapeYamlValue(comments.trim), prefix, indent)
+      val lines = (defString + " :") :: comment :: extras.map(e =>
+        s"$prefix ${escapeYamlValue(e._1)}: ${escapeYamlValue(e._2.toString)}").toList
+      lines.mkString("\n")
+    } else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
     else {
       val indent =
@@ -89,7 +98,9 @@ class YamlTableDefWriter {
         .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
       Option(tableDef.refs).filter(_.size > 0).map(x => "refs:"),
       Option(tableDef.refs).filter(_.size > 0)
-        .map(_.map(i => "- " + toYaml(i)).mkString("\n")))
+        .map(_.map(i => "- " + toYaml(i)).mkString("\n")),
+      Option(tableDef.extras).filter(!_.isEmpty) // TODO map extras - all types
+        .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")))
       .flatMap(x => x).mkString("\n")
   def toYaml(tableDefs: Seq[TableDef[ColumnDef[IoColumnType]]]): String =
     tableDefs.map(toYaml).mkString("\n\n") +

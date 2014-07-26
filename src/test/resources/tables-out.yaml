@@ -15,11 +15,14 @@ columns:
 table:   bank
 columns:
 - id                                   : Ieraksta identifikators.
-- code                 ! 16            : Bankas SWIFT kods.
+- code                 ! 16            :
+  - Bankas SWIFT kods.
+  - extra-for-bank-code: extra for bank.code
 - country.code                         : Bankas valsts, izvēle no klasifikatora.
 - name                 ! 240           : Bankas pilnais nosaukums.
 - name_eng               240           : Bankas pilnais nosaukums, angliski.
 - name_rus               240           : Bankas pilnais nosaukums, transliterēts krieviski.
+extra-for-bank: extra for bank
 
 table:   country
 comment: Valstu klasifikators
