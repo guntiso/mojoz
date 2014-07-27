@@ -3,6 +3,7 @@ import org.scalatest.FlatSpec
 import org.scalatest.Matchers
 import mojoz.metadata._
 import mojoz.metadata.in._
+import mojoz.metadata.io._
 import mojoz.metadata.out._
 import java.io.PrintWriter
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
@@ -17,6 +18,14 @@ class ViewDefTests extends FlatSpec with Matchers {
   val viewDefs = YamlViewDefLoader(tableMd, mdDefs).viewDefs
     // TODO I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
+  "generated yaml file" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "views-out.yaml")
+    val ioViews = viewDefs.map(MdConventions.toExternal(_, tableMd))
+    val produced = (new YamlViewDefWriter).toYaml(ioViews)
+    if (expected != produced)
+      toFile(path + "/" + "views-out-produced.yaml", produced)
+    expected should be(produced)
+  }
   "generated xsd file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-out.xsd")
     val produced = (new XsdWriter(viewDefs)).schema("kps.ldz.lv")

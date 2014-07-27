@@ -136,12 +136,13 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     .filter(r => r.cols.size > 1 ||
       r.onDeleteAction != null || r.onUpdateAction != null || r.name != null)
 
-  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
-    val nullOpt = (col.name, col.nullable) match {
+  def nullableOpt(name: String, nullable: Boolean) = (name, nullable) match {
       case (name, false) if isIdName(name) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
-    }
+  }
+  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
+    val nullOpt = nullableOpt(col.name, col.nullable)
     val dbDefault = (col.type_.name, col.dbDefault) match {
       case (_, null) => null
       case ("string", d) =>
@@ -182,7 +183,13 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         type_ = IoColumnType(nullOpt, typeOpt),
         dbDefault = dbDefault)
     } else {
-      val typeOpt = (col.name, col.type_.name, col.type_.length) match {
+      col.copy(
+        type_ = IoColumnType(nullOpt, typeOpt(col.name, col.type_)),
+        dbDefault = dbDefault)
+    }
+  }
+  def typeOpt(name: String, type_ : Type) = {
+      (name, type_.name, type_.length) match {
         case (name, type_, _) if isIdName(name) && type_ == idTypeName => None
         case (name, type_, _) if isIdRefName(name) && type_ == idTypeName => None
         case (name, "boolean", _) if isBooleanName(name) => None
@@ -191,12 +198,49 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         case (name, "string", None) if !isTypedName(name) => None
         case (name, "string", Some(len)) if !isTypedName(name) =>
           Some(new Type(null.asInstanceOf[String], len))
-        case _ => Option(col.type_)
+        case _ => Option(type_)
       }
-      col.copy(
-        type_ = IoColumnType(nullOpt, typeOpt),
-        dbDefault = dbDefault)
+  }
+  def toExternal(view: ViewDef[FieldDef[Type]], tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]]) = {
+    def mapField(f: FieldDef[Type]) = {
+      import f._
+      if (table == null)
+        f.copy(type_ = new IoColumnType(
+          nullableOpt(name, nullable),
+          typeOpt(name, type_)))
+      else {
+        val col = tableMetadata.columnDef(view, f)
+        val nullableOpt = Option(nullable).filter(_ != col.nullable)
+        val type_ = Option(f.type_).filter(_ != col.type_)
+        val (newName, newExpr) =
+          if (isExpression || expression != null) {
+            val n = Option(alias) getOrElse name
+            if (expression != null && expression.replace(".", "_") == n)
+              (expression, null)
+            else (n, expression)
+          } else if (tableAlias != null && tableAlias != view.tableAlias)
+            (tableAlias + "." + name, expression)
+          else if (table != null && table != view.table)
+            (table + "." + name, expression)
+          else (name, expression)
+        f.copy(
+          name = newName,
+          expression = newExpr,
+          comments = Option(comments).filter(_ != col.comments).orNull,
+          type_ = new IoColumnType(nullableOpt, type_))
+      }
     }
+    import view._
+    val tableDef = if (table == null) null else tableMetadata.tableDef(view)
+    view.copy(
+      table =
+        if (table == null) ""
+        else if (name == table ||
+          extends_ != null || detailsOf != null || draftOf != null) null
+        else table,
+      comments = Option(comments)
+        .filter(tableDef == null || _ != tableDef.comments).orNull,
+      fields = fields.map(mapField))
   }
 }
 

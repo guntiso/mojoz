@@ -14,11 +14,11 @@ fields:
 name: bank_list_row
 table: bank
 fields:
- - id
- - code
- - country_code (LT LV RU)
- - country.name
- - name         : <p>special xml 'chars' & "strings" test</p>
+- id
+- code
+- country_code (LT LV RU)
+- country.name
+- name         : <p>special xml 'chars' & "strings" test</p>
 
 name: person
 fields:

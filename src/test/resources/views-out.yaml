@@ -1,0 +1,89 @@
+name:    account
+fields:
+- id                   ?
+- bank_id
+- billing_account
+- currency               * 3             =
+
+name:    account_details
+extends: account
+fields:
+- bank.code
+- bank.name
+
+name:    bank_list_row
+table:   bank
+fields:
+- id
+- code
+- country_code                        (LT, LV, RU)
+- country.name
+- name                                   : <p>special xml 'chars' & "strings" test</p>
+
+name:    named_inline_view
+table:
+fields:
+- child_id
+- child_name
+
+name:    named_inline_view2
+table:
+fields:
+- child_name
+
+name:    no_table
+table:
+fields:
+- some_id
+- some_name
+- some_date
+- some_date_time                         :
+  - comments (with extra) for some_date_time
+  - extra-for-some-date-time: some-date-time
+- is_boolean
+- is_boolean_expr                        =
+- is_not_boolean           date          : should be date
+
+name:    one_fielder
+table:
+fields:
+- the_one
+extra: some extra
+
+name:    person
+fields:
+- name
+- surname
+- mother.name
+- father.name
+- maternal_grandmother_name              = mother.mother.name
+- maternal_grandfather_name              = mother.father.name
+- maternal_grandfather_surname           = mother.father.surname
+- father.mother.name
+- father.father.name
+- father.father.father.surname
+
+name:    with_anonymous_inline_view
+table:
+fields:
+- some_id
+- some_name
+- some_children          * with_anonymous_inline_view_some_children
+
+name:    with_anonymous_inline_view_some_children
+table:
+fields:
+- child_id
+- child_name
+
+name:    with_named_inline_view
+table:
+fields:
+- some_id
+- some_name
+- some_children          * named_inline_view
+
+name:    with_named_inline_view2
+table:
+fields:
+- some_children          * named_inline_view2
