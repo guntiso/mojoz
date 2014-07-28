@@ -52,15 +52,19 @@ class YamlViewDefWriter {
     val hasExtras = extras != null && !extras.isEmpty
     val slComment =
       if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
-    if (!hasComment) defString.trim
-    else if (hasExtras) {
+    if (!hasComment && !hasExtras) defString.trim
+    else if (hasExtras && !extras.contains("fields")) { // XXX not is view TODO inline child views!
       // TODO handle various types of extras
       val prefix = "  -"
       val indent = "    "
-      val comment = wrapped(escapeYamlValue(comments.trim), prefix, indent)
+      val comment =
+        if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
+        else ""
       val lines = (defString + " :") :: comment :: extras.map(e =>
-        s"$prefix ${escapeYamlValue(e._1)}: ${escapeYamlValue(e._2.toString)}").toList
-      lines.mkString("\n")
+        s"$prefix ${escapeYamlValue(e._1)}: ${escapeYamlValue("" + e._2)}").toList
+      lines
+        .filter(_ != "")
+        .mkString("\n")
     } else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
     else {
