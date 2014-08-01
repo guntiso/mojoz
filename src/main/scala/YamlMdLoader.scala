@@ -342,7 +342,7 @@ private[in] object YamlMdLoader {
                   .map(_.asInstanceOf[java.util.Map[String, Any]])
                   .foldLeft(Map[String, Any]())(_ ++ _)
               // TODO handle (raise error for?) other cases
-              (comments, child)
+              (Option(comments) getOrElse child.get("comments").orNull, child)
             case x => sys.error(ThisFail +
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)
