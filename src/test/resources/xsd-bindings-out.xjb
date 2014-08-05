@@ -20,6 +20,9 @@
     <jaxb:bindings node="//xs:complexType[@name='NamedInlineView2Type']">
       <jaxb:class name="NamedInlineView2"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NamedInlineView3Type']">
+      <jaxb:class name="NamedInlineView3"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NoTableType']">
       <jaxb:class name="NoTable"/>
     </jaxb:bindings>
@@ -40,6 +43,9 @@
     </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineView2Type']">
       <jaxb:class name="WithNamedInlineView2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineView3Type']">
+      <jaxb:class name="WithNamedInlineView3"/>
     </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ListWrapperType']">
       <jaxb:class name="ListWrapper"/>
