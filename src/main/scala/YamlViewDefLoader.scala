@@ -194,8 +194,8 @@ class YamlViewDefLoader(
       val tableAlias = null
       val name = yfd.name
       val alias = null
-      val isCollection = Set("*", "+").contains(yfd.cardinality)
       val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
+      val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
       val nullable = Option(yfd.cardinality)
@@ -381,7 +381,7 @@ class YamlViewDefLoader(
             name = name, alias = alias, expression = expression)
         }
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
-        if (f.isExpression || f.isCollection) f
+        if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.fromExternal(f.name, Option(f.type_), None)._1)
         else if (t.table == null) f

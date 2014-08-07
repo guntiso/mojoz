@@ -81,3 +81,11 @@ fields:
     table:
     fields:
     - child_name
+
+name: with_named_inline_view3
+table:
+fields:
+- single_child *..1 named_inline_view3:
+    table:
+    fields:
+    - child_name
