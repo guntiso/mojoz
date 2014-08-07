@@ -49,6 +49,9 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
       if (col.isCollection) "unbounded" else null
+    } match {
+      case "1" => null
+      case maxOccurs => maxOccurs
     }
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"

@@ -302,7 +302,7 @@
   </xs:complexType>
   <xs:complexType name="WithNamedInlineView3Type">
     <xs:sequence>
-      <xs:element name="SingleChild" nillable="true" minOccurs="0" maxOccurs="1" type="tns:NamedInlineView3Type">
+      <xs:element name="SingleChild" nillable="true" minOccurs="0" type="tns:NamedInlineView3Type">
       </xs:element>
     </xs:sequence>
   </xs:complexType>
