@@ -85,7 +85,7 @@ fields:
 name: with_named_inline_view3
 table:
 fields:
-- single_child *..1 named_inline_view3:
+- single_child named_inline_view3:
     table:
     fields:
     - child_name
