@@ -178,7 +178,7 @@ class YamlViewDefLoader(
     val extendsOrModifies =
       Option(xtnds).orElse(Option(detailsOf)).getOrElse(draftOf)
     val (name, table) = (rawName, rawTable, extendsOrModifies) match {
-      case (name, null, null) => (name, dbName(name))
+      case (name, null, null) => (name, dbName(name)) // FIXME matches null null null => nullpointer
       case (name, null, _) => (name, null)
       case (null, table, null) => (table, dbName(table))
       case (name, table, _) => (name, dbName(table))
