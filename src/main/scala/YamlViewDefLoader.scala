@@ -141,12 +141,13 @@ class YamlViewDefLoader(
     loadRawTypeDefs(tdMap)
   }
   def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
-    def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
+    def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name, true) match {
       case Nil => null
       case x => x mkString ""
     }
-    def getStringSeq(name: ViewDefKeys.ViewDefKeys): Seq[String] = {
-      getSeq(name) map {
+    def getStringSeq(name: ViewDefKeys.ViewDefKeys,
+        nullToString: Boolean = false): Seq[String] = {
+      getSeq(name, nullToString) map {
         case s: java.lang.String => s
         case m: java.util.Map[_, _] =>
           if (m.size == 1) m.entrySet.toList(0).getKey.toString
@@ -154,11 +155,13 @@ class YamlViewDefLoader(
         case x => x.toString
       }
     }
-    def getSeq(name: ViewDefKeys.ViewDefKeys): Seq[_] = tdMap.get(name.toString) match {
+    def getSeq(name: ViewDefKeys.ViewDefKeys,
+        nullToString: Boolean = false): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
       case Some(a: java.util.ArrayList[_]) => a.toList
       case None => Nil
-      case Some(null) => Seq("")
+      case Some(null) if nullToString => Seq("")
+      case Some(null) => Nil
       case x => Seq(x)
     }
     val k = ViewDefKeys
