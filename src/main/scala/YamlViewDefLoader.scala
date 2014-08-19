@@ -303,23 +303,18 @@ class YamlViewDefLoader(
         case tableComments => t.copy(comments = tableComments)
       }
 
-    def inheritJoins(t: ViewDef[FieldDef[Type]]) = {
-      @tailrec
-      def inheritedJoins(t: ViewDef[FieldDef[Type]]): Seq[String] =
-        if (t.joins != null || t.extends_ == null) t.joins
-        else inheritedJoins(m(t.extends_))
-      if (t.extends_ == null) t
-      else t.copy(joins = inheritedJoins(t))
-    }
+    def mergeSeqs(t: ViewDef[FieldDef[Type]], base: ViewDef[FieldDef[Type]]) =
+      t.copy(
+        joins = base.joins ++ t.joins,
+        filter = base.filter ++ t.filter,
+        groupBy = base.groupBy ++ t.groupBy,
+        having = base.having ++ t.having,
+        orderBy = base.orderBy ++ t.orderBy,
+        extras = base.extras ++ t.extras)
 
-    def inheritFilter(t: ViewDef[FieldDef[Type]]) = {
-      @tailrec
-      def inheritedFilter(t: ViewDef[FieldDef[Type]]): Seq[String] =
-        if (t.filter != null || t.extends_ == null) t.filter
-        else inheritedFilter(m(t.extends_))
+    def inheritSeqs(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
       if (t.extends_ == null) t
-      else t.copy(filter = inheritedFilter(t))
-    }
+      else mergeSeqs(t, inheritSeqs(m(t.extends_)))
 
     def resolveBaseTableAlias[T](t: ViewDef[T]) = {
       val partsList =
@@ -534,8 +529,7 @@ class YamlViewDefLoader(
     rawTypeDefs foreach resolveType
     val result = resolvedTypes.toList
       .map(inheritTable)
-      .map(inheritJoins)
-      .map(inheritFilter)
+      .map(inheritSeqs)
       .map(resolveBaseTableAlias)
       .map(resolveFieldNamesAndTypes)
       .map(inheritTableComments)
