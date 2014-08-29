@@ -106,7 +106,14 @@ class YamlViewDefLoader(
         "Failed to load viewdef from " + md.filename, e) // TODO line number
     }
   }.flatten
-  private val nameToRawTypeDef = rawTypeDefs.map(t => (t.name, t)).toMap
+  private val nameToRawTypeDef = {
+    val duplicateNames =
+      rawTypeDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
+    if (duplicateNames.size > 0)
+      throw new RuntimeException(
+        "Duplicate view definitions: " + duplicateNames.mkString(", "))
+    rawTypeDefs.map(t => (t.name, t)).toMap
+  }
   private def isSimpleType(f: FieldDef[Type]) =
     f.type_ == null || !f.type_.isComplexType
   private def isComplexType(f: FieldDef[Type]) =

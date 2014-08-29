@@ -97,7 +97,14 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     checkTableDefs(rawTableDefs)
 
     def resolvedName(n: String) = n.replace('.', '_')
-    val nameToTableDef = rawTableDefs.map(t => (t.name, t)).toMap
+    val nameToTableDef = {
+      val duplicateNames =
+        rawTableDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
+      if (duplicateNames.size > 0)
+        throw new RuntimeException(
+          "Duplicate table definitions: " + duplicateNames.mkString(", "))
+      rawTableDefs.map(t => (t.name, t)).toMap
+    }
     def refToCol(ref: String) =
       (ref.split("\\.", 2).toList match {
         case t :: c :: Nil => Some((t, c)) case x => None
