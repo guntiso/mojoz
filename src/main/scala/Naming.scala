@@ -1,6 +1,6 @@
 package mojoz.metadata
 
-object DbConventions {
+object Naming {
   def dbNameToXsdName(dbName: String) = {
     val parts = dbName.split("[_\\.]+")
     parts.toList.map(_.toLowerCase match {

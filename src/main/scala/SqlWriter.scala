@@ -191,7 +191,7 @@ private[out] class H2SqlWriter(
   override def colCheck(c: ColumnDef[Type]): String = ""
   override def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] = t.cols.map { c =>
     val xt = c.type_
-    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
@@ -206,7 +206,7 @@ private[out] class OracleSqlWriter(
   extends StandardSqlWriter(constraintNamingRules) {
   override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "long" =>
         "numeric(" + (xt.totalDigits getOrElse 18) + ")"
@@ -227,7 +227,7 @@ private[out] class OracleSqlWriter(
     case _ => super.dbDefault(c)
   }
   override def colCheck(c: ColumnDef[Type]) = {
-    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    def dbColumnName = Naming.xsdNameToDbName(c.name)
     c.type_.name match {
       case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
@@ -253,7 +253,7 @@ private[out] class StandardSqlWriter(
     constraintNamingRules.fkName(tableName, ref)
   override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "integer" =>
         "numeric" + xt.totalDigits.map(l => s"($l)").getOrElse("")
@@ -284,7 +284,7 @@ private[out] class StandardSqlWriter(
   }
   override def colCheck(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = DbConventions.xsdNameToDbName(c.name)
+    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")

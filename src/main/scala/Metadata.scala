@@ -137,7 +137,7 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
     val typeDef = viewDef
     val f = fieldDef
-    val colName = DbConventions.xsdNameToDbName(f.name)
+    val colName = Naming.xsdNameToDbName(f.name)
     try colNameToCol((f.table, colName)) catch {
       case ex: Exception =>
         // TODO print filename, lineNr, colNr, too!

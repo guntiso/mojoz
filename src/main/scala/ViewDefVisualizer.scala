@@ -1,6 +1,6 @@
 package mojoz.metadata.out
 
-import mojoz.metadata.DbConventions.{ dbNameToXsdName => xsdName }
+import mojoz.metadata.Naming.{ dbNameToXsdName => xsdName }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
