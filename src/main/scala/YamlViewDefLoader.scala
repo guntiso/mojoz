@@ -33,6 +33,7 @@ object ViewDef {
     val detailsOf: String
     val comments: String
     val fields: Seq[F]
+    val saveTo: Seq[String]
   }
 }
 case class ViewDef[+F](
@@ -49,6 +50,7 @@ case class ViewDef[+F](
   detailsOf: String,
   comments: String,
   fields: Seq[F],
+  saveTo: Seq[String],
   extras: Map[String, Any]) extends ViewDefBase[F]
 
 object FieldDef {
@@ -184,6 +186,7 @@ class YamlViewDefLoader(
     val detailsOf = get(k.detailsOf)
     val comment = get(k.comment)
     val fieldsSrc = getSeq(k.fields).toList
+    val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
     val extendsOrModifies =
       Option(xtnds).orElse(Option(detailsOf)).getOrElse(draftOf)
@@ -240,7 +243,7 @@ class YamlViewDefLoader(
       m != null && m.containsKey("fields")
     val fieldDefs = yamlFieldDefs map toXsdFieldDef
     ViewDef(name, table, null, joins, filter, group, having, order,
-      xtnds, draftOf, detailsOf, comment, fieldDefs, extras) ::
+      xtnds, draftOf, detailsOf, comment, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
       .zip(fieldDefs)
@@ -554,6 +557,7 @@ object YamlViewDefLoader {
     val extends_ = Value("extends")
     val draftOf = Value("draft-of")
     val detailsOf = Value("details-of")
+    val saveTo = Value("save-to")
     val comment, fields = Value
   }
   private val ViewDefKeyStrings = ViewDefKeys.values.map(_.toString)
