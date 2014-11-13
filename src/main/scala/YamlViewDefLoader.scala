@@ -389,6 +389,12 @@ class YamlViewDefLoader(
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias, expression = expression)
         }
+      def overwriteSimpleType(base: Type, overwrite: Type) = Type(
+        Option(overwrite.name) getOrElse base.name,
+        overwrite.length orElse base.length,
+        overwrite.totalDigits orElse base.totalDigits,
+        overwrite.fractionDigits orElse base.fractionDigits,
+        false)
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
@@ -405,7 +411,10 @@ class YamlViewDefLoader(
                 case Right(b) => b || col.nullable
                 case Left(s) => true // FIXME Left(nullableTableDependency)!
               }
-          f.copy(nullable = nullable, type_ = col.type_,
+          f.copy(nullable = nullable,
+            type_ =
+              if (f.type_ != null && f.alias == null) overwriteSimpleType(col.type_, f.type_)
+              else col.type_,
             enum = Option(f.enum) getOrElse col.enum,
             comments = Option(f.comments) getOrElse col.comments)
         }

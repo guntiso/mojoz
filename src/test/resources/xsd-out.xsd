@@ -266,6 +266,18 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="TypeOverrideTestType">
+    <xs:annotation>
+      <xs:documentation>Klienta norēķina konts</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="LastModified" type="xs:date">
+        <xs:annotation>
+          <xs:documentation>Last modified</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithAnonymousInlineViewType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">

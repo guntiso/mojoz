@@ -11,6 +11,11 @@ fields:
 - bank.code
 - bank.name
 
+name:    type_override_test
+table:   account
+fields:
+- last_modified            date          : Last modified
+
 name: bank_list_row
 table: bank
 fields:

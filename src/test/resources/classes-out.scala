@@ -51,6 +51,9 @@ class Person extends Dto {
   var fatherFatherName: String = null
   var fatherFatherFatherSurname: String = null
 }
+class TypeOverrideTest extends Dto {
+  var lastModified: java.sql.Date = null
+}
 class WithAnonymousInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null

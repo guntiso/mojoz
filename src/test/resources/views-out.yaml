@@ -68,6 +68,11 @@ fields:
 - father.father.name
 - father.father.father.surname
 
+name:    type_override_test
+table:   account
+fields:
+- last_modified            date          : Last modified
+
 name:    with_anonymous_inline_view
 table:
 fields:

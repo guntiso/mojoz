@@ -32,6 +32,9 @@
     <jaxb:bindings node="//xs:complexType[@name='PersonType']">
       <jaxb:class name="Person"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTestType']">
+      <jaxb:class name="TypeOverrideTest"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewType']">
       <jaxb:class name="WithAnonymousInlineView"/>
     </jaxb:bindings>
