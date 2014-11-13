@@ -34,11 +34,15 @@ class YamlViewDefWriter {
       .getOrElse("")
 
     val hasExpr = isExpression || expression != null
+    val hasAlias = alias != null && alias != name.replace('.', '_')
     val expr =
-      if (hasExpr) Option(expression).map(" = " + _) getOrElse " ="
+      if (hasExpr)
+        Option(expression).map(" = " + _) getOrElse " ="
+      else if (hasAlias)
+        Option(name).map(" = " + _) getOrElse " ="
       else ""
     val defString = List(
-      (name, 20),
+      (if (hasAlias) alias else name, 20),
       (type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
       (Some(isCollection).filter(x => x).map(_ => "*") getOrElse " ", 1),
       (typeString, 10),

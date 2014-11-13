@@ -271,6 +271,11 @@
       <xs:documentation>Klienta norēķina konts</xs:documentation>
     </xs:annotation>
     <xs:sequence>
+      <xs:element name="Bank" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Bankas ID, sasaiste ar Bankas.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name="LastModified" type="xs:date">
         <xs:annotation>
           <xs:documentation>Last modified</xs:documentation>
