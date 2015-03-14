@@ -40,14 +40,24 @@ trait ScalaClassWriter {
   def initialValueString(col: FieldDef[Type]) =
     if (col.isCollection) "Nil" else "null"
   private def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
-    s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+    try
+      s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+    catch {
+      case ex: Exception =>
+        throw new RuntimeException(s"Failed to process field: $fieldName")
+    }
   def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) =
     Option(typeDef.extends_).filter(_ != "").map(scalaClassName)
   def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
   def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) =
-    typeDef.fields.map(f => scalaFieldString(
-      scalaFieldName(Option(f.alias) getOrElse f.name), f))
+    try
+      typeDef.fields.map(f => scalaFieldString(
+        scalaFieldName(Option(f.alias) getOrElse f.name), f))
+    catch {
+      case ex: Exception =>
+        throw new RuntimeException(s"Failed to process view: ${typeDef.name}")
+    }
   def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
     val fieldsString = scalaFieldsStrings(typeDef)
       .map(scalaFieldsIndent + _ + nl).mkString
