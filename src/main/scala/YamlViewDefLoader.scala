@@ -241,7 +241,14 @@ class YamlViewDefLoader(
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.containsKey("fields")
-    val fieldDefs = yamlFieldDefs map toXsdFieldDef
+    val fieldDefs = yamlFieldDefs
+      .map(toXsdFieldDef)
+      .map { f =>
+        if (f.extras == null) f
+        else f.copy(
+          extras = Option(f.extras).map(_ -- ViewDefKeyStrings)
+            .filterNot(_.isEmpty).orNull)
+      }
     ViewDef(name, table, null, joins, filter, group, having, order,
       xtnds, draftOf, detailsOf, comment, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
