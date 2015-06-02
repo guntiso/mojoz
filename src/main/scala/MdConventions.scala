@@ -18,7 +18,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def isIdRefName(name: String) = name.toLowerCase.endsWith("_id")
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
-    isIdRefName(name)
+    isIdName(name) || isIdRefName(name)
   def fromExternal(table: TableDef[ColumnDef[IoColumnType]]): TableDef[ColumnDef[Type]] =
     table.copy(
       cols = table.cols map fromExternal,
