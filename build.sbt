@@ -24,7 +24,7 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.178" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it,test", // XXX POM fix - not in test scope
-  "org.tresql" %% "tresql" % "6.0-M16-SNAPSHOT" % "it,test",
+  "org.tresql" %% "tresql" % "6.0-M17-SNAPSHOT" % "it,test",
   "org.scalatest" %% "scalatest" % "2.1.5" % "it,test"
 )
 
