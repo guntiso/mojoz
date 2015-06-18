@@ -2,11 +2,11 @@ name := "mojoz"
 
 organization := "org.mojoz"
 
-scalaVersion := "2.11.2"
+scalaVersion := "2.11.6"
 
 crossScalaVersions := Seq(
-  "2.11.2",
-  "2.10.4"
+  "2.11.6",
+  "2.10.5"
 )
 
 scalacOptions ++= Seq("-deprecation", "-feature")
