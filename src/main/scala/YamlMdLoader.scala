@@ -46,8 +46,8 @@ private[in] object YamlTableDefLoader {
   val cols = s"$col($s\\,$s$col)*"
   val colsIdxDef = s"$s($s$cols)$s"
   val namedIdxDef = s"$s($idxName)?$s\\($s($cols)$s\\)$s"
-  val onDelete = "on delete (restrict|cascade|no action)".replace(" ", "\\s+")
-  val onUpdate = "on update (restrict|cascade|no action)".replace(" ", "\\s+")
+  val onDelete = "on delete (restrict|set null|cascade|no action)".replace(" ", "\\s+")
+  val onUpdate = "on update (restrict|set null|cascade|no action)".replace(" ", "\\s+")
 
   private def regex(pattern: String) = ("^" + pattern + "$").r
 
