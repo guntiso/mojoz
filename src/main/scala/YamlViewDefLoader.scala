@@ -97,7 +97,8 @@ class YamlViewDefLoader(
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil, 
     conventions: MdConventions = MdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) {
+    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
+    uninheritableExtras: Seq[String] = Seq()) {
   import YamlViewDefLoader._
 
   val parseJoins = joinsParser
@@ -327,7 +328,7 @@ class YamlViewDefLoader(
         groupBy = base.groupBy ++ t.groupBy,
         having = base.having ++ t.having,
         orderBy = base.orderBy ++ t.orderBy,
-        extras = base.extras ++ t.extras)
+        extras = base.extras -- uninheritableExtras ++ t.extras)
 
     def inheritSeqs(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
       if (t.extends_ == null) t
@@ -582,8 +583,9 @@ object YamlViewDefLoader {
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
     conventions: MdConventions = MdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v) =
+    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
+    uninheritableExtras: Seq[String] = Seq()) =
     new YamlViewDefLoader(
-      tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer)
+      tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer, uninheritableExtras)
 }
 }
