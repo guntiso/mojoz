@@ -2,14 +2,14 @@ create table account(
   id numeric(18),
   bank_id numeric(18) not null,
   billing_account varchar2(64 char) not null,
-  last_modified timestamp not null,
-  constraint pk_account primary key (id)
+  last_modified timestamp not null
 );
 comment on table account is 'Klienta norēķina konts';
 comment on column account.id is 'Ieraksta identifikators.';
 comment on column account.bank_id is 'Bankas ID, sasaiste ar Bankas.';
 comment on column account.billing_account is 'Norēķinu konts.';
 comment on column account.last_modified is 'Pēdējo izmaiņu datums un laiks.';
+alter table account add constraint pk_account primary key (id);
 
 create table account_currency(
   account_id numeric(18) not null,
@@ -25,8 +25,7 @@ create table bank(
   country_code varchar2(2 char),
   name varchar2(240 char) not null,
   name_eng varchar2(240 char),
-  name_rus varchar2(240 char),
-  constraint pk_bank primary key (id)
+  name_rus varchar2(240 char)
 );
 comment on column bank.id is 'Ieraksta identifikators.';
 comment on column bank.code is 'Bankas SWIFT kods.';
@@ -34,17 +33,17 @@ comment on column bank.country_code is 'Bankas valsts, izvēle no klasifikatora.
 comment on column bank.name is 'Bankas pilnais nosaukums.';
 comment on column bank.name_eng is 'Bankas pilnais nosaukums, angliski.';
 comment on column bank.name_rus is 'Bankas pilnais nosaukums, transliterēts krieviski.';
+alter table bank add constraint pk_bank primary key (id);
 
 create table country(
-  code varchar2(2 char) not null check (code in ('LV', 'TO', 'LT')),
+  code varchar2(2 char) check (code in ('LV', 'TO', 'LT')),
   code3 varchar2(3 char) not null,
   code_n3 varchar2(3 char) not null,
   name varchar2(64 char) not null,
   name_eng varchar2(64 char),
   name_rus varchar2(64 char),
   is_active char not null check (is_active in ('N','Y')),
-  is_eu char not null check (is_eu in ('N','Y')),
-  constraint pk_country primary key (code)
+  is_eu char not null check (is_eu in ('N','Y'))
 );
 comment on table country is 'Valstu klasifikators';
 comment on column country.code is 'ISO 3166-1 divu burtu valsts kods';
@@ -54,39 +53,40 @@ comment on column country.name is 'Valsts nosaukums.';
 comment on column country.name_eng is 'Valsts nosaukums angliski.';
 comment on column country.name_rus is 'Valsts nosaukums krieviski.';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
+alter table country add constraint pk_country primary key (code);
 
 create table currency(
-  code varchar2(3 char) not null check (code in ('USD', 'EUR')),
+  code varchar2(3 char) check (code in ('USD', 'EUR')),
   name varchar2(100 char) not null,
   name_eng varchar2(100 char) not null,
-  name_rus varchar2(100 char) not null,
-  constraint pk_currency primary key (code)
+  name_rus varchar2(100 char) not null
 );
 comment on table currency is 'Sistēmā uzturēto valūtu klasifikators.';
 comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmējums (burti).';
 comment on column currency.name is 'Valūtas nosaukums.';
 comment on column currency.name_eng is 'Valūtas nosaukums angliski.';
 comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
+alter table currency add constraint pk_currency primary key (code);
 
 create table person(
   id numeric(18),
   name varchar2(51 char) not null,
   surname varchar2(52 char),
   mother_id numeric(18),
-  father_id numeric(18),
-  constraint pk_person primary key (id)
+  father_id numeric(18)
 );
+alter table person add constraint pk_person primary key (id);
 
 create table test_table1(
   id numeric(18),
-  code varchar2(1 char) not null,
+  code varchar2(1 char),
   col1 varchar2(1 char),
   col2 varchar2(1 char),
   col3 varchar2(1 char),
   col4 varchar2(1 char),
-  col5 varchar2(1 char),
-  constraint pk_tt1_spec_id_code primary key (id, code)
+  col5 varchar2(1 char)
 );
+alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
 alter table test_table1 add constraint uk_test_table1_code unique(code);
 alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
 create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
@@ -100,11 +100,11 @@ create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
 create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
 
 create table test_table2(
-  id numeric(18),
+  id numeric(18) not null,
   code varchar2(1 char),
-  name varchar2(1 char) not null,
-  constraint pk_test_table2 primary key (name)
+  name varchar2(1 char)
 );
+alter table test_table2 add constraint pk_test_table2 primary key (name);
 
 create table test_table3(
   int_col numeric(9),

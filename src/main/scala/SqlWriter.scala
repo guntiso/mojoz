@@ -117,14 +117,16 @@ trait SqlWriter { this: ConstraintNamingRules =>
   def tableAndCommentsAndIndexes(t: TableDef[ColumnDef[Type]]): String =
     List[Iterable[String]](
       Some(table(t)), tableComment(t), columnComments(t),
-      uniqueIndexes(t), indexes(t))
+      primaryKey(t), uniqueIndexes(t), indexes(t))
       .flatten.mkString("\n")
   def table(t: TableDef[ColumnDef[Type]]) =
-    (t.cols.map(column) ++ tableChecks(t) ++ primaryKey(t))
+    // pk separated from table definition to fit large data imports etc.
+    (t.cols.map(column(t)) ++ tableChecks(t)) // ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
   def primaryKey(t: TableDef[_]) = t.pk map { pk =>
+    "alter table " + t.name + " add " +
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
-      " primary key (" + idxCols(pk.cols).mkString(", ") + ")"
+      " primary key (" + idxCols(pk.cols).mkString(", ") + ");"
   }
   def uniqueIndex(t: TableDef[_])(uk: DbIndex) =
     s"create unique index ${
@@ -144,12 +146,14 @@ trait SqlWriter { this: ConstraintNamingRules =>
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
   }
   def dbDefault(c: ColumnDef[Type]) = c.dbDefault
-  private def column(c: ColumnDef[Type]) = {
+  private def column(t: TableDef[_])(c: ColumnDef[Type]) = {
     c.name + " " + dbType(c) +
       (dbDefault(c) match { case null => "" case d => s" default $d" }) +
-      (if (c.nullable || c.name == "id") "" else " not null") + //XXX name != id
+      (if (explicitNotNullForColumn(t, c)) " not null" else "") +
       colCheck(c)
   }
+  private[out] def explicitNotNullForColumn(t: TableDef[_], c: ColumnDef[Type]) =
+    !c.nullable && !t.pk.exists(_.cols.contains(c.name))
   def tableComment(t: TableDef[_]) = Option(t.comments).filter(_ != "").map(c =>
     s"comment on table ${t.name} is '$c';")
   def columnComments(t: TableDef[ColumnDef[_]]) =
@@ -189,6 +193,8 @@ private[out] class H2SqlWriter(
   override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
   // how to retrieve column check constraint for h2? add to table instead 
   override def colCheck(c: ColumnDef[Type]): String = ""
+  override def explicitNotNullForColumn(t: TableDef[_], c: ColumnDef[Type]) =
+    !c.nullable
   override def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] = t.cols.map { c =>
     val xt = c.type_
     def dbColumnName = Naming.xsdNameToDbName(c.name)

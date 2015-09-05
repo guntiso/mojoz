@@ -2,14 +2,14 @@ create table account(
   id bigint,
   bank_id bigint not null,
   billing_account varchar(64) not null,
-  last_modified timestamp not null,
-  constraint pk_account primary key (id)
+  last_modified timestamp not null
 );
 comment on table account is 'Klienta norēķina konts';
 comment on column account.id is 'Ieraksta identifikators.';
 comment on column account.bank_id is 'Bankas ID, sasaiste ar Bankas.';
 comment on column account.billing_account is 'Norēķinu konts.';
 comment on column account.last_modified is 'Pēdējo izmaiņu datums un laiks.';
+alter table account add constraint pk_account primary key (id);
 
 create table account_currency(
   account_id bigint not null,
@@ -25,8 +25,7 @@ create table bank(
   country_code varchar(2),
   name varchar(240) not null,
   name_eng varchar(240),
-  name_rus varchar(240),
-  constraint pk_bank primary key (id)
+  name_rus varchar(240)
 );
 comment on column bank.id is 'Ieraksta identifikators.';
 comment on column bank.code is 'Bankas SWIFT kods.';
@@ -34,17 +33,17 @@ comment on column bank.country_code is 'Bankas valsts, izvēle no klasifikatora.
 comment on column bank.name is 'Bankas pilnais nosaukums.';
 comment on column bank.name_eng is 'Bankas pilnais nosaukums, angliski.';
 comment on column bank.name_rus is 'Bankas pilnais nosaukums, transliterēts krieviski.';
+alter table bank add constraint pk_bank primary key (id);
 
 create table country(
-  code varchar(2) not null check (code in ('LV', 'TO', 'LT')),
+  code varchar(2) check (code in ('LV', 'TO', 'LT')),
   code3 varchar(3) not null,
   code_n3 varchar(3) not null,
   name varchar(64) not null,
   name_eng varchar(64),
   name_rus varchar(64),
   is_active boolean not null,
-  is_eu boolean not null,
-  constraint pk_country primary key (code)
+  is_eu boolean not null
 );
 comment on table country is 'Valstu klasifikators';
 comment on column country.code is 'ISO 3166-1 divu burtu valsts kods';
@@ -54,39 +53,40 @@ comment on column country.name is 'Valsts nosaukums.';
 comment on column country.name_eng is 'Valsts nosaukums angliski.';
 comment on column country.name_rus is 'Valsts nosaukums krieviski.';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
+alter table country add constraint pk_country primary key (code);
 
 create table currency(
-  code varchar(3) not null check (code in ('USD', 'EUR')),
+  code varchar(3) check (code in ('USD', 'EUR')),
   name varchar(100) not null,
   name_eng varchar(100) not null,
-  name_rus varchar(100) not null,
-  constraint pk_currency primary key (code)
+  name_rus varchar(100) not null
 );
 comment on table currency is 'Sistēmā uzturēto valūtu klasifikators.';
 comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmējums (burti).';
 comment on column currency.name is 'Valūtas nosaukums.';
 comment on column currency.name_eng is 'Valūtas nosaukums angliski.';
 comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
+alter table currency add constraint pk_currency primary key (code);
 
 create table person(
   id bigint,
   name varchar(51) not null,
   surname varchar(52),
   mother_id bigint,
-  father_id bigint,
-  constraint pk_person primary key (id)
+  father_id bigint
 );
+alter table person add constraint pk_person primary key (id);
 
 create table test_table1(
   id bigint,
-  code varchar(1) not null,
+  code varchar(1),
   col1 varchar(1),
   col2 varchar(1),
   col3 varchar(1),
   col4 varchar(1),
-  col5 varchar(1),
-  constraint pk_tt1_spec_id_code primary key (id, code)
+  col5 varchar(1)
 );
+alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
 alter table test_table1 add constraint uk_test_table1_code unique(code);
 alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
 create unique index uk_test_table1_code_col2 on test_table1(code, col2);
@@ -100,11 +100,11 @@ create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
 create index idx_tt1_spec_col3_col5d on test_table1(col3, col5);
 
 create table test_table2(
-  id bigint,
+  id bigint not null,
   code varchar(1),
-  name varchar(1) not null,
-  constraint pk_test_table2 primary key (name)
+  name varchar(1)
 );
+alter table test_table2 add constraint pk_test_table2 primary key (name);
 
 create table test_table3(
   int_col integer,

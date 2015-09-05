@@ -93,8 +93,13 @@ class TableDefTests extends FlatSpec with Matchers {
     }.map(t => t.copy( // hsqldb-specific synthetic index cleanup
       uk = t.uk.map { uk =>
         if (!(uk.name startsWith "SYS_IDX_")) uk
-        else uk.copy(name =
-          uk.name.substring("SYS_IDX_".length, uk.name.lastIndexOf("_")))
+        else {
+          val idx = uk.name.lastIndexOf('_')
+          val newName =
+            if (idx < "SYS_IDX_".length) null
+            else uk.name.substring("SYS_IDX_".length, idx)
+          uk.copy(name = newName)
+        }
       },
       idx = t.idx.filter(i => idxNames.contains(i.name))))
 
