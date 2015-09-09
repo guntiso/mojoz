@@ -172,7 +172,7 @@ class YamlViewDefLoader(
       case None => Nil
       case Some(null) if nullToString => Seq("")
       case Some(null) => Nil
-      case x => Seq(x)
+      case Some(x) => Seq(x)
     }
     val k = ViewDefKeys
     val rawName = get(k.name)
