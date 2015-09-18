@@ -59,6 +59,7 @@ object FieldDef {
     val tableAlias: String
     val name: String
     val alias: String
+    val options: String // persistence options
     val isCollection: Boolean
     val maxOccurs: String
     val isExpression: Boolean
@@ -76,6 +77,7 @@ case class FieldDef[+T](
   tableAlias: String,
   name: String,
   alias: String,
+  options: String, // persistence options
   isCollection: Boolean,
   maxOccurs: String,
   isExpression: Boolean,
@@ -208,6 +210,7 @@ class YamlViewDefLoader(
       val tableAlias = null
       val name = yfd.name
       val alias = null
+      val options = yfd.options
       val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
       val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
@@ -236,7 +239,7 @@ class YamlViewDefLoader(
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
-      FieldDef(table, tableAlias, name, alias, isCollection, maxOccurs,
+      FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
         isExpression, expression, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }

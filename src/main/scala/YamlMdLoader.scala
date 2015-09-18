@@ -24,6 +24,7 @@ private[in] case class YamlTableDef(
 
 private[in] case class YamlFieldDef(
   name: String,
+  options: String, // persistence options
   cardinality: String,
   maxOccurs: Option[Int],
   typeName: String,
@@ -294,6 +295,7 @@ private[in] object YamlMdLoader {
 
     val name = qualifiedIdent
     val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
+    val options = "\\[[\\+\\-\\=]+\\]"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
     val enum = "\\(.*?\\)"
@@ -302,7 +304,7 @@ private[in] object YamlMdLoader {
     val frac = int
     val expr = ".*"
     val pattern =
-        (s"($name)( $quant)?( $join)?( $typ)?" + 
+        (s"($name)( $options)?( $quant)?( $join)?( $typ)?" + 
           s"( $len)?( $frac)?" +
           s"( $order)?( $enum)?( =($expr)?)?").replace(" ", s)
 
@@ -313,7 +315,7 @@ private[in] object YamlMdLoader {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String,
         child: Map[String, Any]) = nameEtc match {
-      case FieldDef(name, _, quant, _, _, _, maxOcc, joinToParent, typ, _,
+      case FieldDef(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
         len, frac, order, _, enum, isExpr, expr) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
@@ -322,7 +324,7 @@ private[in] object YamlMdLoader {
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
-        YamlFieldDef(name, cardinality, i(maxOcc), t(typ), i(len), i(frac),
+        YamlFieldDef(name, t(options), cardinality, i(maxOcc), t(typ), i(len), i(frac),
           isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment,
           child)
       case _ => throw new RuntimeException(ThisFail +
