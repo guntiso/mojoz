@@ -71,7 +71,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
-  private def checkTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
+  private def checkRawTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
     val m: Map[String, _] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
@@ -88,6 +88,30 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     td foreach checkHasColumns
     td foreach checkRepeatingColumnNames
   }
+  private def checkTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
+    def checkIndices(t: TableDef[ColumnDef[_]]) {
+      val colNames = t.cols.map(_.name).toSet
+      def checkIdx(indexType: String, idx: DbIndex) = {
+        if (idx.cols == null || idx.cols.size == 0) sys.error(
+          "Table " + t.name + " defines " + indexType + " with no columns " + idx)
+        idx.cols foreach { c =>
+          if (c == null || c == "") sys.error(
+            "Table " + t.name + " defines " + indexType + " with columns without names - " + idx)
+          val colName =
+            if (c contains "(") null // skip checks for functions TODO parse and check
+            else if (c.endsWith(" asc") || c.endsWith(" desc"))
+              c.substring(0, c.lastIndexOf(" ")).trim
+            else c
+          if (colName != null && !colNames.contains(colName)) sys.error(
+            "Table " + t.name + " defines " + indexType + " referencing unknown column name '" + colName + "' - " + idx)
+        }
+      }
+      t.pk foreach { pk => checkIdx("primary key", pk) }
+      t.uk foreach { uk => checkIdx("unique key", uk) }
+      t.idx foreach { idx => checkIdx("index", idx) }
+    }
+    td foreach checkIndices
+  }
   val tableDefs = {
     val rawTableDefs = sources map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
@@ -95,7 +119,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
           "Failed to load typedef from " + md.filename, e) // TODO line number
       }
     }
-    checkTableDefs(rawTableDefs)
+    checkRawTableDefs(rawTableDefs)
 
     def resolvedName(n: String) = n.replace('.', '_')
     val nameToTableDef = {
@@ -171,6 +195,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
         cols = resolvedColsAndRefs.map(_._1),
         refs = mergeRefs(resolvedColsAndRefs.flatMap(_._2), r.refs))
     }
+    checkTableDefs(tableDefs)
     tableDefs
   }
   private def loadYamlIndexDef(src: Any) = {
