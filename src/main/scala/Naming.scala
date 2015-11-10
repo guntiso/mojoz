@@ -22,6 +22,7 @@ object Naming {
     }).mkString("_").replace("__", "_")
       .replace("_1", "1") // no underscore before 1 in our database names
       .replace("_2", "2") // no underscore before 2 in our database names
+      .replace("_3", "3") // no underscore before 3 in our database names
     (hadPrefix, hadSuffix) match {
       case (true, true) => "_" + clean + "_"
       case (true, false) => "_" + clean
