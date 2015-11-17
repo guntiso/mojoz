@@ -160,11 +160,11 @@ trait SqlWriter { this: ConstraintNamingRules =>
     t.cols.filter(_.comments != null).filter(_.comments != "").map(c =>
       s"comment on column ${t.name}.${c.name} is '${c.comments}';")
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
-    t.refs map foreignKey(t)
+    t.refs map foreignKey(t.name)
   }.flatten
-  def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
-    s"alter table ${t.name} add constraint ${
-      Option(r.name) getOrElse fkName(t.name, r)
+  def foreignKey(tableName: String)(r: TableDef.Ref) =
+    s"alter table $tableName add constraint ${
+      Option(r.name) getOrElse fkName(tableName, r)
     } foreign key (${
       r.cols mkString ", "
     }) references ${r.refTable}(${r.refCols mkString ", "})" +
@@ -241,9 +241,9 @@ private[out] class OracleSqlWriter(
       case _ => super.colCheck(c)
     }
   }
-  override def foreignKey(t: TableDef[_])(r: TableDef.Ref) =
+  override def foreignKey(tableName: String)(r: TableDef.Ref) =
     // oracle does not have on update rule
-    super.foreignKey(t)(
+    super.foreignKey(tableName)(
       if (r.onUpdateAction != null) r.copy(onUpdateAction = null) else r)
 }
 
