@@ -134,7 +134,8 @@ create table test_table4(
 );
 
 create table test_table5(
-  bank_id bigint
+  bank_id bigint,
+  enum varchar(5) check (enum in ('list1', 'list2'))
 );
 
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);

@@ -431,7 +431,7 @@ private[in] object CkParser {
   val CheckNotNull = regex(checkNotNull)
   private def toColEnum(col: String, values: String) =
     (col.replace(""""""", ""),
-      values.split("""[\\s\\(',\\)]+""").toList.filter(_.trim != ""))
+      values.split("[\\s\\(',\\)]+").toList.filter(_.trim != ""))
   def colAndEnum(ck: String) = ck match {
     case CheckIn(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
     case CheckIn2(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
