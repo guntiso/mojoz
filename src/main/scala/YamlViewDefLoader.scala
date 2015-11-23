@@ -410,6 +410,7 @@ class YamlViewDefLoader(
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.fromExternal(f.name, Option(f.type_), None)._1)
+        else if (f.table == null) f
         else if (t.table == null) f
         else {
           val col = tableMetadata.columnDef(t, f)
