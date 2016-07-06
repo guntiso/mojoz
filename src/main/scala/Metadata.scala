@@ -112,7 +112,8 @@ case class ColumnDef[+T](
 }
 
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
-  val tableDefs: Seq[T]) {
+  val tableDefs: Seq[T],
+  val dbName: String => String = Naming.dbName) {
   private val md = tableDefs.map(e => (e.name, e)).toMap
   private val refTableAliasToRef = tableDefs.map(t => t.refs
     .filter(_.defaultRefTableAlias != null)
@@ -137,7 +138,7 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
     val typeDef = viewDef
     val f = fieldDef
-    val colName = Naming.xsdNameToDbName(f.name)
+    val colName = dbName(f.name)
     try colNameToCol((f.table, colName)) catch {
       case ex: Exception =>
         // TODO print filename, lineNr, colNr, too!

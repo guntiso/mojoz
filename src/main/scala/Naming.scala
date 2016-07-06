@@ -10,7 +10,7 @@ object Naming {
       case x => x
     }).map(_.capitalize).mkString
   }
-  def xsdNameToDbName(xsdName: String) = {
+  def dbName(xsdName: String) = {
     val parts = dasherize(xsdName).split("[\\-\\_]")
     val hadPrefix = xsdName.startsWith("_")
     val hadSuffix = xsdName.endsWith("_")

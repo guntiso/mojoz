@@ -14,7 +14,6 @@ import org.yaml.snakeyaml.Yaml
 
 import mojoz.metadata.in._
 import mojoz.metadata.io._
-import mojoz.metadata.Naming.{ xsdNameToDbName => dbName }
 import ViewDef._
 import FieldDef._
 
@@ -102,6 +101,7 @@ class YamlViewDefLoader(
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) {
   import YamlViewDefLoader._
+  import tableMetadata.dbName
 
   val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
