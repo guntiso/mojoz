@@ -197,11 +197,10 @@ private[out] class H2SqlWriter(
     !c.nullable
   override def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] = t.cols.map { c =>
     val xt = c.type_
-    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
-          .mkString("check " + dbColumnName + " in (", ", ", ")")
+          .mkString("check " + c.name + " in (", ", ", ")")
       case _ => ""
     }
   }.filter(_ != "") ++ super.tableChecks(t)
@@ -212,7 +211,6 @@ private[out] class OracleSqlWriter(
   extends StandardSqlWriter(constraintNamingRules) {
   override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "long" =>
         "numeric(" + (xt.totalDigits getOrElse 18) + ")"
@@ -233,9 +231,8 @@ private[out] class OracleSqlWriter(
     case _ => super.dbDefault(c)
   }
   override def colCheck(c: ColumnDef[Type]) = {
-    def dbColumnName = Naming.xsdNameToDbName(c.name)
     c.type_.name match {
-      case "boolean" => " check (" + dbColumnName + " in ('N','Y'))"
+      case "boolean" => " check (" + c.name + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
       // like: ORA-02290: check constraint (KPS.SYS_C0090768) violated
       case _ => super.colCheck(c)
@@ -259,7 +256,6 @@ private[out] class StandardSqlWriter(
     constraintNamingRules.fkName(tableName, ref)
   override def dbType(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "integer" =>
         "numeric" + xt.totalDigits.map(l => s"($l)").getOrElse("")
@@ -290,11 +286,10 @@ private[out] class StandardSqlWriter(
   }
   override def colCheck(c: ColumnDef[Type]) = {
     val xt = c.type_
-    def dbColumnName = Naming.xsdNameToDbName(c.name)
     xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
-          .mkString(" check (" + dbColumnName + " in (", ", ", "))")
+          .mkString(" check (" + c.name + " in (", ", ", "))")
       case _ => ""
     }
   }
