@@ -25,6 +25,11 @@ private[in] trait MdSource {
   def defs = split(defSets)
 }
 
+private[in] class FileMdSource(file: File) extends MdSource {
+  override def defSets =
+    Seq(YamlMd(file.getName, 0,  Source.fromFile(file).mkString))
+}
+
 private[in] class FilesMdSource(
   val path: String,
   val filter: (File) => Boolean) extends MdSource {
@@ -59,6 +64,8 @@ object YamlMd {
   private[in] def isTableDef(d: YamlMd) =
     tableDefPattern.findFirstIn(d.body).isDefined
   private[in] def isViewDef(d: YamlMd) = !isTableDef(d)
+  def fromFile(file: File) =
+    new FileMdSource(file).defs
   def fromFiles(
     path: String,
     filter: (File) => Boolean = _.getName endsWith ".yaml") =
