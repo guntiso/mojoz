@@ -7,8 +7,10 @@ scala:
 jdk:
   - oraclejdk7
   - openjdk7
+sudo: required # for setting hostname
 addons:
   postgresql: 9.3
+  hostname: localhost #https://github.com/travis-ci/travis-ci/issues/5227
 before_script:
   - psql -f src/it/mojoz-postgresql-setup.sql -U postgres
   - cp src/it/resources/application.conf.travis src/it/resources/application.conf
