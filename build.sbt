@@ -28,6 +28,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.1.5" % "it,test"
 )
 
+autoAPIMappings := true
+
 scalacOptions in (Compile, doc) <++= (baseDirectory in
  LocalProject("mojoz")).map {
    bd => Seq("-sourcepath", bd.getAbsolutePath,
