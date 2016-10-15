@@ -148,9 +148,11 @@ class YamlViewDefLoader(
     .map(extendedViewDefTransformer)
     .map(t => (t.name, t)).toMap
   def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
-    val tdMap = mapAsScalaMap(
-      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
-    loadRawTypeDefs(tdMap)
+    Option((new Yaml).load(typeDef))
+      .map(v => mapAsScalaMap(v.asInstanceOf[java.util.Map[String, _]]))
+      .map(_.toMap)
+      .map(loadRawTypeDefs)
+      .getOrElse(Nil)
   }
   def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name, true) match {
