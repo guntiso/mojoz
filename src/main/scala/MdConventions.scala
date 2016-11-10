@@ -244,24 +244,54 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   }
 }
 
-object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules)
+object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules) {
 
-class SimplePatternMdConventions(
-  booleanNamePatterns: Seq[String],
-  dateNamePatterns: Seq[String],
-  dateTimeNamePatterns: Seq[String]) extends MdConventions {
-
-  /** Supported patterns: "name", "prefix*", "*suffix" */
-  def matches(name: String)(pattern: String): Boolean = {
-    if (pattern startsWith "*") name endsWith pattern.substring(1)
-    else if (pattern endsWith "*") name startsWith pattern.substring(0, pattern.length - 1)
-    else name == pattern
+  /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
+  def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String]): Seq[String] = {
+    Option(getClass.getResourceAsStream(resourceName)).map(scala.io.Source.fromInputStream)
+      .map {s => val patterns = s.mkString.trim.split("[,\\s]+").toSeq.map(_.trim); s.close; patterns }
+      .getOrElse(defaultPatterns)
   }
 
-  override def isBooleanName(name: String) =
-    booleanNamePatterns exists matches(name)
-  override def isDateName(name: String) =
-    dateNamePatterns exists matches(name)
-  override def isDateTimeName(name: String) =
-    dateTimeNamePatterns exists matches(name)
+  sealed trait Pattern
+  case class Equals(pattern: String) extends Pattern
+  case class Starts(pattern: String) extends Pattern
+  case class Ends(pattern: String) extends Pattern
+
+  class SimplePatternMdConventions(
+        booleanNamePatternStrings: Seq[String] =
+          namePatternsFromResource("/md-conventions/boolean-name-patterns.txt",
+            Seq("is_*", "has_*")),
+        dateNamePatternStrings: Seq[String] =
+          namePatternsFromResource("/md-conventions/date-name-patterns.txt",
+            Seq("*_date", "*_date_from", "*_date_to")),
+        dateTimeNamePatternStrings: Seq[String] =
+          namePatternsFromResource("/md-conventions/datetime-name-patterns.txt",
+            Seq("*_time", "*_time_from", "*_time_to"))
+    ) extends MdConventions {
+
+    val booleanNamePatterns = booleanNamePatternStrings.map(pattern).toSeq
+    val dateNamePatterns = dateNamePatternStrings.map(pattern).toSeq
+    val dateTimeNamePatterns = dateTimeNamePatternStrings.map(pattern).toSeq
+
+    /** Supported patterns: "name", "prefix*", "*suffix" */
+    def pattern(patternString: String): Pattern = {
+      if (patternString startsWith "*") Ends(patternString.substring(1))
+      else if (patternString endsWith "*") Starts(patternString.substring(0, patternString.length - 1))
+      else Equals(patternString)
+    }
+
+    def matches(name: String)(pattern: Pattern): Boolean = pattern match {
+      case Equals(s) => name == s
+      case Starts(s) => name startsWith s
+      case Ends(s) => name endsWith s
+    }
+
+    override def isBooleanName(name: String) =
+      booleanNamePatterns exists matches(name)
+    override def isDateName(name: String) =
+      dateNamePatterns exists matches(name)
+    override def isDateTimeName(name: String) =
+      dateTimeNamePatterns exists matches(name)
+  }
 }
