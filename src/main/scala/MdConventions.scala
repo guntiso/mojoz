@@ -264,10 +264,10 @@ object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingR
             Seq("is_*", "has_*")),
         dateNamePatternStrings: Seq[String] =
           namePatternsFromResource("/md-conventions/date-name-patterns.txt",
-            Seq("*_date", "*_date_from", "*_date_to")),
+            Seq("date_*", "*_date", "*_date_from", "*_date_to")),
         dateTimeNamePatternStrings: Seq[String] =
           namePatternsFromResource("/md-conventions/datetime-name-patterns.txt",
-            Seq("*_time", "*_time_from", "*_time_to"))
+            Seq("time_*", "*_time", "*_time_from", "*_time_to"))
     ) extends MdConventions {
 
     val booleanNamePatterns = booleanNamePatternStrings.map(pattern).toSeq
