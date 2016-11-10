@@ -245,3 +245,23 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
 }
 
 object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules)
+
+class SimplePatternMdConventions(
+  booleanNamePatterns: Seq[String],
+  dateNamePatterns: Seq[String],
+  dateTimeNamePatterns: Seq[String]) extends MdConventions {
+
+  /** Supported patterns: "name", "prefix*", "*suffix" */
+  def matches(name: String)(pattern: String): Boolean = {
+    if (pattern startsWith "*") name endsWith pattern.substring(1)
+    else if (pattern endsWith "*") name startsWith pattern.substring(0, pattern.length - 1)
+    else name == pattern
+  }
+
+  override def isBooleanName(name: String) =
+    booleanNamePatterns exists matches(name)
+  override def isDateName(name: String) =
+    dateNamePatterns exists matches(name)
+  override def isDateTimeName(name: String) =
+    dateTimeNamePatterns exists matches(name)
+}
