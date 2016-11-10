@@ -5,3 +5,7 @@ package object in {
   /** basetable and joins to parsed joins */
   type JoinsParser = (String, Seq[String]) => Seq[Join]
 }
+
+package object io {
+  type SimplePatternMdConventions = MdConventions.SimplePatternMdConventions
+}
