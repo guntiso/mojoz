@@ -246,28 +246,46 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
 
 object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules) {
 
+  private def splitNamePatternString(patternString: String): Seq[String] =
+    patternString.trim.split("[,\\s]+").toSeq.map(_.trim)
+
   /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
   def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String]): Seq[String] = {
     Option(getClass.getResourceAsStream(resourceName)).map(scala.io.Source.fromInputStream)
-      .map {s => val patterns = s.mkString.trim.split("[,\\s]+").toSeq.map(_.trim); s.close; patterns }
+      .map {s => val patterns = splitNamePatternString(s.mkString); s.close; patterns }
       .getOrElse(defaultPatterns)
   }
+  def namePatternsFromFile(resourceFileOpt: Option[java.io.File], defaultPatterns: Seq[String]): Seq[String] = {
+    resourceFileOpt.map(scala.io.Source.fromFile)
+      .map {s => val patterns = splitNamePatternString(s.mkString); s.close; patterns }
+      .getOrElse(defaultPatterns)
+  }
+  def namePatternsFromResource(patternSource: PatternSource): Seq[String] =
+    namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns)
 
   sealed trait Pattern
   case class Equals(pattern: String) extends Pattern
   case class Starts(pattern: String) extends Pattern
   case class Ends(pattern: String) extends Pattern
 
+  case class PatternSource(filename: String, defaultPatterns: Seq[String])
+  val defaultBooleanNamePatternSource = PatternSource(
+    "/md-conventions/boolean-name-patterns.txt",
+    Seq("is_*", "has_*"))
+  val defaultDateNamePatternSource = PatternSource(
+    "/md-conventions/date-name-patterns.txt",
+    Seq("date_*", "*_date", "*_date_from", "*_date_to"))
+  val defaultDateTimeNamePatternSource = PatternSource(
+    "/md-conventions/datetime-name-patterns.txt",
+    Seq("time_*", "*_time", "*_time_from", "*_time_to"))
+
   class SimplePatternMdConventions(
-        booleanNamePatternStrings: Seq[String] =
-          namePatternsFromResource("/md-conventions/boolean-name-patterns.txt",
-            Seq("is_*", "has_*")),
-        dateNamePatternStrings: Seq[String] =
-          namePatternsFromResource("/md-conventions/date-name-patterns.txt",
-            Seq("date_*", "*_date", "*_date_from", "*_date_to")),
-        dateTimeNamePatternStrings: Seq[String] =
-          namePatternsFromResource("/md-conventions/datetime-name-patterns.txt",
-            Seq("time_*", "*_time", "*_time_from", "*_time_to"))
+      booleanNamePatternStrings: Seq[String] =
+        namePatternsFromResource(defaultBooleanNamePatternSource),
+      dateNamePatternStrings: Seq[String] =
+        namePatternsFromResource(defaultDateNamePatternSource),
+      dateTimeNamePatternStrings: Seq[String] =
+        namePatternsFromResource(defaultDateTimeNamePatternSource)
     ) extends MdConventions {
 
     val booleanNamePatterns = booleanNamePatternStrings.map(pattern).toSeq
