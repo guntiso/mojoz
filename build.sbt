@@ -1,23 +1,4 @@
-name := "mojoz"
-
-organization := "org.mojoz"
-
-scalaVersion := "2.11.8"
-
-crossScalaVersions := Seq(
-  "2.11.8",
-  "2.10.6"
-)
-
-scalacOptions ++= Seq("-deprecation", "-feature")
-
-retrieveManaged := true
-
-resolvers ++= Seq(
-  "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-)
-
-libraryDependencies ++= Seq(
+lazy val dependencies = Seq(
   "org.yaml" % "snakeyaml" % "1.13",
   // test
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
@@ -28,15 +9,35 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.1.5" % "it,test"
 )
 
+lazy val commonSettings = Seq(
+  name := "mojoz",
+  organization := "org.mojoz",
+  scalaVersion := "2.11.8",
+  crossScalaVersions := Seq(
+    "2.11.8",
+    "2.10.6"
+  ),
+  scalacOptions ++= Seq("-deprecation", "-feature"),
+  resolvers ++= Seq(
+    "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+  ),
+  libraryDependencies ++= dependencies
+)
+
+lazy val mojoz = (project in file("."))
+  .configs(IntegrationTest)
+  .settings(commonSettings: _*)
+  .settings(Defaults.itSettings: _*)
+
 autoAPIMappings := true
 
-scalacOptions in (Compile, doc) <++= (baseDirectory in
- LocalProject("mojoz")).map {
+scalacOptions in (Compile, doc) ++= (baseDirectory in LocalProject("mojoz")).map {
    bd => Seq("-sourcepath", bd.getAbsolutePath,
              "-doc-source-url", "https://github.com/guntiso/mojoz/blob/develop€{FILE_PATH}.scala")
- }
+}.value
 
-publishTo <<= version { v: String =>
+publishTo := {
+  val v: String = version.value
   val nexus = "https://oss.sonatype.org/"
   if (v.trim.endsWith("SNAPSHOT"))
     Some("snapshots" at nexus + "content/repositories/snapshots")
