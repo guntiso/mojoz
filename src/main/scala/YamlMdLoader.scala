@@ -3,8 +3,7 @@ package mojoz.metadata.in
 import java.io.File
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import scala.collection.JavaConverters._
 import scala.io.Source
 import mojoz.metadata._
 import mojoz.metadata.io._
@@ -243,30 +242,30 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
     }
   }
   private def loadYamlTableDef(typeDef: String) = {
-    val tdMap = mapAsScalaMap(
-      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]]).toMap
+    val tdMap =
+      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
     val table = tdMap.get("table").map(_.toString)
       .getOrElse(sys.error("Missing table name"))
     val comment = tdMap.get("comment").map(_.toString) getOrElse null
     val colSrc = tdMap.get("columns")
       .filter(_ != null)
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].toList)
+      .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
     val pk = tdMap.get("pk").map(loadYamlIndexDef)
     val uk = tdMap.get("uk")
       .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
       .map(loadYamlIndexDef)
     val idx = tdMap.get("idx")
       .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
       .map(loadYamlIndexDef)
     val refs = tdMap.get("refs")
       .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].toList)
+      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
       .map(loadYamlRefDef)
     val extras = tdMap -- TableDefKeyStrings
@@ -361,19 +360,19 @@ private[in] object YamlMdLoader {
       case x: java.util.Map[_, _] =>
         val m = x.asInstanceOf[java.util.Map[_, _]]
         if (m.size == 1) {
-          val entry = m.entrySet.toList(0)
+          val entry = m.entrySet.asScala.toList(0)
           val nameEtc = entry.getKey
           val (comment, child) = entry.getValue match {
             case s: String => (s, null)
             case m: java.util.Map[_, _] =>
-              (null, mapAsScalaMap(m.asInstanceOf[java.util.Map[String, _]]).toMap)
+              (null, m.asInstanceOf[java.util.Map[String, _]].asScala.toMap)
             case a: java.util.ArrayList[_] =>
-              val l = a.toList
+              val l = a.asScala.toList
               val comments =
-                a.filter(_.isInstanceOf[java.lang.String]).mkString("/n")
+                l.filter(_.isInstanceOf[java.lang.String]).mkString("/n")
               val child =
-                a.filter(_.isInstanceOf[java.util.Map[_, _]])
-                  .map(_.asInstanceOf[java.util.Map[String, Any]])
+                l.filter(_.isInstanceOf[java.util.Map[_, _]])
+                  .map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
                   .foldLeft(Map[String, Any]())(_ ++ _)
               // TODO handle (raise error for?) other cases
               (Option(comments) getOrElse child.get("comments").orNull, child)
@@ -384,7 +383,7 @@ private[in] object YamlMdLoader {
           colDef(nameEtc.toString, Option(comment).map(_.toString).orNull, child)
         } else throw new RuntimeException(ThisFail +
           // TODO do not throw, allow decomposed or with custom extras instead
-          " - more than one entry for column: " + m.toMap.toString())
+          " - more than one entry for column: " + m.asScala.toMap.toString())
       case x => throw new RuntimeException(ThisFail +
         " - unexpected field definition class: " + x.getClass
         + "\nentry: " + x.toString)

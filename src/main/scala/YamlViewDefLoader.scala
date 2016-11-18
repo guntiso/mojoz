@@ -5,8 +5,7 @@ import java.util.ArrayList
 
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
-import scala.collection.JavaConversions._
-import scala.collection.JavaConverters.enumerationAsScalaIteratorConverter
+import scala.collection.JavaConverters._
 import scala.collection.mutable.Queue
 import scala.io.Source
 
@@ -149,7 +148,7 @@ class YamlViewDefLoader(
     .map(t => (t.name, t)).toMap
   def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
     Option((new Yaml).load(typeDef))
-      .map(v => mapAsScalaMap(v.asInstanceOf[java.util.Map[String, _]]))
+      .map(v => v.asInstanceOf[java.util.Map[String, _]].asScala)
       .map(_.toMap)
       .map(loadRawTypeDefs)
       .getOrElse(Nil)
@@ -164,7 +163,7 @@ class YamlViewDefLoader(
       getSeq(name, nullToString) map {
         case s: java.lang.String => s
         case m: java.util.Map[_, _] =>
-          if (m.size == 1) m.entrySet.toList(0).getKey.toString
+          if (m.size == 1) m.entrySet.asScala.toList(0).getKey.toString
           else m.toString // TODO error?
         case x => x.toString
       }
@@ -172,7 +171,7 @@ class YamlViewDefLoader(
     def getSeq(name: ViewDefKeys.ViewDefKeys,
         nullToString: Boolean = false): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
-      case Some(a: java.util.ArrayList[_]) => a.toList
+      case Some(a: java.util.ArrayList[_]) => a.asScala.toList
       case None => Nil
       case Some(null) if nullToString => Seq("")
       case Some(null) => Nil
@@ -205,7 +204,7 @@ class YamlViewDefLoader(
       "extends, draft-of, details-of are not supported simultaneously, type: " + name)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
     def typeName(v: Map[String, Any], defaultSuffix: String) =
-      if (v.containsKey("name")) "" + v("name")
+      if (v.contains("name")) "" + v("name")
       else name + "_" + defaultSuffix
     def toXsdFieldDef(yfd: YamlFieldDef) = {
       val table = null
@@ -246,7 +245,7 @@ class YamlViewDefLoader(
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
-      m != null && m.containsKey("fields")
+      m != null && m.contains("fields")
     val fieldDefs = yamlFieldDefs
       .map(toXsdFieldDef)
       .map { f =>
@@ -557,6 +556,8 @@ class YamlViewDefLoader(
         case (null, null) => t
         case (draftOf, null) => resolveDraft(t, addMissing)
         case (null, detailsOf) => resolveDetails(t, addMissing)
+        case (_, _) => sys.error(
+          "extends, draft-of, details-of are not supported simultaneously, type: " + t.name)
       }
     }
 

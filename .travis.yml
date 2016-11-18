@@ -2,17 +2,26 @@ language: scala
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test it:test
 scala:
+  - 2.12.0
   - 2.11.8
   - 2.10.6
-jdk:
-  - oraclejdk8
-  - oraclejdk7
-  - openjdk7
+env:
+  - JDK=oraclejdk8
+  - JDK=oraclejdk7
+  - JDK=openjdk7
+matrix:
+  # scala 2.12 requires java 8
+  exclude:
+    - scala: 2.12.0
+      env: JDK=oraclejdk7
+    - scala: 2.12.0
+      env: JDK=openjdk7
 sudo: required # for setting hostname
 addons:
   postgresql: 9.3
   hostname: localhost #https://github.com/travis-ci/travis-ci/issues/5227
 before_script:
+  - jdk_switcher use $JDK
   - psql -f src/it/mojoz-postgresql-setup.sql -U postgres
   - cp src/it/resources/application.conf.travis src/it/resources/application.conf
 notifications:

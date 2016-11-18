@@ -5,7 +5,7 @@ lazy val dependencies = Seq(
   "com.h2database" % "h2" % "1.4.178" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it,test", // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest" % "2.1.5" % "it,test"
+  "org.scalatest" %% "scalatest" % "3.0.1" % "it,test"
 )
 def tresqlDependency(scalaVersion: String) = scalaVersion match {
   case "2.10.6" => "org.tresql" %% "tresql" % "7.3" % "it,test"
@@ -15,8 +15,9 @@ def tresqlDependency(scalaVersion: String) = scalaVersion match {
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.0",
   crossScalaVersions := Seq(
+    "2.12.0",
     "2.11.8",
     "2.10.6"
   ),
