@@ -9,7 +9,6 @@ comment on column account.id is 'Ieraksta identifikators.';
 comment on column account.bank_id is 'Bankas ID, sasaiste ar Bankas.';
 comment on column account.billing_account is 'Norēķinu konts.';
 comment on column account.last_modified is 'Pēdējo izmaiņu datums un laiks.';
-alter table account add constraint pk_account primary key (id);
 
 create table account_currency(
   account_id numeric(18) not null,
@@ -33,7 +32,6 @@ comment on column bank.country_code is 'Bankas valsts, izvēle no klasifikatora.
 comment on column bank.name is 'Bankas pilnais nosaukums.';
 comment on column bank.name_eng is 'Bankas pilnais nosaukums, angliski.';
 comment on column bank.name_rus is 'Bankas pilnais nosaukums, transliterēts krieviski.';
-alter table bank add constraint pk_bank primary key (id);
 
 create table country(
   code varchar2(2 char) check (code in ('LV', 'TO', 'LT')),
@@ -53,7 +51,6 @@ comment on column country.name is 'Valsts nosaukums.';
 comment on column country.name_eng is 'Valsts nosaukums angliski.';
 comment on column country.name_rus is 'Valsts nosaukums krieviski.';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
-alter table country add constraint pk_country primary key (code);
 
 create table currency(
   code varchar2(3 char) check (code in ('USD', 'EUR')),
@@ -66,7 +63,6 @@ comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmēj
 comment on column currency.name is 'Valūtas nosaukums.';
 comment on column currency.name_eng is 'Valūtas nosaukums angliski.';
 comment on column currency.name_rus is 'Valūtas nosaukums krieviski.';
-alter table currency add constraint pk_currency primary key (code);
 
 create table person(
   id numeric(18),
@@ -75,7 +71,6 @@ create table person(
   mother_id numeric(18),
   father_id numeric(18)
 );
-alter table person add constraint pk_person primary key (id);
 
 create table test_table1(
   id numeric(18),
@@ -86,25 +81,12 @@ create table test_table1(
   col4 varchar2(1 char),
   col5 varchar2(1 char)
 );
-alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
-alter table test_table1 add constraint uk_test_table1_code unique(code);
-alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
-create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
-alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
-alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
-create index idx_test_table1_id on test_table1(id);
-create index idx_test_table1_id_col1 on test_table1(id, col1);
-create index idx_tt1_spec_col3 on test_table1(col3);
-create index idx_tt1_spec_col3_col4 on test_table1(col3, col4);
-create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
-create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
 
 create table test_table2(
   id numeric(18) not null,
   code varchar2(1 char),
   name varchar2(1 char)
 );
-alter table test_table2 add constraint pk_test_table2 primary key (name);
 
 create table test_table3(
   int_col numeric(9),
@@ -137,6 +119,31 @@ create table test_table5(
   bank_id numeric(18),
   enum varchar2(5 char) check (enum in ('list1', 'list2'))
 );
+
+alter table account add constraint pk_account primary key (id);
+
+alter table bank add constraint pk_bank primary key (id);
+
+alter table country add constraint pk_country primary key (code);
+
+alter table currency add constraint pk_currency primary key (code);
+
+alter table person add constraint pk_person primary key (id);
+
+alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
+alter table test_table1 add constraint uk_test_table1_code unique(code);
+alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
+create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
+alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
+alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
+create index idx_test_table1_id on test_table1(id);
+create index idx_test_table1_id_col1 on test_table1(id, col1);
+create index idx_tt1_spec_col3 on test_table1(col3);
+create index idx_tt1_spec_col3_col4 on test_table1(col3, col4);
+create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
+create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
+
+alter table test_table2 add constraint pk_test_table2 primary key (name);
 
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);

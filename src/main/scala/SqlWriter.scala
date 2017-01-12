@@ -111,14 +111,20 @@ trait SqlWriter { this: ConstraintNamingRules =>
   private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   def schema(tables: Seq[TableDef[ColumnDef[Type]]]) = List(
-    tables.map(tableAndCommentsAndIndexes).mkString("\n\n"),
-    foreignKeys(tables).mkString("\n")).mkString("\n\n") +
+    tables.map(tableAndComments).mkString("\n\n"),
+    tables.map(keysAndIndexes).filter(_ != "").mkString("\n\n"),
+    foreignKeys(tables).mkString("\n")).filter(_ != "").mkString("\n\n") +
     (if (tables.size > 0) "\n" else "")
-  def tableAndCommentsAndIndexes(t: TableDef[ColumnDef[Type]]): String =
+  def tableAndComments(t: TableDef[ColumnDef[Type]]): String =
     List[Iterable[String]](
-      Some(table(t)), tableComment(t), columnComments(t),
+      Some(table(t)), tableComment(t), columnComments(t))
+      .flatten.mkString("\n")
+  def keysAndIndexes(t: TableDef[ColumnDef[Type]]): String =
+    List[Iterable[String]](
       primaryKey(t), uniqueIndexes(t), indexes(t))
       .flatten.mkString("\n")
+  def tableAndCommentsAndIndexes(t: TableDef[ColumnDef[Type]]): String =
+    (tableAndComments(t) + keysAndIndexes(t)).trim
   def table(t: TableDef[ColumnDef[Type]]) =
     // pk separated from table definition to fit large data imports etc.
     (t.cols.map(column(t)) ++ tableChecks(t)) // ++ primaryKey(t))
