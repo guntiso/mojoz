@@ -110,19 +110,25 @@ def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstrai
 trait SqlWriter { this: ConstraintNamingRules =>
   private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
+  /** Returns full sql schema string (tables, comments, keys, indices, refs)
+    */
   def schema(tables: Seq[TableDef[ColumnDef[Type]]]) = List(
-    tables.map(tableAndComments).mkString("\n\n"),
-    tables.map(keysAndIndexes).filter(_ != "").mkString("\n\n"),
-    foreignKeys(tables).mkString("\n")).filter(_ != "").mkString("\n\n") +
+    tablesAndComments(tables),
+    keysAndIndexes(tables),
+    foreignKeys(tables)).filter(_ != "").mkString("\n\n") +
     (if (tables.size > 0) "\n" else "")
   def tableAndComments(t: TableDef[ColumnDef[Type]]): String =
     List[Iterable[String]](
       Some(table(t)), tableComment(t), columnComments(t))
       .flatten.mkString("\n")
+  def tablesAndComments(tables: Seq[TableDef[ColumnDef[Type]]]): String =
+    tables.map(tableAndComments).mkString("\n\n")
   def keysAndIndexes(t: TableDef[ColumnDef[Type]]): String =
     List[Iterable[String]](
       primaryKey(t), uniqueIndexes(t), indexes(t))
       .flatten.mkString("\n")
+  def keysAndIndexes(tables: Seq[TableDef[ColumnDef[Type]]]): String =
+    tables.map(keysAndIndexes).filter(_ != "").mkString("\n\n")
   def tableAndCommentsAndIndexes(t: TableDef[ColumnDef[Type]]): String =
     (tableAndComments(t) + keysAndIndexes(t)).trim
   def table(t: TableDef[ColumnDef[Type]]) =
@@ -167,7 +173,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
       s"comment on column ${t.name}.${c.name} is '${c.comments}';")
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
     t.refs map foreignKey(t.name)
-  }.flatten
+  }.flatten.mkString("\n")
   def foreignKey(tableName: String)(r: TableDef.Ref) =
     s"alter table $tableName add constraint ${
       Option(r.name) getOrElse fkName(tableName, r)
