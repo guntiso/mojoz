@@ -286,6 +286,7 @@ private[out] class StandardSqlWriter(
           case (None, Some(f)) => s"(*, $f)"
           case (Some(t), Some(f)) => s"($t, $f)"
         })
+      case "double" => "double precision"
       case "date" => "date"
       case "dateTime" => "timestamp"
       case "string" =>
