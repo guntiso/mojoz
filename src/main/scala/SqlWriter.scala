@@ -186,8 +186,9 @@ trait SqlWriter { this: ConstraintNamingRules =>
   def dbType(c: ColumnDef[Type]): String
   def colCheck(c: ColumnDef[Type]): String
   def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] =
-    // TODO do not lose check constraint name!
-    t.ck.map("check " + _.expression)
+    t.ck.map(ck =>
+      if (ck.name != null) s"constraint ${ck.name} check (${ck.expression})"
+      else s"check (${ck.expression})")
 }
 
 private[out] class HsqldbSqlWriter(
