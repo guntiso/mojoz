@@ -85,6 +85,7 @@ case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
     copy(
       pk = pk.map(idxTransform),
       uk = uk.map(idxTransform),
+      ck = ck.map(c => c.copy(name = safeTransform(c.name))),
       idx = idx.map(idxTransform),
       refs = refs.map(r => r.copy(name = safeTransform(r.name)))).asInstanceOf[this.type]
   }
