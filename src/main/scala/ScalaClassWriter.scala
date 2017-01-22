@@ -26,6 +26,7 @@ trait ScalaClassWriter {
     case "integer" => "BigInt"
     case "long" => "java.lang.Long"
     case "int" => "java.lang.Integer"
+    case "double" => "java.lang.Double"
     case "decimal" => "BigDecimal"
     case "date" => "java.sql.Date"
     case "dateTime" => "java.sql.Timestamp"
