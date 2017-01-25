@@ -95,7 +95,7 @@ package in {
 class YamlViewDefLoader(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
-    joinsParser: JoinsParser = (_, _) => Nil, 
+    joinsParser: JoinsParser = (_, _) => Nil,
     conventions: MdConventions = MdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) {
@@ -356,6 +356,9 @@ class YamlViewDefLoader(
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
       val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
+      val tableOrAliasToColDefs = joins
+        .map(j => Option(j.alias).getOrElse(j.table) -> j.columns.map(c => c.name -> c).toMap)
+        .toMap
       def reduceExpression[T](f: FieldDef[T]) =
         if (f.isExpression && f.name.indexOf(".") < 0 && f.expression != null &&
           YamlTableDefLoader.QualifiedIdentDef.pattern.matcher(f.expression).matches &&
@@ -416,14 +419,13 @@ class YamlViewDefLoader(
         else {
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
-          // FIXME autojoins nullable?
           val nullable =
             if (f.isForcedCardinality) f.nullable
-            else tableOrAliasToJoin.get(tableOrAlias).map(_.nullable)
-              .getOrElse(Right(col.nullable)) match {
-                case Right(b) => b || col.nullable
-                case Left(s) => true // FIXME Left(nullableTableDependency)!
-              }
+            else tableOrAliasToColDefs
+              .get(tableOrAlias)
+              .flatMap(_.get(col.name))
+              .map(_.nullable)
+              .getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
               if (f.type_ != null && f.alias == null) overwriteSimpleType(col.type_, f.type_)
