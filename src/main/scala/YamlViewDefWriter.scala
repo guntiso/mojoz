@@ -65,7 +65,9 @@ class YamlViewDefWriter {
         if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
         else ""
       val lines = (defString + " :") :: comment :: extras.map(e =>
-        s"$prefix ${escapeYamlValue(e._1)}: ${escapeYamlValue("" + e._2)}").toList
+        s"$prefix ${escapeYamlValue(e._1)}" + (
+          if (e._1 == e._2) ""
+          else s": ${escapeYamlValue("" + e._2)}")).toList
       lines
         .filter(_ != "")
         .mkString("\n")

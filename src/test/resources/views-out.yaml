@@ -45,6 +45,7 @@ fields:
 - some_date_time                         :
   - comments (with extra) for some_date_time
   - extra-for-some-date-time: some-date-time
+  - some-other-extra-for-some-date-time
 - is_boolean
 - is_boolean_expr                        =
 - is_not_boolean           date          : should be date

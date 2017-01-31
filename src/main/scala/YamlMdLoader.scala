@@ -368,14 +368,16 @@ private[in] object YamlMdLoader {
               (null, m.asInstanceOf[java.util.Map[String, _]].asScala.toMap)
             case a: java.util.ArrayList[_] =>
               val l = a.asScala.toList
-              val comments =
-                l.filter(_.isInstanceOf[java.lang.String]).mkString("/n")
+              val strings =
+                l.filter(_.isInstanceOf[java.lang.String])
+                  .map(_.asInstanceOf[java.lang.String])
               val child =
                 l.filter(_.isInstanceOf[java.util.Map[_, _]])
                   .map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
                   .foldLeft(Map[String, Any]())(_ ++ _)
+              val comments = strings.headOption.getOrElse(child.get("comments").orNull)
               // TODO handle (raise error for?) other cases
-              (Option(comments) getOrElse child.get("comments").orNull, child)
+              (comments, child ++ strings.drop(1).map(s => s -> s).toMap)
             case x => sys.error(ThisFail +
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)
