@@ -67,6 +67,7 @@ object FieldDef {
     val enum: Seq[String]
     val joinToParent: String
     val orderBy: String
+    val default: String
     val comments: String
   }
 }
@@ -86,6 +87,7 @@ case class FieldDef[+T](
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
+  default: String,
   isI18n: Boolean,
   comments: String,
   extras: Map[String, Any]) extends FieldDefBase[T]
@@ -242,7 +244,7 @@ class YamlViewDefLoader(
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
         isExpression, expression, nullable, isForcedCardinality,
-        xsdType, enum, joinToParent, orderBy, false, comment, extras)
+        xsdType, enum, joinToParent, orderBy, null, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
