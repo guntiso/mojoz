@@ -63,6 +63,7 @@ object FieldDef {
     val isExpression: Boolean
     val expression: String
     val nullable: Boolean
+    val default: String
     val type_ : T
     val enum: Seq[String]
     val joinToParent: String
@@ -81,6 +82,7 @@ case class FieldDef[+T](
   isExpression: Boolean,
   expression: String,
   nullable: Boolean,
+  default: String,
   isForcedCardinality: Boolean,
   type_ : T,
   enum: Seq[String],
@@ -218,6 +220,7 @@ class YamlViewDefLoader(
       val expression = yfd.expression
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
+      val default = null // TODO fieldDef default?
       val isForcedCardinality = yfd.cardinality != null
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
@@ -241,7 +244,7 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
-        isExpression, expression, nullable, isForcedCardinality,
+        isExpression, expression, nullable, default, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
