@@ -417,13 +417,13 @@ class YamlViewDefLoader(
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
           // FIXME autojoins nullable?
+          val joinOpt = tableOrAliasToJoin.get(tableOrAlias)
+          val joinColOpt =
+            // TODO make use of join col type info?
+            joinOpt.map(_.columns).getOrElse(Nil).filter(_.name == f.name).headOption
           val nullable =
             if (f.isForcedCardinality) f.nullable
-            else tableOrAliasToJoin.get(tableOrAlias).map(_.nullable)
-              .getOrElse(Right(col.nullable)) match {
-                case Right(b) => b || col.nullable
-                case Left(s) => true // FIXME Left(nullableTableDependency)!
-              }
+            else joinColOpt.map(_.nullable).getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
               if (f.type_ != null && f.alias == null) overwriteSimpleType(col.type_, f.type_)
