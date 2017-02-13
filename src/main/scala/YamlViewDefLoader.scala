@@ -354,7 +354,11 @@ class YamlViewDefLoader(
     }
 
     def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
-      val joins = parseJoins(t.table, t.joins)
+      val joins = parseJoins(
+        Option(t.table)
+          .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
+          .orNull,
+        t.joins)
       val aliasToTable =
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
       val tableOrAliasToJoin =
