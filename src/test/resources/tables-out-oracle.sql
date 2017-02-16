@@ -117,7 +117,8 @@ create table test_table4(
 
 create table test_table5(
   bank_id numeric(18),
-  enum varchar2(5 char) check (enum in ('list1', 'list2'))
+  enum varchar2(5 char) check (enum in ('list1', 'list2')),
+  enum_ws varchar2(6 char) check (enum_ws in ('list 1', 'list 2'))
 );
 
 alter table account add constraint pk_account primary key (id);

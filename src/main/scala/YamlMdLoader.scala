@@ -344,7 +344,13 @@ private[in] object YamlMdLoader {
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
         def e(enum: String) = Option(enum)
-          .map(_ split "[\\(\\)\\s,]+")
+          .map { e =>
+            // TODO parse enums properly? Allow whitespace etc. when (single/double) quoted, allow escapes
+            if (e contains '\'')
+              e.replace("(", "").replace(")", "").trim.split("',\\s*").map(_.replace("'", ""))
+            else
+              e.split("[\\(\\)\\s,]+")
+          }
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull

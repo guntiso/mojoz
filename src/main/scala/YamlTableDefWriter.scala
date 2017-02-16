@@ -27,6 +27,7 @@ class YamlTableDefWriter {
     val enumString = Option(colDef.enum)
       .filter(_ != null)
       .filter(_ != Nil)
+      .map(_.map(e => if (e contains ' ') "'" + e + "'" else e))
       .map(_.mkString("(", ", ", ")"))
       .getOrElse("")
 
