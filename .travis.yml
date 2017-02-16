@@ -18,7 +18,7 @@ matrix:
       env: JDK=openjdk7
 sudo: required # for setting hostname
 addons:
-  postgresql: 9.3
+  postgresql: 9.5
   hostname: localhost #https://github.com/travis-ci/travis-ci/issues/5227
 before_script:
   - jdk_switcher use $JDK

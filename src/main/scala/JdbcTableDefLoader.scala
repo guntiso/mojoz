@@ -412,33 +412,37 @@ private[in] object CkParser {
   val s = "\\s*"
   val ident = "[_a-zA-z][_a-zA-Z0-9]*"
   val qi = s"$ident(\\.$ident)*"
-  val aposQi = s"'$qi'"
   val quotQi = s""""$qi""""
-  val in = "[iI][nN]"
-  val checkIn = s"$s($qi|$quotQi)\\s+$in$s\\($s($aposQi($s\\,$s$aposQi)*)$s\\)$s"
-  val checkIn2 = s"$s\\($checkIn\\)$s"
-  val checkIn3 = s"$s\\($s($qi|$quotQi)$s\\)\\s+$in$s" +
-    s"\\($s(\\($s$aposQi$s\\)($s\\,$s\\($s$aposQi$s\\))*)$s\\)$s"
-  val checkIn4 = s"$s\\(\\(\\(($qi|$quotQi)\\)::text = ANY \\(\\(ARRAY\\[" +
-    s"($aposQi::character varying(, $aposQi::character varying)*)" +
-    s"\\]\\)::text\\[\\]\\)\\)\\)$s"
+  val checkIn1 = """\s*(\w+(\.\w+)*)\s*[iI][nN]\s*\(\s*('[\w\.\s]+'(\s*\,\s*'[\w\.\s]+')*)\s*\)\s*"""
+  val checkIn2 = s"$s\\($checkIn1\\)$s"
+  val checkIn3 = """\(\(?\(?(\w+(\.\w+)*)\)?::text = ANY \(\(?ARRAY""" +
+    """\[('[\w\.\s]+'::character varying(\,\s*'[\w\.\s]+'::character varying)*)\]\)?::text\[\]\)\)\)?"""
+  val checkIn4 = """\((\w+(\.\w+)*)\s*[iI][nN]\s*\(('[\w\.\s]+'(\,\s*'[\w\.\s]+')*)\)\)"""
+  val checkIn5 = """\((\w+(\.\w+)*)\)\s*[iI][nN]\s*\((\('[\w\.\s]+'\)(\,\s*\('[\w\.\s]+'\))*)\)"""
   val checkNotNull = s"$s($qi|$quotQi)(?i) is not null$s".replace(" ", "\\s+")
   private def regex(pattern: String) = ("^" + pattern + "$").r
-  val CheckIn = regex(checkIn)
+  val CheckIn1 = regex(checkIn1)
   val CheckIn2 = regex(checkIn2)
   val CheckIn3 = regex(checkIn3)
   val CheckIn4 = regex(checkIn4)
+  val CheckIn5 = regex(checkIn5)
   val CheckNotNull = regex(checkNotNull)
   private def toColEnum(col: String, values: String) =
     (col.replace(""""""", ""),
-      values.split("[\\s\\(',\\)]+").toList.filter(_.trim != ""))
+      values.split("[\\(,\\)]+").toList.map(_.trim.replace("'", "")).filter(_.trim != ""))
   def colAndEnum(ck: String) = ck match {
-    case CheckIn(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
-    case CheckIn2(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
-    case CheckIn3(col, _, _, values, _, _, _) => Some(toColEnum(col, values))
-    case CheckIn4(col, _, _, values, _, _, _) =>
+    case CheckIn1(col, _, values, _) =>
+      Some(toColEnum(col, values))
+    case CheckIn2(col, _, values, _) =>
+      Some(toColEnum(col, values))
+    case CheckIn3(col, _, values, _) =>
       Some(toColEnum(col, values.replace("::character varying", "")))
-    case _ => None
+    case CheckIn4(col, _, values, _) =>
+      Some(toColEnum(col, values))
+    case CheckIn5(col, _, values, _) =>
+      Some(toColEnum(col, values))
+    case _ =>
+      None
   }
   def isNotNullCheck(ck: String) = ck match {
     case CheckNotNull(_, _, _) => true

@@ -117,5 +117,6 @@ table:   test_table5
 columns:
 - bank.id
 - enum                   5          (list1, list2)
+- enum_ws                6          ('list 1', 'list 2')
 refs:
 - bank_id -> bank(id) on delete cascade
