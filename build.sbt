@@ -4,7 +4,7 @@ lazy val dependencies = Seq(
   "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
   "com.h2database" % "h2" % "1.4.178" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
-  "org.postgresql" % "postgresql" % "9.3-1101-jdbc41" % "it,test", // XXX POM fix - not in test scope
+  "org.postgresql" % "postgresql" % "9.4.1212.jre7" % "it,test",   // XXX POM fix - not in test scope
   "org.scalatest" %% "scalatest" % "3.0.1" % "it,test"
 )
 def tresqlDependency(scalaVersion: String) = scalaVersion match {
