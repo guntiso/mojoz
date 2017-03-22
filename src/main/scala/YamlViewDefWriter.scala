@@ -33,11 +33,13 @@ class YamlViewDefWriter {
       .map(_.mkString("(", ", ", ")"))
       .getOrElse("")
 
-    val hasExpr = isExpression || expression != null
+    val saveExpr =
+      Option(saveTo).map(" -> " + _ + Option(resolver).map(" = " + _).getOrElse("")).orNull
+    val hasExpr = isExpression || expression != null || saveExpr != null
     val hasAlias = alias != null && alias != name.replace('.', '_')
     val expr =
       if (hasExpr)
-        Option(expression).map(" = " + _) getOrElse " ="
+        Option(expression).map(" = " + _).getOrElse(" =") + Option(saveExpr).getOrElse("")
       else if (hasAlias)
         Option(name).map(" = " + _) getOrElse " ="
       else ""

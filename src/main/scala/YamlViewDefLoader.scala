@@ -62,6 +62,8 @@ object FieldDef {
     val maxOccurs: String
     val isExpression: Boolean
     val expression: String
+    val saveTo: String
+    val resolver: String // expression, calculates value to be saved
     val nullable: Boolean
     val type_ : T
     val enum: Seq[String]
@@ -80,6 +82,8 @@ case class FieldDef[+T](
   maxOccurs: String,
   isExpression: Boolean,
   expression: String,
+  saveTo: String,
+  resolver: String, // expression, calculates value to be saved
   nullable: Boolean,
   isForcedCardinality: Boolean,
   type_ : T,
@@ -216,6 +220,8 @@ class YamlViewDefLoader(
       val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
+      val saveTo = yfd.saveTo
+      val resolver = yfd.resolver
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = yfd.cardinality != null
@@ -241,7 +247,7 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
-        isExpression, expression, nullable, isForcedCardinality,
+        isExpression, expression, saveTo, resolver, nullable, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =

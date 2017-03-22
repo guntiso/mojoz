@@ -31,6 +31,8 @@ private[in] case class YamlFieldDef(
   fraction: Option[Int],
   isExpression: Boolean,
   expression: String,
+  saveTo: String,
+  resolver: String,
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
@@ -354,8 +356,13 @@ private[in] object YamlMdLoader {
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
+        val exprParts = Option(t(expr)).map(_.split("\\s+\\->\\s+", 2)) getOrElse Array[String]()
+        val expr0 = if (exprParts.size > 0) t(exprParts(0)) else null
+        val saveParts = if (exprParts.size > 1) exprParts(1).split("\\s*=\\s*", 2) else Array[String]()
+        val saveTo = if (saveParts.size > 0) t(saveParts(0)) else null
+        val resolver = if (saveParts.size > 1) t(saveParts(1)) else null
         YamlFieldDef(name, t(options), cardinality, i(maxOcc), t(typ), i(len), i(frac),
-          isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment,
+          isExpr != null, expr0, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
           child)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
