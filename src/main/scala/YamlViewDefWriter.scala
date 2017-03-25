@@ -33,15 +33,18 @@ class YamlViewDefWriter {
       .map(_.mkString("(", ", ", ")"))
       .getOrElse("")
 
-    val saveExpr =
-      Option(saveTo).map(" -> " + _ + Option(resolver).map(" = " + _).getOrElse("")).orNull
-    val hasExpr = isExpression || expression != null || saveExpr != null
+    val hasExpr = isExpression || expression != null
     val hasAlias = alias != null && alias != name.replace('.', '_')
     val expr =
       if (hasExpr)
-        Option(expression).map(" = " + _).getOrElse(" =") + Option(saveExpr).getOrElse("")
+        Option(expression).map(" = " + _).getOrElse(" =")
       else if (hasAlias)
         Option(name).map(" = " + _) getOrElse " ="
+      else ""
+    val hasResolver = saveTo != null /* TODO && != name/alias */ || resolver != null
+    val saveExpr =
+      if (hasResolver)
+        " ->" + Option(saveTo).map(" " + _).getOrElse("") + Option(resolver).map(" = " + _).getOrElse("")
       else ""
     val defString = List(
       (if (hasAlias) alias else name, 20),
@@ -52,7 +55,7 @@ class YamlViewDefWriter {
       .foldLeft(("", 0))((r, t) => (
         List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
         r._2 + t._2 + 1))._1 +
-      expr
+      expr + saveExpr
 
     val hasComment = (comments != null && comments.trim != "")
     val hasExtras = extras != null && !extras.isEmpty
