@@ -3,6 +3,7 @@ package mojoz.metadata
 import scala.annotation.tailrec
 
 import mojoz.metadata.in.I18nRules
+import mojoz.metadata.in.YamlTableDefLoader
 import TableDef._
 import ColumnDef._
 import ViewDef._
@@ -113,7 +114,7 @@ case class ColumnDef[+T](
 }
 
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
-  val tableDefs: Seq[T],
+  val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
   val dbName: String => String = Naming.dbName) {
   private val md = tableDefs.map(e => (e.name, e)).toMap
   private val refTableAliasToRef = tableDefs.map(t => t.refs

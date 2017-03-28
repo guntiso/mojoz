@@ -97,10 +97,10 @@ case class FieldDef[+T](
 package in {
 
 class YamlViewDefLoader(
-    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
-    yamlMd: Seq[YamlMd],
+    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]] = new TableMetadata,
+    yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     joinsParser: JoinsParser = (_, _) => Nil, 
-    conventions: MdConventions = MdConventions,
+    conventions: MdConventions = new SimplePatternMdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) {
   import YamlViewDefLoader._
@@ -595,7 +595,7 @@ object YamlViewDefLoader {
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
-    conventions: MdConventions = MdConventions,
+    conventions: MdConventions = new SimplePatternMdConventions,
     extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) =
     new YamlViewDefLoader(

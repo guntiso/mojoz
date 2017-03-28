@@ -5,9 +5,11 @@ import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.io.Source
-import mojoz.metadata._
 import mojoz.metadata.io._
+import mojoz.metadata.ColumnDef
+import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
+import mojoz.metadata.Type
 import org.yaml.snakeyaml.Yaml
 
 // TODO remove yaml table def
@@ -67,8 +69,8 @@ private[in] object YamlTableDefLoader {
   }
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
-class YamlTableDefLoader(yamlMd: Seq[YamlMd],
-  conventions: MdConventions = MdConventions) {
+class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
+  conventions: MdConventions = new SimplePatternMdConventions) {
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
