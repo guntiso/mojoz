@@ -101,7 +101,6 @@ class YamlViewDefLoader(
     yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     joinsParser: JoinsParser = (_, _) => Nil, 
     conventions: MdConventions = new SimplePatternMdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
@@ -148,7 +147,6 @@ class YamlViewDefLoader(
           (v.fields ++ fields).asInstanceOf[t.fields.type])
       t.copy(fields = baseFields(t, Nil.asInstanceOf[t.fields.type]))
     })
-    .map(extendedViewDefTransformer)
     .map(t => (t.name, t)).toMap
   def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
     Option((new Yaml).load(typeDef))
@@ -596,9 +594,8 @@ object YamlViewDefLoader {
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
     conventions: MdConventions = new SimplePatternMdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
     uninheritableExtras: Seq[String] = Seq()) =
     new YamlViewDefLoader(
-      tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer, uninheritableExtras)
+      tableMetadata, yamlMd, joinsParser, conventions, uninheritableExtras)
 }
 }
