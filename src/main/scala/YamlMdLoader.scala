@@ -42,7 +42,7 @@ private[in] case class YamlFieldDef(
   extras: Map[String, Any])
 
 private[in] object YamlTableDefLoader {
-  val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+  val ident = "[_a-zA-Z][_a-zA-Z0-9]*"
   val qualifiedIdent = s"$ident(\\.$ident)*"
   val s = "\\s*"
   val idxName = qualifiedIdent
