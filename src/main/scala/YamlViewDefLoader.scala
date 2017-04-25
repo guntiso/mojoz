@@ -134,7 +134,7 @@ class YamlViewDefLoader(
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
     else baseTable(nameToTypeDef.get(t.extends_)
-      .getOrElse(sys.error("base table not found, type: " + t.name)),
+      .getOrElse(sys.error("Base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
   val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
   private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
@@ -320,7 +320,9 @@ class YamlViewDefLoader(
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
-      else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
+      else t.copy(table = try baseTable(t, resolvedTypesMap, Nil) catch {
+        case ex: Exception => throw new RuntimeException("Failed to find base table for " + t.name, ex)
+      })
 
     def inheritTableComments[T](t: ViewDef[T]) =
       if (t.table == null || t.comments != null) t
