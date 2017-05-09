@@ -5,9 +5,11 @@ import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.io.Source
-import mojoz.metadata._
 import mojoz.metadata.io._
+import mojoz.metadata.ColumnDef
+import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
+import mojoz.metadata.Type
 import org.yaml.snakeyaml.Yaml
 
 // TODO remove yaml table def
@@ -31,6 +33,8 @@ private[in] case class YamlFieldDef(
   fraction: Option[Int],
   isExpression: Boolean,
   expression: String,
+  saveTo: String,
+  resolver: String,
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
@@ -38,7 +42,7 @@ private[in] case class YamlFieldDef(
   extras: Map[String, Any])
 
 private[in] object YamlTableDefLoader {
-  val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+  val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qualifiedIdent = s"$ident(\\.$ident)*"
   val s = "\\s*"
   val idxName = qualifiedIdent
@@ -65,8 +69,8 @@ private[in] object YamlTableDefLoader {
   }
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
-class YamlTableDefLoader(yamlMd: Seq[YamlMd],
-  conventions: MdConventions = MdConventions) {
+class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
+  conventions: MdConventions = new SimplePatternMdConventions) {
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
@@ -312,7 +316,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd],
 
 private[in] object YamlMdLoader {
   val FieldDef = {
-    val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+    val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
     val qualifiedIdent = s"$ident(\\.$ident)*"
     val int = "[0-9]+"
     val s = "\\s*"
@@ -326,11 +330,12 @@ private[in] object YamlMdLoader {
     val typ = qualifiedIdent
     val len = int
     val frac = int
+    val arrow = "\\s+->\\s+"
     val expr = ".*"
     val pattern =
         (s"($name)( $options)?( $quant)?( $join)?( $typ)?" + 
           s"( $len)?( $frac)?" +
-          s"( $order)?( $enum)?( =($expr)?)?").replace(" ", s)
+          s"( $order)?( $enum)?(( =|$arrow)($expr)?)?").replace(" ", s)
 
     ("^" + pattern + "$").r
   }
@@ -340,7 +345,8 @@ private[in] object YamlMdLoader {
     def colDef(nameEtc: String, comment: String,
         child: Map[String, Any]) = nameEtc match {
       case FieldDef(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
-        len, frac, order, _, enum, isExpr, expr) =>
+        len, frac, order, _, enum,
+        exprOrResolverWithDelimiter, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
         def e(enum: String) = Option(enum)
@@ -354,8 +360,20 @@ private[in] object YamlMdLoader {
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
+        val isExpr = exprOrResolverWithDelimiter != null && exprOrResolverDelimiter.indexOf('=') >= 0
+        val isResolver = exprOrResolverWithDelimiter != null && exprOrResolverDelimiter.indexOf('=') < 0
+        val exprOrResolverParts = Option(t(exprOrResolver)).map(_.split("\\s*->\\s+", 2)) getOrElse Array[String]()
+        val expr = if (isExpr && exprOrResolverParts.size > 0) t(exprOrResolverParts(0)) else null
+        val saveAndResolverString =
+          if (isExpr && exprOrResolverParts.size > 1) exprOrResolverParts(1)
+          else if (isResolver) exprOrResolver
+          else null
+        val saveAndResolverParts =
+          Option(saveAndResolverString).map(_.split("\\s*=\\s*", 2)) getOrElse Array[String]()
+        val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
+        val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
         YamlFieldDef(name, t(options), cardinality, i(maxOcc), t(typ), i(len), i(frac),
-          isExpr != null, t(expr), e(enum), t(joinToParent), t(order), comment,
+          isExpr, expr, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
           child)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)

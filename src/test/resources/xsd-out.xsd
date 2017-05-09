@@ -266,6 +266,103 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ResolverTest1Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Mother" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Father" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResolverTest2Type">
+    <xs:annotation>
+      <xs:documentation>Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Account">
+        <xs:annotation>
+          <xs:documentation>Norēķinu konts.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="64"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="CurrencyName">
+        <xs:annotation>
+          <xs:documentation>Valūtas nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="100"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResolverTest3Type">
+    <xs:annotation>
+      <xs:documentation>Klienta norēķina konts</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Code" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResolverTest4Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Name">
+        <xs:annotation>
+          <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="240"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResolverTest5Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Name">
+        <xs:annotation>
+          <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="240"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="TypeOverrideTestType">
     <xs:annotation>
       <xs:documentation>Klienta norēķina konts</xs:documentation>

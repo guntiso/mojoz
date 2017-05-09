@@ -62,6 +62,8 @@ object FieldDef {
     val maxOccurs: String
     val isExpression: Boolean
     val expression: String
+    val saveTo: String
+    val resolver: String // expression, calculates value to be saved
     val nullable: Boolean
     val default: String
     val type_ : T
@@ -81,6 +83,8 @@ case class FieldDef[+T](
   maxOccurs: String,
   isExpression: Boolean,
   expression: String,
+  saveTo: String,
+  resolver: String, // expression, calculates value to be saved
   nullable: Boolean,
   default: String,
   isForcedCardinality: Boolean,
@@ -95,11 +99,10 @@ case class FieldDef[+T](
 package in {
 
 class YamlViewDefLoader(
-    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
-    yamlMd: Seq[YamlMd],
+    tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]] = new TableMetadata,
+    yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     joinsParser: JoinsParser = (_, _) => Nil, 
-    conventions: MdConventions = MdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
+    conventions: MdConventions = new SimplePatternMdConventions,
     uninheritableExtras: Seq[String] = Seq()) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
@@ -133,7 +136,7 @@ class YamlViewDefLoader(
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
     else baseTable(nameToTypeDef.get(t.extends_)
-      .getOrElse(sys.error("base table not found, type: " + t.name)),
+      .getOrElse(sys.error("Base table not found, type: " + t.name)),
       nameToTypeDef, t.name :: visited)
   val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
   private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
@@ -146,7 +149,6 @@ class YamlViewDefLoader(
           (v.fields ++ fields).asInstanceOf[t.fields.type])
       t.copy(fields = baseFields(t, Nil.asInstanceOf[t.fields.type]))
     })
-    .map(extendedViewDefTransformer)
     .map(t => (t.name, t)).toMap
   def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
     Option((new Yaml).load(typeDef))
@@ -218,6 +220,8 @@ class YamlViewDefLoader(
       val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
+      val saveTo = yfd.saveTo
+      val resolver = yfd.resolver
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val default = null // TODO fieldDef default?
@@ -244,7 +248,7 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
-        isExpression, expression, nullable, default, isForcedCardinality,
+        isExpression, expression, saveTo, resolver, nullable, default, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
@@ -319,7 +323,9 @@ class YamlViewDefLoader(
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
-      else t.copy(table = baseTable(t, resolvedTypesMap, Nil))
+      else t.copy(table = try baseTable(t, resolvedTypesMap, Nil) catch {
+        case ex: Exception => throw new RuntimeException("Failed to find base table for " + t.name, ex)
+      })
 
     def inheritTableComments[T](t: ViewDef[T]) =
       if (t.table == null || t.comments != null) t
@@ -596,10 +602,9 @@ object YamlViewDefLoader {
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
-    conventions: MdConventions = MdConventions,
-    extendedViewDefTransformer: ViewDef[FieldDef[Type]] => ViewDef[FieldDef[Type]] = v => v,
+    conventions: MdConventions = new SimplePatternMdConventions,
     uninheritableExtras: Seq[String] = Seq()) =
     new YamlViewDefLoader(
-      tableMetadata, yamlMd, joinsParser, conventions, extendedViewDefTransformer, uninheritableExtras)
+      tableMetadata, yamlMd, joinsParser, conventions, uninheritableExtras)
 }
 }

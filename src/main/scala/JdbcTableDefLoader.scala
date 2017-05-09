@@ -410,7 +410,7 @@ object JdbcTableDefLoader {
 
 private[in] object CkParser {
   val s = "\\s*"
-  val ident = "[_a-zA-z][_a-zA-Z0-9]*"
+  val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qi = s"$ident(\\.$ident)*"
   val quotQi = s""""$qi""""
   val checkIn1 = """\s*(\w+(\.\w+)*)\s*[iI][nN]\s*\(\s*('[\w\.\s]+'(\s*\,\s*'[\w\.\s]+')*)\s*\)\s*"""
