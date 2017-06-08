@@ -360,6 +360,48 @@ object JdbcTableDefLoader {
     map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
   def mapType(tableDef: TableDef[ColumnDef[JdbcColumnType]]): TableDef[ColumnDef[Type]] =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = mapType(c.type_))))
+  private def jdbcTypeNameToCode(jdbcTypeName: String): Int = jdbcTypeName match {
+    case "ARRAY" => Types.ARRAY
+    case "BIGINT" => Types.BIGINT
+    case "BINARY" => Types.BINARY
+    case "BIT" => Types.BIT
+    case "BLOB" => Types.BLOB
+    case "BOOLEAN" => Types.BOOLEAN
+    case "CHAR" => Types.CHAR
+    case "CLOB" => Types.CLOB
+    case "DATALINK" => Types.DATALINK
+    case "DATE" => Types.DATE
+    case "DECIMAL" => Types.DECIMAL
+    case "DISTINCT" => Types.DISTINCT
+    case "DOUBLE" => Types.DOUBLE
+    case "FLOAT" => Types.FLOAT
+    case "INTEGER" => Types.INTEGER
+    case "JAVA_OBJECT" => Types.JAVA_OBJECT
+    case "LONGNVARCHAR" => Types.LONGNVARCHAR
+    case "LONGVARBINARY" => Types.LONGVARBINARY
+    case "LONGVARCHAR" => Types.LONGVARCHAR
+    case "NCHAR" => Types.NCHAR
+    case "NCLOB" => Types.NCLOB
+    case "NULL" => Types.NULL
+    case "NUMERIC" => Types.NUMERIC
+    case "NVARCHAR" => Types.NVARCHAR
+    case "OTHER" => Types.OTHER
+    case "REAL" => Types.REAL
+    case "REF" => Types.REF
+    case "REF_CURSOR" => 2012 // Types.REF_CURSOR - since java 8
+    case "ROWID" => Types.ROWID
+    case "SMALLINT" => Types.SMALLINT
+    case "SQLXML" => Types.SQLXML
+    case "STRUCT" => Types.STRUCT
+    case "TIME" => Types.TIME
+    case "TIME_WITH_TIMEZONE" => 2013 // Types.TIME_WITH_TIMEZONE - since java 8
+    case "TIMESTAMP" => Types.TIMESTAMP
+    case "TIMESTAMP_WITH_TIMEZONE" => 2014 // Types.TIMESTAMP_WITH_TIMEZONE - since java 8
+    case "TINYINT" => Types.TINYINT
+    case "VARBINARY" => Types.VARBINARY
+    case "VARCHAR" => Types.VARCHAR
+    case x => sys.error("Unexpected jdbc type name: " + x)
+  }
   private[in] def map(jdbcTypeCode: Int, size: Int, fractionDigits: Int) =
     jdbcTypeCode match {
       case Types.ARRAY => new Type("base64Binary")
