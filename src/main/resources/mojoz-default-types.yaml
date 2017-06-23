@@ -1,0 +1,153 @@
+type:       string
+xsd name:   string
+scala name: String
+jdbc load:
+- LONGNVARCHAR 0
+- LONGNVARCHAR 1..* -> size
+- LONGVARCHAR  0
+- LONGVARCHAR  1..* -> size
+- DISTINCT # TODO need base type to solve this correctly
+- 'NULL'
+- NCHAR             -> size
+- NCLOB             -> size
+- NVARCHAR          -> size
+- VARCHAR           -> size
+- REF               -> size
+- ROWID             -> size
+- SQLXML
+- CHAR              -> size
+- CLOB              -> size
+- DATALINK          -> size # anyURI instead?
+yaml:
+- string ?          -> size?
+
+type:       date
+xsd name:   date
+scala name: java.sql.Date
+jdbc load:
+- DATE
+yaml:
+- date
+
+type:       time
+xsd name:   time
+scala name: time
+jdbc load:
+- TIME
+yaml:
+- time
+
+type:       dateTime
+xsd name:   dateTime
+scala name: java.sql.Timestamp
+jdbc load:
+- TIMESTAMP
+yaml:
+- dateTime
+
+
+type:       short
+xsd name:   short
+scala name: short
+jdbc load:
+- SMALLINT
+- TINYINT # TODO? signed/unsigned byte?
+yaml:
+- short
+- short *           -> size
+
+type:       int
+xsd name:   int
+scala name: java.lang.Integer
+jdbc load:
+- DECIMAL *..9 0    -> none, size
+- NUMERIC *..9 0    -> none, size
+- INTEGER
+yaml:
+- int
+- int *             -> size
+
+type:       long
+xsd name:   long
+scala name: java.lang.Long
+jdbc load:
+- DECIMAL 10..18 0  -> none, size
+- NUMERIC 10..18 0  -> none, size
+- BIGINT
+yaml:
+- long
+- long *            -> size
+
+type:       integer
+xsd name:   integer
+scala name: BigInt
+jdbc load:
+- DECIMAL 19..* 0   -> none, size
+- NUMERIC 19..* 0   -> none, size
+yaml:
+- integer
+- integer *         -> *
+
+
+type:       float
+xsd name:   float
+scala name: float
+jdbc load:
+- REAL
+yaml:
+- float
+
+type:       double
+xsd name:   double
+scala name: java.lang.Double
+jdbc load:
+- DOUBLE
+- FLOAT
+yaml:
+- double
+
+type:       decimal
+xsd name:   decimal
+scala name: BigDecimal
+jdbc load:
+- DECIMAL * 1..*    -> size, frac
+- NUMERIC * 1..*    -> size, frac
+yaml:
+- null    * *       -> size, frac
+- decimal
+- decimal *         -> size
+- decimal * *       -> size, frac
+
+
+type:       boolean
+xsd name:   boolean
+scala name: java.lang.Boolean
+jdbc load:
+- BIT
+- BOOLEAN
+yaml:
+- boolean
+
+
+type:       base64Binary
+xsd name:   base64Binary
+scala name: Array[Byte]
+jdbc load:
+- ARRAY
+- BINARY
+- BLOB
+- JAVA_OBJECT
+- LONGVARBINARY
+- OTHER
+- STRUCT
+- VARBINARY
+yaml:
+- base64Binary
+- base64Binary *    -> size
+
+
+type:       anyType
+xsd name:   anyType
+scala name: Any
+yaml:
+- anyType
