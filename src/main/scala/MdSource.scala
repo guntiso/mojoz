@@ -60,10 +60,13 @@ private[in] class ResourcesMdSource(
 }
 
 object YamlMd {
-  private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
+  private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
+  private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
+  private[in] def isCustomTypeDef(d: YamlMd) =
+    customTypeDefPattern.findFirstIn(d.body).isDefined
   private[in] def isTableDef(d: YamlMd) =
     tableDefPattern.findFirstIn(d.body).isDefined
-  private[in] def isViewDef(d: YamlMd) = !isTableDef(d)
+  private[in] def isViewDef(d: YamlMd) = !isTableDef(d) && !isCustomTypeDef(d)
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(
