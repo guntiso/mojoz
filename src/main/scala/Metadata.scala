@@ -115,7 +115,7 @@ case class ColumnDef[+T](
 
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
-  val dbName: String => String = Naming.dbName) {
+  val dbName: String => String = identity) {
   private val md = tableDefs.map(e => (e.name, e)).toMap
   private val refTableAliasToRef = tableDefs.map(t => t.refs
     .filter(_.defaultRefTableAlias != null)

@@ -16,6 +16,10 @@ class ViewDefTests extends FlatSpec with Matchers {
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
   val viewDefs = YamlViewDefLoader(tableMd, mdDefs).viewDefs
+  val xsdWriter = new XsdWriter(
+    viewDefs,
+    Naming.camelize _,
+    Naming.camelize(_) + "Type")
     // TODO I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
   "generated yaml file" should "equal sample file" in {
@@ -28,14 +32,14 @@ class ViewDefTests extends FlatSpec with Matchers {
   }
   "generated xsd file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-out.xsd")
-    val produced = (new XsdWriter(viewDefs)).schema("kps.ldz.lv")
+    val produced = xsdWriter.schema("kps.ldz.lv")
     if (expected != produced)
       toFile(path + "/" + "xsd-out-produced.xsd", produced)
     expected should be(produced)
   }
   "generated bindings file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-bindings-out.xjb")
-    val produced = (new XsdWriter(viewDefs)).jaxbBindings("my-ws-schema.xsd")
+    val produced = xsdWriter.jaxbBindings("my-ws-schema.xsd")
     if (expected != produced)
       toFile(path + "/" + "xsd-bindings-out-produced.xjb", produced)
     expected should be(produced)
@@ -45,6 +49,8 @@ class ViewDefTests extends FlatSpec with Matchers {
     val expected = fileToString(path + "/" + "classes-out.scala")
     // TODO api sucks
     object ScalaBuilder extends ScalaClassWriter {
+      override def scalaClassName(name: String) = Naming.camelize(name)
+      override def scalaFieldName(name: String) = Naming.camelizeLower(name)
       override def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]) =
         if (typeDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
           List("DtoWithId")

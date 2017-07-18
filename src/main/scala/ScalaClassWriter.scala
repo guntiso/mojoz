@@ -1,18 +1,13 @@
 package mojoz.metadata.out
 
-import mojoz.metadata.Naming.{ dbNameToXsdName => xsdName }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
 trait ScalaClassWriter {
   def nl = System.getProperty("line.separator")
-  def scalaClassName(name: String) = xsdName(name)
-  def scalaFieldName(name: String) = xsdName(name) match {
-    case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>
-      x(0).toLower + x.substring(1)
-    case x => x
-  }
+  def scalaClassName(name: String) = name
+  def scalaFieldName(name: String) = name
   def scalaFieldTypeName(field: FieldDef[Type]) = {
     val itemTypeName =
       if (field.type_.isComplexType) scalaComplexTypeName(field.type_)

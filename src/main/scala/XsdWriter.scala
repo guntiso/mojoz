@@ -1,13 +1,12 @@
 package mojoz.metadata.out
 
 import mojoz.metadata._
-import mojoz.metadata.Naming.dbNameToXsdName
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 
 class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
-    xsdName: String => String = dbNameToXsdName,
-    xsdTypeName: String => String = dbNameToXsdName(_) + "Type",
+    xsdName: String => String = identity,
+    xsdTypeName: String => String = identity,
     createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =

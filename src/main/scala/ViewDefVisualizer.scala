@@ -1,6 +1,5 @@
 package mojoz.metadata.out
 
-import mojoz.metadata.Naming.{ dbNameToXsdName => xsdName }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
@@ -10,14 +9,14 @@ class ViewDefVisualizer(nameToExtendedViewDef: Map[String, ViewDef[FieldDef[Type
   private def printComplexType(indent: String, typeDef: ViewDef[FieldDef[Type]]) {
     val nextIndent = indent + "  "
     typeDef.fields.foreach(f => {
-      println(nextIndent + (xsdName(Option(f.alias) getOrElse f.name)))
+      println(nextIndent + (Option(f.alias) getOrElse f.name))
       if (f.type_ != null && f.type_.isComplexType)
         printComplexType(nextIndent, getType(f.type_.name))
     })
   }
   def print(typeName: String) = {
     val t = getType(typeName)
-    println(xsdName(t.name))
+    println(t.name)
     printComplexType("", t)
   }
 }
