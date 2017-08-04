@@ -417,7 +417,11 @@ class YamlViewDefLoader(
               .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
                 .getOrElse(tableOrAlias))).map(dbName).orNull
           val tableAlias =
-            if (table == tableOrAlias || parts.size > 2) null else tableOrAlias
+            if (table == tableOrAlias ||
+                t.tableAlias == tableOrAlias ||
+                parts.size > 2)
+              null
+            else tableOrAlias
           val partsReverseList = parts.toList.reverse
           val name = dbName(partsReverseList.head)
           val path = partsReverseList.tail.reverse
