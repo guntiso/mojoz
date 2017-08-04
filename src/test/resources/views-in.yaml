@@ -153,6 +153,12 @@ fields:
 - id
 - bank = bank.name ->
 
+name: resolver_test_8b
+table: account a_
+fields:
+- id
+- a_.bank_id -> = 33
+
 name: resolver_test_9
 table: person
 fields:

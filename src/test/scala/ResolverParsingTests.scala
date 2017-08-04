@@ -147,6 +147,17 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t8, "bank").saveTo should be("bank_id")
     field(t8, "bank").resolver should be(null)
 
+    val t8b = xViewDefs("resolver_test_8b")
+
+    field(t8b, "bank_id").name should be("bank_id")
+    field(t8b, "bank_id").alias should be(null)
+    field(t8b, "bank_id").table should be("account")
+    field(t8b, "bank_id").tableAlias should be(null)
+    field(t8b, "bank_id").isExpression should be(false)
+    field(t8b, "bank_id").expression should be(null)
+    field(t8b, "bank_id").saveTo should be("bank_id")
+    field(t8b, "bank_id").resolver should be("33")
+
     val t9 = xViewDefs("resolver_test_9")
 
     field(t9, "mother").name should be("mother")

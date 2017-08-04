@@ -59,6 +59,9 @@
     <jaxb:bindings node="//xs:complexType[@name='ResolverTest8Type']">
       <jaxb:class name="ResolverTest8"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ResolverTest8bType']">
+      <jaxb:class name="ResolverTest8b"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ResolverTest9Type']">
       <jaxb:class name="ResolverTest9"/>
     </jaxb:bindings>

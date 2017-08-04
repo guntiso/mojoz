@@ -89,6 +89,10 @@ class ResolverTest8 extends DtoWithId {
   var id: java.lang.Long = null
   var bank: String = null
 }
+class ResolverTest8b extends DtoWithId {
+  var id: java.lang.Long = null
+  var bankId: java.lang.Long = null
+}
 class ResolverTest9 extends DtoWithId {
   var id: java.lang.Long = null
   var mother: String = null

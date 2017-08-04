@@ -226,16 +226,17 @@ class YamlViewDefLoader(
           def errorMessage =
             s"Failed to imply save target for $viewName.${Option(alias) getOrElse name}" +
               ", please provide target column name"
+          val simpleName = if (name.indexOf('.') > 0) name.substring(name.indexOf('.') + 1) else name
           Option(viewSaveTo).filter(_.size > 0)
               .orElse(Option(viewTable).map(_.split("\\s+", 2)(0)).map(Seq(_))).map { tNames =>
             val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
-            if (tables.exists(t => t.cols.exists(_.name == name)))
-              name
+            if (tables.exists(t => t.cols.exists(_.name == simpleName)))
+              simpleName
             else {
               val matches: Set[String] = tables
                 .flatMap(_.refs.filter { ref =>
                   ref.cols.size == 1 &&
-                    Option(ref.defaultRefTableAlias).getOrElse(ref.refTable) == name
+                    Option(ref.defaultRefTableAlias).getOrElse(ref.refTable) == simpleName
                 })
                 .map(_.cols(0))
                 .foldLeft(Set[String]())(_ + _).toSet
