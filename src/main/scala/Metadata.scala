@@ -124,6 +124,10 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     .toMap
   private val colNameToCol =
     tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
+
+  def tableDefOption(tableName: String) =
+    md.get(tableName)
+
   def tableDef(tableName: String) =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)

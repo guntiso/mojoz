@@ -210,7 +210,7 @@ class YamlViewDefLoader(
     def typeName(v: Map[String, Any], defaultSuffix: String) =
       if (v.contains("name")) "" + v("name")
       else name + "_" + defaultSuffix
-    def toXsdFieldDef(yfd: YamlFieldDef) = {
+    def toXsdFieldDef(yfd: YamlFieldDef, viewName: String, viewTable: String, viewSaveTo: Seq[String]) = {
       val table = null
       val tableAlias = null
       val name = yfd.name
@@ -220,7 +220,30 @@ class YamlViewDefLoader(
       val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
-      val saveTo = yfd.saveTo
+      val isResolvable = yfd.isResolvable
+      val saveTo = Option(yfd.saveTo) getOrElse {
+        if (isResolvable) {
+          def errorMessage =
+            s"Failed to imply save target for $viewName.${Option(alias) getOrElse name}" +
+              ", please provide target column name"
+          Option(viewSaveTo).filter(_.size > 0).orElse(Option(viewTable).map(Seq(_))).map { tNames =>
+            val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
+            if (tables.exists(t => t.cols.exists(_.name == name)))
+              name
+            else {
+              val matches: Set[String] = tables
+                .flatMap(_.refs.filter { ref =>
+                  ref.cols.size == 1 &&
+                    Option(ref.defaultRefTableAlias).getOrElse(ref.refTable) == name
+                })
+                .map(_.cols(0))
+                .foldLeft(Set[String]())(_ + _).toSet
+              if (matches.size == 1) matches.head
+              else throw new RuntimeException(errorMessage)
+            }
+          }.getOrElse(throw new RuntimeException(errorMessage))
+        } else null
+      }
       val resolver = yfd.resolver
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
@@ -254,7 +277,7 @@ class YamlViewDefLoader(
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
     val fieldDefs = yamlFieldDefs
-      .map(toXsdFieldDef)
+      .map(toXsdFieldDef(_, name, table, saveTo))
       .map { f =>
         if (f.extras == null) f
         else f.copy(

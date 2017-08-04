@@ -100,6 +100,32 @@ fields:
 - id
 - name                                   -> = _ || ' saved'
 
+name:    resolver_test_6
+table:   bank
+fields:
+- id
+- name                                   = name || '.' ->
+
+name:    resolver_test_7
+table:   bank
+fields:
+- id
+- name
+- country                                = country.name -> country_code
+
+name:    resolver_test_8
+table:   account
+fields:
+- id
+- bank                                   = bank.name -> bank_id
+
+name:    resolver_test_9
+table:   person
+fields:
+- id
+- mother                                 = mother.name || mother.surname -> mother_id
+- father                                 = father.name || ' ' || father.surname -> father_id
+
 name:    type_override_test
 table:   account
 fields:

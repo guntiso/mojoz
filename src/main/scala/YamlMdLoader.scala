@@ -33,6 +33,7 @@ private[in] case class YamlFieldDef(
   fraction: Option[Int],
   isExpression: Boolean,
   expression: String,
+  isResolvable: Boolean,
   saveTo: String,
   resolver: String,
   enum: Seq[String],
@@ -330,12 +331,13 @@ private[in] object YamlMdLoader {
     val typ = qualifiedIdent
     val len = int
     val frac = int
-    val arrow = "\\s+->\\s+"
+    val midArrow = "\\s+->\\s+"
+    val endArrow = "\\s+->\\s*"
     val expr = ".*"
     val pattern =
         (s"($name)( $options)?( $quant)?( $join)?( $typ)?" + 
           s"( $len)?( $frac)?" +
-          s"( $order)?( $enum)?(( =|$arrow)($expr)?)?").replace(" ", s)
+          s"( $order)?( $enum)?($endArrow|(( =|$midArrow)($expr)?))?").replace(" ", s)
 
     ("^" + pattern + "$").r
   }
@@ -346,7 +348,7 @@ private[in] object YamlMdLoader {
         child: Map[String, Any]) = nameEtc match {
       case FieldDef(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
         len, frac, order, _, enum,
-        exprOrResolverWithDelimiter, exprOrResolverDelimiter, exprOrResolver) =>
+        exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
         def e(enum: String) = Option(enum)
@@ -360,20 +362,23 @@ private[in] object YamlMdLoader {
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
-        val isExpr = exprOrResolverWithDelimiter != null && exprOrResolverDelimiter.indexOf('=') >= 0
-        val isResolver = exprOrResolverWithDelimiter != null && exprOrResolverDelimiter.indexOf('=') < 0
-        val exprOrResolverParts = Option(t(exprOrResolver)).map(_.split("\\s*->\\s+", 2)) getOrElse Array[String]()
+        val isExpr = exprOrResolverDelimiter != null && exprOrResolverDelimiter.indexOf('=') >= 0
+        val isResolvable = exprOrResolverWithDelimiter != null &&
+          (exprOrResolverDelimiter == null ||
+           exprOrResolverDelimiter.indexOf('=') < 0 ||
+           exprOrResolver != null && exprOrResolver.endsWith(" ->"))
+        val exprOrResolverParts = Option(t(exprOrResolver)).map(_.split("\\s*->\\s*", 2)) getOrElse Array[String]()
         val expr = if (isExpr && exprOrResolverParts.size > 0) t(exprOrResolverParts(0)) else null
         val saveAndResolverString =
           if (isExpr && exprOrResolverParts.size > 1) exprOrResolverParts(1)
-          else if (isResolver) exprOrResolver
+          else if (isResolvable) exprOrResolver
           else null
         val saveAndResolverParts =
           Option(saveAndResolverString).map(_.split("\\s*=\\s*", 2)) getOrElse Array[String]()
         val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
         val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
         YamlFieldDef(name, t(options), cardinality, i(maxOcc), t(typ), i(len), i(frac),
-          isExpr, expr, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
+          isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
           child)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)

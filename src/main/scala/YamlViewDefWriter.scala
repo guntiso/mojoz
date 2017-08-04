@@ -41,10 +41,15 @@ class YamlViewDefWriter {
       else if (hasAlias)
         Option(name).map(" = " + _) getOrElse " ="
       else ""
-    val hasResolver = saveTo != null /* TODO && != name/alias */ || resolver != null
+    val explicitSaveTo =
+      // TODO & != unique refs.defaultRefTableAlias (use code from loader)
+      Option(saveTo).filter(_ != Option(alias).getOrElse(name)).orNull
+    val hasResolver = explicitSaveTo != null || saveTo != null && isExpression || resolver != null
     val saveExpr =
       if (hasResolver)
-        " ->" + Option(saveTo).map(" " + _).getOrElse("") + Option(resolver).map(" = " + _).getOrElse("")
+        " ->" +
+          Option(explicitSaveTo).map(" " + _).getOrElse("") +
+          Option(resolver).map(" = " + _).getOrElse("")
       else ""
     val defString = List(
       (if (hasAlias) alias else name, 20),

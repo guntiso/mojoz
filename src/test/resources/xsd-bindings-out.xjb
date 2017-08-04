@@ -47,6 +47,18 @@
     <jaxb:bindings node="//xs:complexType[@name='ResolverTest5Type']">
       <jaxb:class name="ResolverTest5"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ResolverTest6Type']">
+      <jaxb:class name="ResolverTest6"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ResolverTest7Type']">
+      <jaxb:class name="ResolverTest7"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ResolverTest8Type']">
+      <jaxb:class name="ResolverTest8"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ResolverTest9Type']">
+      <jaxb:class name="ResolverTest9"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTestType']">
       <jaxb:class name="TypeOverrideTest"/>
     </jaxb:bindings>

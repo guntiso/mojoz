@@ -72,6 +72,24 @@ class ResolverTest5 extends DtoWithId {
   var id: java.lang.Long = null
   var name: String = null
 }
+class ResolverTest6 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
+class ResolverTest7 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+  var country: String = null
+}
+class ResolverTest8 extends DtoWithId {
+  var id: java.lang.Long = null
+  var bank: String = null
+}
+class ResolverTest9 extends DtoWithId {
+  var id: java.lang.Long = null
+  var mother: String = null
+  var father: String = null
+}
 class TypeOverrideTest extends Dto {
   var bank: java.lang.Long = null
   var lastModified: java.sql.Date = null
