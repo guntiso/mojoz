@@ -390,7 +390,8 @@ class YamlViewDefLoader(
           .orNull,
         t.joins)
       val aliasToTable =
-        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
+        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap ++
+          Seq(t.tableAlias).filter(_ != null).map(_ -> t.table).toMap
       val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def reduceExpression[T](f: FieldDef[T]) =
