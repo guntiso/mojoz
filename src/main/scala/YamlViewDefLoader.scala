@@ -436,7 +436,7 @@ class YamlViewDefLoader(
             case rmIdx => fName.substring(rmIdx + 2)
           }
           val alias = Option(f.alias).map(dbName) getOrElse
-            dbName(maybeNoPrefix(f.name).replace(".", "_"))
+            Some(dbName(maybeNoPrefix(f.name).replace(".", "_"))).filter(_ != name).orNull
           val expression =
             if (f.expression != null || parts.size < 3) f.expression
             else parts.map(dbName).mkString(".")
