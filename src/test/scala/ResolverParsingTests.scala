@@ -125,6 +125,17 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t7, "country").saveTo should be("country_code")
     field(t7, "country").resolver should be(null)
 
+    val t7b = xViewDefs("resolver_test_7b")
+
+    field(t7b, "country").name should be("name")
+    field(t7b, "country").alias should be("country")
+    field(t7b, "country").table should be("country")
+    field(t7b, "country").tableAlias should be(null)
+    field(t7b, "country").isExpression should be(false)
+    field(t7b, "country").expression should be(null)
+    field(t7b, "country").saveTo should be("country_code")
+    field(t7b, "country").resolver should be("to_country_code(_)")
+
     val t8 = xViewDefs("resolver_test_8")
 
     field(t8, "bank").name should be("name")

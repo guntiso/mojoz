@@ -141,6 +141,12 @@ fields:
 - name ->
 - country = country.name ->
 
+name: resolver_test_7b
+table: bank b
+fields:
+- id
+- country = country.name -> = to_country_code(_)
+
 name: resolver_test_8
 table: account
 fields:

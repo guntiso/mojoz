@@ -363,10 +363,9 @@ private[in] object YamlMdLoader {
           .filter(_.size > 0).orNull
         def cardinality = Option(t(quant)).map(_.take(1)).orNull
         val isExpr = exprOrResolverDelimiter != null && exprOrResolverDelimiter.indexOf('=') >= 0
-        val isResolvable = exprOrResolverWithDelimiter != null &&
-          (exprOrResolverDelimiter == null ||
-           exprOrResolverDelimiter.indexOf('=') < 0 ||
-           exprOrResolver != null && exprOrResolver.endsWith(" ->"))
+        val isResolvable =
+          exprOrResolverWithDelimiter != null &&
+          s"$exprOrResolverWithDelimiter ".indexOf(" -> ") >= 0
         val exprOrResolverParts = Option(t(exprOrResolver)).map(_.split("\\s*->\\s*", 2)) getOrElse Array[String]()
         val expr = if (isExpr && exprOrResolverParts.size > 0) t(exprOrResolverParts(0)) else null
         val saveAndResolverString =

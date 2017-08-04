@@ -407,6 +407,27 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ResolverTest7bType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Country">
+        <xs:annotation>
+          <xs:documentation>Valsts nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="64"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="ResolverTest8Type">
     <xs:annotation>
       <xs:documentation>Klienta norēķina konts</xs:documentation>
