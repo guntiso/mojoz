@@ -223,10 +223,10 @@ class YamlViewDefLoader(
       val isResolvable = yfd.isResolvable
       val saveTo = Option(yfd.saveTo) getOrElse {
         if (isResolvable) {
-          def errorMessage =
-            s"Failed to imply save target for $viewName.${Option(alias) getOrElse name}" +
-              ", please provide target column name"
           val simpleName = if (name.indexOf('.') > 0) name.substring(name.indexOf('.') + 1) else name
+          def errorMessage =
+            s"Failed to resolve save target for $viewName.$simpleName" +
+              ", please provide target column name"
           Option(viewSaveTo).filter(_.size > 0)
               .orElse(Option(viewTable).map(_.split("\\s+", 2)(0)).map(Seq(_))).map { tNames =>
             val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
