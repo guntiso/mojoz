@@ -107,7 +107,7 @@ fields:
 - name                                   = name || '.' ->
 
 name:    resolver_test_7
-table:   bank
+table:   bank b
 fields:
 - id
 - name

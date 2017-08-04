@@ -226,7 +226,8 @@ class YamlViewDefLoader(
           def errorMessage =
             s"Failed to imply save target for $viewName.${Option(alias) getOrElse name}" +
               ", please provide target column name"
-          Option(viewSaveTo).filter(_.size > 0).orElse(Option(viewTable).map(Seq(_))).map { tNames =>
+          Option(viewSaveTo).filter(_.size > 0)
+              .orElse(Option(viewTable).map(_.split("\\s+", 2)(0)).map(Seq(_))).map { tNames =>
             val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
             if (tables.exists(t => t.cols.exists(_.name == name)))
               name
