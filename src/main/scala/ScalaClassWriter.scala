@@ -35,9 +35,11 @@ trait ScalaClassWriter {
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
   def initialValueString(col: FieldDef[Type]) =
     if (col.isCollection) "Nil" else "null"
-  private def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
+  def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
+    s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+  private def scalaFieldStringWithHandler(fieldName: String, col: FieldDef[Type]) =
     try
-      s"var $fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+      scalaFieldString(fieldName, col)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process field: $fieldName", ex)
@@ -47,23 +49,27 @@ trait ScalaClassWriter {
   def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
   def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) =
+    typeDef.fields.map(f => scalaFieldStringWithHandler(
+      scalaFieldName(Option(f.alias) getOrElse f.name), f))
+  private def scalaFieldsStringsWithHandler(typeDef: ViewDef[FieldDef[Type]]) =
     try
-      typeDef.fields.map(f => scalaFieldString(
-        scalaFieldName(Option(f.alias) getOrElse f.name), f))
+      scalaFieldsStrings(typeDef)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process view: ${typeDef.name}", ex)
     }
-  def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
-    val fieldsString = scalaFieldsStrings(typeDef)
+  private[out] def fieldsString(typeDef: ViewDef[FieldDef[Type]]) =
+    scalaFieldsStringsWithHandler(typeDef)
       .map(scalaFieldsIndent + _ + nl).mkString
-    val extendsString = Option(scalaClassTraits(typeDef))
+  private[out] def extendsString(typeDef: ViewDef[FieldDef[Type]]) =
+    Option(scalaClassTraits(typeDef))
       .map(scalaClassExtends(typeDef).toList ::: _.toList)
       .map(t => t.filter(_ != null).filter(_.trim != ""))
       .filter(_.size > 0)
       .map(_.mkString(" extends ", " with ", ""))
       .getOrElse("")
-    s"class ${scalaClassName(typeDef.name)}$extendsString {$nl$fieldsString}"
+  def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
+    s"class ${scalaClassName(typeDef.name)}${extendsString(typeDef)} {$nl${fieldsString(typeDef)}}"
   }
   def createScalaClassesString(
     headers: Seq[String], typedefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
@@ -72,4 +78,20 @@ trait ScalaClassWriter {
       .mkString("", nl, nl)
 }
 
+trait ScalaCaseClassWriter extends ScalaClassWriter {
+  override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
+    s"$fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+  override def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) = {
+    val fieldsStrings = super.scalaFieldsStrings(typeDef)
+    if (fieldsStrings.size < 2) fieldsStrings
+    else (fieldsStrings.reverse.head :: fieldsStrings.reverse.tail.map(_ + ",").toList).reverse
+  }
+  // FIXME extends for case classes?
+  override def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) = None
+  override def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
+    s"case class ${scalaClassName(typeDef.name)}${extendsString(typeDef)} ($nl${fieldsString(typeDef)})"
+  }
+}
+
 object ScalaClassWriter extends ScalaClassWriter
+object ScalaCaseClassWriter extends ScalaCaseClassWriter

@@ -64,6 +64,21 @@ class ViewDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "classes-out-produced.scala", produced)
     expected should be(produced)
   }
+  "generated scala case class file" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "case-classes-out.scala")
+    // TODO api sucks
+    object ScalaBuilder extends ScalaCaseClassWriter {
+      override def scalaClassName(name: String) = Naming.camelize(name)
+      override def scalaFieldName(name: String) = Naming.camelizeLower(name)
+    }
+    // TODO api sucks
+    val produced = ScalaBuilder.createScalaClassesString(
+      List("package some.caseclass.pack", ""), viewDefs, Seq("// end"))
+      .replace(nl, "\n") // normalize newlines here? TODO
+    if (expected != produced)
+      toFile(path + "/" + "case-classes-out-produced.scala", produced)
+    expected should be(produced)
+  }
   def fileToString(filename: String) = {
     val source = Source.fromFile(filename)
     val body = source.mkString
