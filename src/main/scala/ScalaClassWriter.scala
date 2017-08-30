@@ -62,6 +62,9 @@ trait ScalaClassWriter {
   def scalaFieldsString(typeDef: ViewDef[FieldDef[Type]]) =
     scalaFieldsStringsWithHandler(typeDef)
       .map(scalaFieldsIndent + _ + nl).mkString
+  def scalaBody(typeDef: ViewDef[FieldDef[Type]]) =
+    scalaFieldsString(typeDef) + Option(scalaBodyExtra(typeDef)).getOrElse("")
+  def scalaBodyExtra(typeDef: ViewDef[FieldDef[Type]]) = ""
   def scalaExtendsString(typeDef: ViewDef[FieldDef[Type]]) =
     Option(scalaClassTraits(typeDef))
       .map(scalaClassExtends(typeDef).toList ::: _.toList)
@@ -71,7 +74,7 @@ trait ScalaClassWriter {
       .getOrElse("")
   def scalaPrefix(typeDef: ViewDef[FieldDef[Type]]) = "class"
   def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
-    s"${scalaPrefix(typeDef)} ${scalaClassName(typeDef.name)}${scalaExtendsString(typeDef)} {$nl${scalaFieldsString(typeDef)}}"
+    s"${scalaPrefix(typeDef)} ${scalaClassName(typeDef.name)}${scalaExtendsString(typeDef)} {$nl${scalaBody(typeDef)}}"
   }
   def createScalaClassesString(
     headers: Seq[String], typedefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
@@ -92,7 +95,8 @@ trait ScalaCaseClassWriter extends ScalaClassWriter {
   override def scalaPrefix(typeDef: ViewDef[FieldDef[Type]]) = "case class"
   override def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) = None
   override def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
-    s"${scalaPrefix(typeDef)} ${scalaClassName(typeDef.name)}${scalaExtendsString(typeDef)} ($nl${scalaFieldsString(typeDef)})"
+    s"${scalaPrefix(typeDef)} ${scalaClassName(typeDef.name)}${scalaExtendsString(typeDef)} ($nl${scalaFieldsString(typeDef)})" +
+      Option(scalaBodyExtra(typeDef)).filter(_.trim != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }
 }
 
