@@ -94,7 +94,54 @@ case class FieldDef[+T](
   orderBy: String,
   isI18n: Boolean,
   comments: String,
-  extras: Map[String, Any]) extends FieldDefBase[T]
+  extras: Map[String, Any]) extends FieldDefBase[T] {
+  def this(name: String, type_ : T = null) = this(
+    table = null,
+    tableAlias = null,
+    name = name,
+    alias = null,
+    options = null, // persistence options
+    isCollection = false,
+    maxOccurs = null,
+    isExpression = false,
+    expression = null,
+    saveTo = null,
+    resolver = null, // expression, calculates value to be saved
+    nullable = true,
+    default = null,
+    isForcedCardinality = false,
+    type_  = type_,
+    enum = null,
+    joinToParent = null,
+    orderBy = null,
+    isI18n = false,
+    comments = null,
+    extras = null
+  )
+  def this(that: FieldDefBase[T]) = this(
+    table = that.table,
+    tableAlias = that.tableAlias,
+    name = that.name,
+    alias = that.alias,
+    options = that.options, // persistence options
+    isCollection = that.isCollection,
+    maxOccurs = that.maxOccurs,
+    isExpression = that.isExpression,
+    expression = that.expression,
+    saveTo = that.saveTo,
+    resolver = that.resolver, // expression, calculates value to be saved
+    nullable = that.nullable,
+    default = that.default,
+    isForcedCardinality = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isForcedCardinality else false,
+    type_ = that.type_,
+    enum = that.enum,
+    joinToParent = that.joinToParent,
+    orderBy = that.orderBy,
+    isI18n = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isI18n else false,
+    comments = that.comments,
+    extras = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].extras else null
+  )
+}
 
 package in {
 
