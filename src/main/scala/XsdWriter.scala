@@ -3,6 +3,7 @@ package mojoz.metadata.out
 import mojoz.metadata._
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import scala.collection.immutable.Seq
 
 class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     xsdName: String => String = identity,

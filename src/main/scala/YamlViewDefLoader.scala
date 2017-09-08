@@ -6,6 +6,7 @@ import java.util.ArrayList
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 import scala.collection.mutable.Queue
 import scala.io.Source
 

@@ -1,6 +1,7 @@
 import scala.io.Source
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import scala.collection.immutable.Seq
 import mojoz.metadata._
 import mojoz.metadata.in._
 import mojoz.metadata.io._

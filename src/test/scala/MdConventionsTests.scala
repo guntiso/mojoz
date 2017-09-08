@@ -1,5 +1,6 @@
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import scala.collection.immutable.Seq
 
 import mojoz.metadata.ColumnDef
 import mojoz.metadata.TableDef

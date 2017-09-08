@@ -8,6 +8,7 @@ import java.sql.{ ResultSet => RS }
 import java.sql.Types
 
 import scala.collection.mutable.ListBuffer
+import scala.collection.immutable.Seq
 
 import mojoz.metadata.ColumnDef
 import mojoz.metadata.TableDef
@@ -255,18 +256,19 @@ abstract class JdbcTableDefLoader {
           .filter(_ != null).filter(_ != "").mkString(".")
       refMap.get(pkTabFullName, fkName) match {
         case Some(r) =>
-          r.cols.asInstanceOf[ListBuffer[String]] += fkColName
-          r.refCols.asInstanceOf[ListBuffer[String]] += pkColName
+          refMap += (pkTabFullName, fkName) ->
+            r.copy(
+              cols = r.cols :+ fkColName,
+              refCols = r.refCols :+ pkColName)
         case None =>
           // TODO deferrability to ref!
           refMap += (pkTabFullName, fkName) ->
-            Ref(fkName, ListBuffer(fkColName), pkTabFullName,
-              ListBuffer(pkColName), null, null, deleteRule, updateRule)
+            Ref(fkName, Seq(fkColName), pkTabFullName,
+              Seq(pkColName), null, null, deleteRule, updateRule)
       }
     }
     rs.close
     refMap.values
-      .map(r => r.copy(cols = r.cols.toList, refCols = r.refCols.toList))
       .toList
       .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }

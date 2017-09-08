@@ -1,5 +1,7 @@
 package mojoz.metadata
 
+import scala.collection.immutable.Seq
+
 package object in {
   case class Join(alias: String, table: String, columns: Seq[ColumnDef[Type]])
   /** basetable and joins to parsed joins */

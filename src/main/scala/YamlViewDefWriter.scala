@@ -1,6 +1,7 @@
 package mojoz.metadata.out
 
 import scala.annotation.tailrec
+import scala.collection.immutable.Seq
 
 import mojoz.metadata._
 import mojoz.metadata.io._

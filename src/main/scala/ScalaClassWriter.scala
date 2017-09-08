@@ -3,6 +3,7 @@ package mojoz.metadata.out
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import scala.collection.immutable.Seq
 
 // TODO ScalaWriter, ScalaTraitWriter, Scala[Companion]ObjectWriter
 trait ScalaClassWriter {
