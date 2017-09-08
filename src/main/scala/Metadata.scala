@@ -51,7 +51,10 @@ object TableDef {
     name: String,
     // TODO check constraint deferrability?
     // TODO table check constraint or column check constraint?
-    expression: String)
+    expression: String) {
+    require(expression != null && expression.trim != "",
+      "Invalid expression for check constraint: " + expression)
+  }
   trait TableDefBase[+C <: ColumnDefBase[_]] { // TODO bound too tight?
     val name: String
     val comments: String
