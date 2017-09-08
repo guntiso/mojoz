@@ -23,10 +23,12 @@ case class Type(name: String, length: Option[Int],
   def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
 }
 object TableDef {
+  private def validCols(cols: Seq[String]) =
+    cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == "")
   case class DbIndex(
     name: String,
     cols: Seq[String]) {
-    require(cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == ""),
+    require(validCols(cols),
       "Invalid columns for index: " + cols)
   }
   case class Ref(
@@ -37,7 +39,14 @@ object TableDef {
     defaultTableAlias: String,
     defaultRefTableAlias: String,
     onDeleteAction: String,
-    onUpdateAction: String)
+    onUpdateAction: String) {
+    require(validCols(cols),
+      "Invalid columns for ref: " + cols)
+    require(validCols(refCols),
+      "Invalid ref columns for ref: " + refCols)
+    require(refTable != null && refTable.trim != "",
+      "Invalid ref table for ref: " + refTable)
+  }
   case class CheckConstraint(
     name: String,
     // TODO check constraint deferrability?
