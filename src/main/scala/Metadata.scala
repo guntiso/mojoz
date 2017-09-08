@@ -25,7 +25,10 @@ case class Type(name: String, length: Option[Int],
 object TableDef {
   case class DbIndex(
     name: String,
-    cols: Seq[String])
+    cols: Seq[String]) {
+    require(cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == ""),
+      "Invalid columns for index: " + cols)
+  }
   case class Ref(
     name: String,
     cols: Seq[String],
