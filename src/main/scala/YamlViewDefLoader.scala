@@ -223,7 +223,7 @@ class YamlViewDefLoader(
     def getSeq(name: ViewDefKeys.ViewDefKeys,
         nullToString: Boolean = false): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
-      case Some(a: java.util.ArrayList[_]) => a.asScala.toList
+      case Some(a: java.util.ArrayList[_]) => a.asScala.toList.filter(_ != null)
       case None => Nil
       case Some(null) if nullToString => Seq("")
       case Some(null) => Nil
