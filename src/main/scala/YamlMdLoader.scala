@@ -407,6 +407,7 @@ private[in] object YamlMdLoader {
               val comments = strings.headOption.getOrElse(child.get("comments").orNull)
               // TODO handle (raise error for?) other cases
               (comments, child ++ strings.drop(1).map(s => s -> s).toMap)
+            case null => (null, null)
             case x => sys.error(ThisFail +
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)
