@@ -9,6 +9,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.collection.mutable.Queue
 import scala.io.Source
+import scala.util.control.NonFatal
 
 import org.yaml.snakeyaml.Yaml
 
@@ -432,7 +433,13 @@ class YamlViewDefLoader(
       t.copy(table = table, tableAlias = tableAlias)
     }
 
-    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
+    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) =
+      try resolveFieldNamesAndTypes_(t) catch {
+        case NonFatal(ex) =>
+          throw new RuntimeException("Failed to resolve field names and types for " + t.name, ex)
+      }
+
+    def resolveFieldNamesAndTypes_(t: ViewDef[FieldDef[Type]]) = {
       val joins = parseJoins(
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
