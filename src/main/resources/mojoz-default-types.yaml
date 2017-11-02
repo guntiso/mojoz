@@ -60,8 +60,8 @@ type:       int
 xsd name:   int
 scala name: java.lang.Integer
 jdbc load:
-- DECIMAL *..9 0    -> none, size
-- NUMERIC *..9 0    -> none, size
+- DECIMAL *..9 0    -> size, none
+- NUMERIC *..9 0    -> size, none
 - INTEGER
 yaml:
 - int
@@ -71,8 +71,8 @@ type:       long
 xsd name:   long
 scala name: java.lang.Long
 jdbc load:
-- DECIMAL 10..18 0  -> none, size
-- NUMERIC 10..18 0  -> none, size
+- DECIMAL 10..18 0  -> size, none
+- NUMERIC 10..18 0  -> size, none
 - BIGINT
 yaml:
 - long
@@ -82,8 +82,8 @@ type:       integer
 xsd name:   integer
 scala name: BigInt
 jdbc load:
-- DECIMAL 19..* 0   -> none, size
-- NUMERIC 19..* 0   -> none, size
+- DECIMAL 19..* 0   -> size, none
+- NUMERIC 19..* 0   -> size, none
 yaml:
 - integer
 - integer *         -> *

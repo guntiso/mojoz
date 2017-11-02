@@ -3,6 +3,7 @@ package in
 
 import mojoz.metadata.ColumnDef.ColumnDefBase
 import org.yaml.snakeyaml.Yaml
+import scala.collection.immutable._
 import scala.collection.JavaConverters._
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources()) {
@@ -53,15 +54,37 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources()) {
     val targetPart =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
       else null
+    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array()
     val jdbcPartParts = jdbcPart.split("\\s+", 3)
     val jdbcNameOrCode = jdbcPartParts(0)
     val sizeInterval = if (jdbcPartParts.size > 1) jdbcPartParts(1) else ""
     val (minSize, maxSize) = toMinMax(sizeInterval)
     val fracInterval = if (jdbcPartParts.size > 2) jdbcPartParts(2) else ""
     val (minFrac, maxFrac) = toMinMax(fracInterval)
-    val targetLength:         Option[Int] = None // TODO // xxx Some(null) means copy from source
-    val targetTotalDigits:    Option[Int] = None // TODO // xxx Some(null) means copy from source
-    val targetFractionDigits: Option[Int] = None // TODO // xxx Some(null) means copy from source
+    val targetLength:         Option[Integer] =
+      if (targetPartParts.size == 1)
+        targetPartParts(0) match {
+          case "none" => None
+          case "size" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
+    val targetTotalDigits:    Option[Integer] =
+      if (targetPartParts.size == 2)
+        targetPartParts(0) match {
+          case "none" => None
+          case "size" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
+    val targetFractionDigits: Option[Integer] =
+      if (targetPartParts.size == 2)
+        targetPartParts(1) match {
+          case "none" => None
+          case "frac" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
     JdbcLoadInfo(jdbcNameOrCode, minSize, maxSize, minFrac, maxFrac,
       targetLength, targetTotalDigits, targetFractionDigits)
   }
@@ -70,7 +93,10 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources()) {
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
     val typeName = tdMap.get("type").map(_.toString)
       .getOrElse(sys.error("Missing type name"))
-    val targetNames = Map.empty[String, String] // TODO
+    val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++
+      tdMap.filterKeys(_ endsWith " name").map {
+        case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
+      }
     val jdbcLoad = tdMap.get("jdbc load")
       .filter(_ != null)
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)

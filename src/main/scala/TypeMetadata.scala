@@ -9,9 +9,9 @@ case class JdbcLoadInfo(
   maxSize:              Option[Int],
   minFractionDigits:    Option[Int],
   maxFractionDigits:    Option[Int],
-  targetLength:         Option[Int], // xxx Some(null) means copy from source
-  targetTotalDigits:    Option[Int], // xxx Some(null) means copy from source
-  targetFractionDigits: Option[Int]  // xxx Some(null) means copy from source
+  targetLength:         Option[Integer], // xxx Some(null) means copy from source
+  targetTotalDigits:    Option[Integer], // xxx Some(null) means copy from source
+  targetFractionDigits: Option[Integer]  // xxx Some(null) means copy from source
 )
 
 case class YamlLoadInfo(
