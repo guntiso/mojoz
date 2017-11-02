@@ -6,8 +6,10 @@ import java.util.ArrayList
 import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Seq
 import scala.collection.mutable.Queue
 import scala.io.Source
+import scala.util.control.NonFatal
 
 import org.yaml.snakeyaml.Yaml
 
@@ -65,6 +67,7 @@ object FieldDef {
     val saveTo: String
     val resolver: String // expression, calculates value to be saved
     val nullable: Boolean
+    val default: String
     val type_ : T
     val enum: Seq[String]
     val joinToParent: String
@@ -85,6 +88,7 @@ case class FieldDef[+T](
   saveTo: String,
   resolver: String, // expression, calculates value to be saved
   nullable: Boolean,
+  default: String,
   isForcedCardinality: Boolean,
   type_ : T,
   enum: Seq[String],
@@ -92,7 +96,54 @@ case class FieldDef[+T](
   orderBy: String,
   isI18n: Boolean,
   comments: String,
-  extras: Map[String, Any]) extends FieldDefBase[T]
+  extras: Map[String, Any]) extends FieldDefBase[T] {
+  def this(name: String, type_ : T = null) = this(
+    table = null,
+    tableAlias = null,
+    name = name,
+    alias = null,
+    options = null, // persistence options
+    isCollection = false,
+    maxOccurs = null,
+    isExpression = false,
+    expression = null,
+    saveTo = null,
+    resolver = null, // expression, calculates value to be saved
+    nullable = true,
+    default = null,
+    isForcedCardinality = false,
+    type_  = type_,
+    enum = null,
+    joinToParent = null,
+    orderBy = null,
+    isI18n = false,
+    comments = null,
+    extras = null
+  )
+  def this(that: FieldDefBase[T]) = this(
+    table = that.table,
+    tableAlias = that.tableAlias,
+    name = that.name,
+    alias = that.alias,
+    options = that.options, // persistence options
+    isCollection = that.isCollection,
+    maxOccurs = that.maxOccurs,
+    isExpression = that.isExpression,
+    expression = that.expression,
+    saveTo = that.saveTo,
+    resolver = that.resolver, // expression, calculates value to be saved
+    nullable = that.nullable,
+    default = that.default,
+    isForcedCardinality = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isForcedCardinality else false,
+    type_ = that.type_,
+    enum = that.enum,
+    joinToParent = that.joinToParent,
+    orderBy = that.orderBy,
+    isI18n = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isI18n else false,
+    comments = that.comments,
+    extras = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].extras else null
+  )
+}
 
 package in {
 
@@ -173,7 +224,7 @@ class YamlViewDefLoader(
     def getSeq(name: ViewDefKeys.ViewDefKeys,
         nullToString: Boolean = false): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
-      case Some(a: java.util.ArrayList[_]) => a.asScala.toList
+      case Some(a: java.util.ArrayList[_]) => a.asScala.toList.filter(_ != null)
       case None => Nil
       case Some(null) if nullToString => Seq("")
       case Some(null) => Nil
@@ -208,7 +259,7 @@ class YamlViewDefLoader(
     def typeName(v: Map[String, Any], defaultSuffix: String) =
       if (v.contains("name")) "" + v("name")
       else name + "_" + defaultSuffix
-    def toXsdFieldDef(yfd: YamlFieldDef) = {
+    def toXsdFieldDef(yfd: YamlFieldDef, viewName: String, viewTable: String, viewSaveTo: Seq[String]) = {
       val table = null
       val tableAlias = null
       val name = yfd.name
@@ -218,10 +269,36 @@ class YamlViewDefLoader(
       val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
-      val saveTo = yfd.saveTo
+      val isResolvable = yfd.isResolvable
+      val saveTo = Option(yfd.saveTo) getOrElse {
+        if (isResolvable) {
+          val simpleName = if (name.indexOf('.') > 0) name.substring(name.indexOf('.') + 1) else name
+          def errorMessage =
+            s"Failed to resolve save target for $viewName.$simpleName" +
+              ", please provide target column name"
+          Option(viewSaveTo).filter(_.size > 0)
+              .orElse(Option(viewTable).map(_.split("\\s+", 2)(0)).map(Seq(_))).map { tNames =>
+            val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
+            if (tables.exists(t => t.cols.exists(_.name == simpleName)))
+              simpleName
+            else {
+              val matches: Set[String] = tables
+                .flatMap(_.refs.filter { ref =>
+                  ref.cols.size == 1 &&
+                    Option(ref.defaultRefTableAlias).getOrElse(ref.refTable) == simpleName
+                })
+                .map(_.cols(0))
+                .foldLeft(Set[String]())(_ + _).toSet
+              if (matches.size == 1) matches.head
+              else throw new RuntimeException(errorMessage)
+            }
+          }.getOrElse(throw new RuntimeException(errorMessage))
+        } else null
+      }
       val resolver = yfd.resolver
       val nullable = Option(yfd.cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
+      val default = null // TODO fieldDef default?
       val isForcedCardinality = yfd.cardinality != null
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
@@ -245,13 +322,13 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
-        isExpression, expression, saveTo, resolver, nullable, isForcedCardinality,
+        isExpression, expression, saveTo, resolver, nullable, default, isForcedCardinality,
         xsdType, enum, joinToParent, orderBy, false, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
     val fieldDefs = yamlFieldDefs
-      .map(toXsdFieldDef)
+      .map(toXsdFieldDef(_, name, table, saveTo))
       .map { f =>
         if (f.extras == null) f
         else f.copy(
@@ -356,10 +433,21 @@ class YamlViewDefLoader(
       t.copy(table = table, tableAlias = tableAlias)
     }
 
-    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) = {
-      val joins = parseJoins(t.table, t.joins)
+    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) =
+      try resolveFieldNamesAndTypes_(t) catch {
+        case NonFatal(ex) =>
+          throw new RuntimeException("Failed to resolve field names and types for " + t.name, ex)
+      }
+
+    def resolveFieldNamesAndTypes_(t: ViewDef[FieldDef[Type]]) = {
+      val joins = parseJoins(
+        Option(t.table)
+          .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
+          .orNull,
+        t.joins)
       val aliasToTable =
-        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap
+        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap ++
+          Seq(t.tableAlias).filter(_ != null).map(_ -> t.table).toMap
       val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def reduceExpression[T](f: FieldDef[T]) =
@@ -385,7 +473,11 @@ class YamlViewDefLoader(
               .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
                 .getOrElse(tableOrAlias))).map(dbName).orNull
           val tableAlias =
-            if (table == tableOrAlias || parts.size > 2) null else tableOrAlias
+            if (table == tableOrAlias ||
+                t.tableAlias == tableOrAlias ||
+                parts.size > 2)
+              null
+            else tableOrAlias
           val partsReverseList = parts.toList.reverse
           val name = dbName(partsReverseList.head)
           val path = partsReverseList.tail.reverse
@@ -400,7 +492,7 @@ class YamlViewDefLoader(
             case rmIdx => fName.substring(rmIdx + 2)
           }
           val alias = Option(f.alias).map(dbName) getOrElse
-            dbName(maybeNoPrefix(f.name).replace(".", "_"))
+            Some(dbName(maybeNoPrefix(f.name).replace(".", "_"))).filter(_ != name).orNull
           val expression =
             if (f.expression != null || parts.size < 3) f.expression
             else parts.map(dbName).mkString(".")
@@ -423,13 +515,13 @@ class YamlViewDefLoader(
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
           // FIXME autojoins nullable?
+          val joinOpt = tableOrAliasToJoin.get(tableOrAlias)
+          val joinColOpt =
+            // TODO make use of join col type info?
+            joinOpt.map(_.columns).getOrElse(Nil).filter(_.name == f.name).headOption
           val nullable =
             if (f.isForcedCardinality) f.nullable
-            else tableOrAliasToJoin.get(tableOrAlias).map(_.nullable)
-              .getOrElse(Right(col.nullable)) match {
-                case Right(b) => b || col.nullable
-                case Left(s) => true // FIXME Left(nullableTableDependency)!
-              }
+            else joinColOpt.map(_.nullable).getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
               if (f.type_ != null && f.alias == null) overwriteSimpleType(col.type_, f.type_)

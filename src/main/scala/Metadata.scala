@@ -1,6 +1,7 @@
 package mojoz.metadata
 
 import scala.annotation.tailrec
+import scala.collection.immutable.Seq
 
 import mojoz.metadata.in.I18nRules
 import mojoz.metadata.in.YamlTableDefLoader
@@ -22,9 +23,14 @@ case class Type(name: String, length: Option[Int],
   def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
 }
 object TableDef {
+  private def validCols(cols: Seq[String]) =
+    cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == "")
   case class DbIndex(
     name: String,
-    cols: Seq[String])
+    cols: Seq[String]) {
+    require(validCols(cols),
+      "Invalid columns for index: " + cols)
+  }
   case class Ref(
     name: String,
     cols: Seq[String],
@@ -33,12 +39,22 @@ object TableDef {
     defaultTableAlias: String,
     defaultRefTableAlias: String,
     onDeleteAction: String,
-    onUpdateAction: String)
+    onUpdateAction: String) {
+    require(validCols(cols),
+      "Invalid columns for ref: " + cols)
+    require(validCols(refCols),
+      "Invalid ref columns for ref: " + refCols)
+    require(refTable != null && refTable.trim != "",
+      "Invalid ref table for ref: " + refTable)
+  }
   case class CheckConstraint(
     name: String,
     // TODO check constraint deferrability?
     // TODO table check constraint or column check constraint?
-    expression: String)
+    expression: String) {
+    require(expression != null && expression.trim != "",
+      "Invalid expression for check constraint: " + expression)
+  }
   trait TableDefBase[+C <: ColumnDefBase[_]] { // TODO bound too tight?
     val name: String
     val comments: String
@@ -115,7 +131,7 @@ case class ColumnDef[+T](
 
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
-  val dbName: String => String = Naming.dbName) {
+  val dbName: String => String = identity) {
   private val md = tableDefs.map(e => (e.name, e)).toMap
   private val refTableAliasToRef = tableDefs.map(t => t.refs
     .filter(_.defaultRefTableAlias != null)
@@ -124,6 +140,10 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     .toMap
   private val colNameToCol =
     tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
+
+  def tableDefOption(tableName: String) =
+    md.get(tableName)
+
   def tableDef(tableName: String) =
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)

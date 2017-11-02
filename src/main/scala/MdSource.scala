@@ -1,6 +1,7 @@
 package mojoz.metadata.in
 
 import java.io.File
+import scala.collection.immutable.Seq
 import scala.io.Codec
 import scala.io.Source
 
@@ -40,7 +41,7 @@ private[in] class FilesMdSource(
       these.filter(_.isDirectory).flatMap(recursiveListFiles)
   }
   private def typedefFiles =
-    recursiveListFiles(new File(path)).toSeq.filter(filter)
+    recursiveListFiles(new File(path)).toList.filter(filter)
   override def defSets = typedefFiles.map(f => YamlMd(f.getName, 0,
     Source.fromFile(f).mkString))
 }
@@ -54,7 +55,7 @@ private[in] class ResourcesMdSource(
     Option(getClass.getResourceAsStream(indexPath))
       .map(Source.fromInputStream(_)(Codec("UTF-8"))
         .getLines.toList).getOrElse(Nil)
-      .filter(nameFilter).map(nameMap).toSet.toSeq
+      .filter(nameFilter).map(nameMap).toSet.toList
   override def defSets = typedefResources.map(r => YamlMd(r, 0,
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
 }

@@ -3,6 +3,7 @@ package mojoz.metadata.io
 import mojoz.metadata._
 import mojoz.metadata.TableDef._
 import mojoz.metadata.out.SqlWriter
+import scala.collection.immutable.Seq
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
@@ -247,7 +248,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
 object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules) {
 
   private def splitNamePatternString(patternString: String): Seq[String] =
-    patternString.trim.split("[,\\s]+").toSeq.map(_.trim)
+    patternString.trim.split("[,\\s]+").toList.map(_.trim)
 
   /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
   def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String]): Seq[String] = {

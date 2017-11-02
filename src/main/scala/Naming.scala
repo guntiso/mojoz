@@ -1,12 +1,17 @@
 package mojoz.metadata
 
 object Naming {
-  def dbNameToXsdName(dbName: String) = {
-    val parts = dbName.split("[_\\.]+")
+  def camelize(name: String) = {
+    val parts = name.split("[_\\-\\.]+")
     parts.toList
       .map(_.toLowerCase)
       .map(_.capitalize)
       .mkString
+  }
+  def camelizeLower(name: String) = camelize(name) match {
+    case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>
+      x(0).toLower + x.substring(1)
+    case x => x
   }
   def dbName(name: String) = {
     val parts = dasherize(name).split("[\\-\\_]")

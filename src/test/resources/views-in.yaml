@@ -127,3 +127,41 @@ table: bank
 fields:
 - id
 - name -> = _ || ' saved'
+
+name: resolver_test_6
+table: bank
+fields:
+- id
+- name = name || '.' ->
+
+name: resolver_test_7
+table: bank b
+fields:
+- id
+- name ->
+- country = country.name ->
+
+name: resolver_test_7b
+table: bank b
+fields:
+- id
+- country = country.name -> = to_country_code(_)
+
+name: resolver_test_8
+table: account
+fields:
+- id
+- bank = bank.name ->
+
+name: resolver_test_8b
+table: account a_
+fields:
+- id
+- a_.bank_id -> = 33
+
+name: resolver_test_9
+table: person
+fields:
+- id
+- mother = mother.name || mother.surname ->
+- father = father.name || ' ' || father.surname ->
