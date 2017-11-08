@@ -42,7 +42,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources()) {
       case i => Some(i).map(_.toInt) // TODO try, explain
     }
     val min = toIntOpt(parts(0))
-    val max = if (parts.size > 1) toIntOpt(parts(1)) else None
+    val max = if (parts.size > 1) toIntOpt(parts(1)) else min
     (min, max)
   }
   private def toJdbcLoadInfo(s: String) = {
