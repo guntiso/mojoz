@@ -425,7 +425,7 @@ object JdbcTableDefLoader {
     "TIMESTAMP_WITH_TIMEZONE" -> 2014, // Types.TIMESTAMP_WITH_TIMEZONE - since java 8,
     "TINYINT" -> Types.TINYINT,
     "VARBINARY" -> Types.VARBINARY,
-    "VARCHAR" -> Types.VARCHAR,
+    "VARCHAR" -> Types.VARCHAR
   )
   private[in] val jdbcCodeToTypeName: Map[Int, String] =
     jdbcTypeNameToCode.map(_.swap)
