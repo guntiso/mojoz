@@ -5,6 +5,7 @@ import mojoz.metadata.ColumnDef.ColumnDefBase
 
 case class JdbcLoadInfo(
   jdbcTypeNameOrCode:   String,
+  jdbcTypeCode:         Int,
   minSize:              Option[Int],
   maxSize:              Option[Int],
   minFractionDigits:    Option[Int],

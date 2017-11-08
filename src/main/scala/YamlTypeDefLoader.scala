@@ -5,6 +5,7 @@ import mojoz.metadata.ColumnDef.ColumnDefBase
 import org.yaml.snakeyaml.Yaml
 import scala.collection.immutable._
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-default-types.yaml")) {
   import YamlTableDefLoader._
@@ -57,6 +58,10 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
     val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array()
     val jdbcPartParts = jdbcPart.split("\\s+", 3)
     val jdbcNameOrCode = jdbcPartParts(0)
+    val jdbcCode =
+      Try(jdbcNameOrCode.toInt).toOption
+        .getOrElse(JdbcTableDefLoader.jdbcTypeNameToCode.get(jdbcNameOrCode)
+          .getOrElse(sys.error("Unexpected jdbc type name: " + jdbcNameOrCode)))
     val sizeInterval = if (jdbcPartParts.size > 1) jdbcPartParts(1) else ""
     val (minSize, maxSize) = toMinMax(sizeInterval)
     val fracInterval = if (jdbcPartParts.size > 2) jdbcPartParts(2) else ""
@@ -85,7 +90,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
           case fxSize => Some(new Integer(fxSize.toInt))
         }
       else None
-    JdbcLoadInfo(jdbcNameOrCode, minSize, maxSize, minFrac, maxFrac,
+    JdbcLoadInfo(jdbcNameOrCode, jdbcCode, minSize, maxSize, minFrac, maxFrac,
       targetLength, targetTotalDigits, targetFractionDigits)
   }
   private def loadYamlTypeDef(typeDef: String) = {

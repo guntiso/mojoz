@@ -272,6 +272,40 @@ abstract class JdbcTableDefLoader {
       .toList
       .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }
+  lazy val jdbcLoadInfoToTypeDef =
+    new YamlTypeDefLoader().typeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
+  def jdbcTypeToMojozType(jdbcTypeCode: Int, size: Int, frac: Int) =
+    jdbcLoadInfoToTypeDef.find { case (jl, td) =>
+      jl.jdbcTypeCode == jdbcTypeCode &&
+      jl.minSize.map(_ <= size).getOrElse(true) &&
+      jl.maxSize.map(_ >= size).getOrElse(true) &&
+      jl.minFractionDigits.map(_ <= frac).getOrElse(true) &&
+      jl.maxFractionDigits.map(_ >= frac).getOrElse(true)
+    }.map { case (jl, td) =>
+      val length = jl.targetLength match {
+        case Some(null) => Some(size) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val totalDigits = jl.targetTotalDigits match {
+        case Some(null) => Some(size) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val fractionDigits = jl.targetFractionDigits match {
+        case Some(null) => Some(frac) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val isComplexType = false
+      Type(td.name, length, totalDigits, fractionDigits, isComplexType)
+    }.getOrElse {
+      val jdbcTypeName = jdbcCodeToTypeName.get(jdbcTypeCode) getOrElse ""
+      throw new RuntimeException(
+        s"Failed to convert jdbc type (code: $jdbcTypeCode, name: $jdbcTypeName, size: $size, fractionDigits: $frac)" +
+          " to mojoz type - mo match found")
+    }
+  def toMojozType(jdbcColumnType: JdbcColumnType): Type =
+    jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
+  def toMojozTypeTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): TableDef[ColumnDef[Type]] =
+    tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
 
 // java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/GettingStartedTOC.fm.html
@@ -333,14 +367,8 @@ object JdbcTableDefLoader {
       Nil
     }
   }
-  private[in] def integerOrSubtype(len: Int) =
-    if (len > 18) new Type("integer", None, Some(len.toInt), None, false)
-    else if (len > 9) new Type("long", None, Some(len.toInt), None, false)
-    else new Type("int", None, Some(len.toInt), None, false)
-  def jdbcTableDefs(conn: Connection,
-    catalog: String, schemaPattern: String, tableNamePattern: String,
-    types: String*) = {
-    val loader = conn.getMetaData.getDatabaseProductName match {
+  def jdbcTableDefLoader(conn: Connection) = {
+    conn.getMetaData.getDatabaseProductName match {
       case "H2" => new H2
       case "HSQL Database Engine" => new Hsqldb
       case "Oracle" => new Oracle
@@ -350,106 +378,57 @@ object JdbcTableDefLoader {
           ", ignoring check constraints!")
         new Other
     }
-    loader.jdbcTableDefs(
-      conn, catalog, schemaPattern, tableNamePattern, types: _*)
   }
   def tableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
-    types: String*) =
-    jdbcTableDefs(conn, catalog, schemaPattern, tableNamePattern, types: _*)
-      .map(mapType)
-  def mapType(jdbcColumnType: JdbcColumnType): Type =
-    map(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def mapType(tableDef: TableDef[ColumnDef[JdbcColumnType]]): TableDef[ColumnDef[Type]] =
-    tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = mapType(c.type_))))
-  private def jdbcTypeNameToCode(jdbcTypeName: String): Int = jdbcTypeName match {
-    case "ARRAY" => Types.ARRAY
-    case "BIGINT" => Types.BIGINT
-    case "BINARY" => Types.BINARY
-    case "BIT" => Types.BIT
-    case "BLOB" => Types.BLOB
-    case "BOOLEAN" => Types.BOOLEAN
-    case "CHAR" => Types.CHAR
-    case "CLOB" => Types.CLOB
-    case "DATALINK" => Types.DATALINK
-    case "DATE" => Types.DATE
-    case "DECIMAL" => Types.DECIMAL
-    case "DISTINCT" => Types.DISTINCT
-    case "DOUBLE" => Types.DOUBLE
-    case "FLOAT" => Types.FLOAT
-    case "INTEGER" => Types.INTEGER
-    case "JAVA_OBJECT" => Types.JAVA_OBJECT
-    case "LONGNVARCHAR" => Types.LONGNVARCHAR
-    case "LONGVARBINARY" => Types.LONGVARBINARY
-    case "LONGVARCHAR" => Types.LONGVARCHAR
-    case "NCHAR" => Types.NCHAR
-    case "NCLOB" => Types.NCLOB
-    case "NULL" => Types.NULL
-    case "NUMERIC" => Types.NUMERIC
-    case "NVARCHAR" => Types.NVARCHAR
-    case "OTHER" => Types.OTHER
-    case "REAL" => Types.REAL
-    case "REF" => Types.REF
-    case "REF_CURSOR" => 2012 // Types.REF_CURSOR - since java 8
-    case "ROWID" => Types.ROWID
-    case "SMALLINT" => Types.SMALLINT
-    case "SQLXML" => Types.SQLXML
-    case "STRUCT" => Types.STRUCT
-    case "TIME" => Types.TIME
-    case "TIME_WITH_TIMEZONE" => 2013 // Types.TIME_WITH_TIMEZONE - since java 8
-    case "TIMESTAMP" => Types.TIMESTAMP
-    case "TIMESTAMP_WITH_TIMEZONE" => 2014 // Types.TIMESTAMP_WITH_TIMEZONE - since java 8
-    case "TINYINT" => Types.TINYINT
-    case "VARBINARY" => Types.VARBINARY
-    case "VARCHAR" => Types.VARCHAR
-    case x => sys.error("Unexpected jdbc type name: " + x)
+    types: String*) = {
+    val loader = jdbcTableDefLoader(conn)
+    loader.jdbcTableDefs(conn, catalog, schemaPattern, tableNamePattern, types: _*)
+      .map(loader.toMojozTypeTableDef)
   }
-  private[in] def map(jdbcTypeCode: Int, size: Int, fractionDigits: Int) =
-    jdbcTypeCode match {
-      case Types.ARRAY => new Type("base64Binary")
-      case Types.BIGINT => new Type("long")
-      case Types.BINARY => new Type("base64Binary")
-      case Types.BIT => new Type("boolean")
-      case Types.BLOB => new Type("base64Binary")
-      case Types.BOOLEAN => new Type("boolean")
-      case Types.CHAR => new Type("string", size)
-      case Types.CLOB => new Type("string", size)
-      case Types.DATALINK => new Type("string", size) // anyURI instead?
-      case Types.DATE => new Type("date")
-      case Types.DECIMAL | Types.NUMERIC =>
-        if (fractionDigits == 0) integerOrSubtype(size)
-        else new Type("decimal", size, fractionDigits)
-      case Types.DISTINCT =>
-        // TODO need base type to solve this correctly
-        new Type("string")
-      case Types.DOUBLE => new Type("double")
-      case Types.FLOAT => new Type("double") // Yes, double, not float! I mean it.
-      case Types.INTEGER => new Type("int") // Yes, int, not integer! I mean it.
-      case Types.JAVA_OBJECT => new Type("base64Binary")
-      case Types.LONGNVARCHAR => new Type("string")
-      case Types.LONGVARBINARY => new Type("base64Binary")
-      case Types.LONGVARCHAR =>
-        if (size > 0) new Type("string", size) else new Type("string")
-      case Types.NCHAR => new Type("string", size)
-      case Types.NCLOB => new Type("string", size)
-      case Types.NULL => new Type("string")
-      case Types.NVARCHAR => new Type("string", size)
-      case Types.OTHER => new Type("base64Binary")
-      case Types.REAL => new Type("float")
-      case Types.REF => new Type("string", size)
-      case Types.ROWID => new Type("string", size)
-      case Types.SMALLINT => new Type("short")
-      case Types.SQLXML => new Type("string")
-      case Types.STRUCT => new Type("base64Binary")
-      case Types.TIME => new Type("time")
-      case Types.TIMESTAMP => new Type("dateTime")
-      case Types.TINYINT =>
-        // TODO? signed/unsigned byte?
-        new Type("short")
-      case Types.VARBINARY => new Type("base64Binary")
-      case Types.VARCHAR => new Type("string", size)
-      case x => sys.error("Unexpected jdbc type code: " + x)
-    }
+  private[in] val jdbcTypeNameToCode: Map[String, Int] = Map(
+    "ARRAY" -> Types.ARRAY,
+    "BIGINT" -> Types.BIGINT,
+    "BINARY" -> Types.BINARY,
+    "BIT" -> Types.BIT,
+    "BLOB" -> Types.BLOB,
+    "BOOLEAN" -> Types.BOOLEAN,
+    "CHAR" -> Types.CHAR,
+    "CLOB" -> Types.CLOB,
+    "DATALINK" -> Types.DATALINK,
+    "DATE" -> Types.DATE,
+    "DECIMAL" -> Types.DECIMAL,
+    "DISTINCT" -> Types.DISTINCT,
+    "DOUBLE" -> Types.DOUBLE,
+    "FLOAT" -> Types.FLOAT,
+    "INTEGER" -> Types.INTEGER,
+    "JAVA_OBJECT" -> Types.JAVA_OBJECT,
+    "LONGNVARCHAR" -> Types.LONGNVARCHAR,
+    "LONGVARBINARY" -> Types.LONGVARBINARY,
+    "LONGVARCHAR" -> Types.LONGVARCHAR,
+    "NCHAR" -> Types.NCHAR,
+    "NCLOB" -> Types.NCLOB,
+    "NULL" -> Types.NULL,
+    "NUMERIC" -> Types.NUMERIC,
+    "NVARCHAR" -> Types.NVARCHAR,
+    "OTHER" -> Types.OTHER,
+    "REAL" -> Types.REAL,
+    "REF" -> Types.REF,
+    "REF_CURSOR" -> 2012, // Types.REF_CURSOR - since java 8
+    "ROWID" -> Types.ROWID,
+    "SMALLINT" -> Types.SMALLINT,
+    "SQLXML" -> Types.SQLXML,
+    "STRUCT" -> Types.STRUCT,
+    "TIME" -> Types.TIME,
+    "TIME_WITH_TIMEZONE" -> 2013, // Types.TIME_WITH_TIMEZONE - since java 8
+    "TIMESTAMP" -> Types.TIMESTAMP,
+    "TIMESTAMP_WITH_TIMEZONE" -> 2014, // Types.TIMESTAMP_WITH_TIMEZONE - since java 8,
+    "TINYINT" -> Types.TINYINT,
+    "VARBINARY" -> Types.VARBINARY,
+    "VARCHAR" -> Types.VARCHAR,
+  )
+  private[in] val jdbcCodeToTypeName: Map[Int, String] =
+    jdbcTypeNameToCode.map(_.swap)
 }
 
 private[in] object CkParser {
