@@ -60,6 +60,12 @@ private[in] class ResourcesMdSource(
     Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
 }
 
+private[in] class ResourceMdSource(val resourcePath: String) extends MdSource {
+  val typedefResources = Seq(resourcePath)
+  override def defSets = typedefResources.map(r => YamlMd(r, 0,
+    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
+}
+
 object YamlMd {
   private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
   private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
@@ -79,4 +85,6 @@ object YamlMd {
     nameFilter: (String) => Boolean = _ endsWith ".yaml",
     nameMap: (String) => String = "/" + _) =
     new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
+  def fromResource(resourcePath: String) =
+    new ResourceMdSource(resourcePath).defs
 }
