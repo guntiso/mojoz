@@ -309,7 +309,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
     val comment = yfd.comments
-    val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
+    val rawXsdType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
     val extras = yfd.extras
     ColumnDef(name, IoColumnType(nullable, rawXsdType),
       nullable getOrElse true, dbDefault, enum, comment, extras)
@@ -422,35 +422,45 @@ private[in] object YamlMdLoader {
     }
   }
 
-  def xsdType(f: YamlFieldDef,
-    conventions: MdConventions) = (f.typeName, f.length, f.fraction) match {
+  lazy val yamlLoadInfoToTypeDef =
+    new YamlTypeDefLoader().typeDefs.flatMap(td => td.yamlLoad.map(_ -> td))
+  def yamlTypeToMojozType(f: YamlFieldDef, conventions: MdConventions): Type =
+     yamlTypeToMojozType(f.typeName, f.length, f.fraction, conventions)
+  def yamlTypeToMojozType(yamlTypeName: String, size: Option[Int], frac: Option[Int],
+      conventions: MdConventions): Type = (yamlTypeName, size, frac) match {
     // FIXME do properly (check unsupported patterns, ...)
-    // FIXME TODO complex types
     case (null, None, None) => null
     case (null, Some(len), None) => new Type(null, len)
-    case (null, Some(len), Some(frac)) => new Type("decimal", len, frac)
-    case ("anySimpleType", _, _) => new Type("anySimpleType")
-    case ("date", _, _) => new Type("date")
-    case ("dateTime", _, _) => new Type("dateTime")
-    case ("string", None, _) => new Type("string")
-    case ("string", Some(len), _) => new Type("string", len)
-    case ("boolean", _, _) => new Type("boolean")
-    case ("int", None, _) => new Type("int")
-    case ("int", Some(len), _) => Type("int", None, Some(len), None, false)
-    case ("integer", None, _) => new Type("integer")
-    case ("integer", Some(len), _) => Type("integer", None, Some(len), None, false)
-    case ("long", None, _) => new Type("long")
-    case ("long", Some(len), _) => Type("long", None, Some(len), None, false)
-    case ("double", None, None) => new Type("double")
-    case ("decimal", None, None) => new Type("decimal")
-    case ("decimal", Some(len), None) => new Type("decimal", len, 0)
-    case ("decimal", Some(len), Some(frac)) => new Type("decimal", len, frac)
-    case ("base64Binary", None, _) => new Type("base64Binary")
-    case ("base64Binary", Some(len), _) => new Type("base64Binary", len)
-    case ("anyType", _, _) => new Type("anyType")
-    case (x, len, frac) if conventions.isRefName(x) =>
-      Type(x, len, None, frac, false) // FIXME len <> totalDigits, resolve!
-    // if no known xsd type name found - let it be complex type!
-    case (x, _, _) => new Type(x, true)
+    case _ =>
+      yamlLoadInfoToTypeDef.find { case (yl, td) =>
+        yl.typeName.orNull == yamlTypeName &&
+        sizeOptionMatch(yl.minSize, yl.maxSize, size) &&
+        sizeOptionMatch(yl.minFractionDigits, yl.maxFractionDigits, frac)
+      }.map { case (yl, td) =>
+        val length = yl.targetLength match {
+          case Some(null) => size // xxx Some(null) means copy from source
+          case x => x.map(_.intValue)
+        }
+        val totalDigits = yl.targetTotalDigits match {
+          case Some(null) => size // xxx Some(null) means copy from source
+          case x => x.map(_.intValue)
+        }
+        val fractionDigits = yl.targetFractionDigits match {
+          case Some(null) => frac // xxx Some(null) means copy from source
+          case x => x.map(_.intValue)
+        }
+        val isComplexType = false
+        Type(td.name, length, totalDigits, fractionDigits, isComplexType)
+      }.getOrElse {
+        if (conventions.isRefName(yamlTypeName))
+          Type(yamlTypeName, size, None, frac, false) // FIXME len <> totalDigits, resolve!
+        else
+          // if no known xsd type name found - let it be complex type!
+          new Type(yamlTypeName, true)
+      }
   }
+  private def sizeOptionMatch(min: Option[Int], max: Option[Int], value: Option[Int]) =
+    min.isEmpty && value.isEmpty ||
+      min.isDefined && value.isDefined && min.get <= value.get &&
+      max.map(_ >= value.get).getOrElse(true)
 }
