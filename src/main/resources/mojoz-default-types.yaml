@@ -19,7 +19,8 @@ jdbc load:
 - CLOB              -> size
 - DATALINK          -> size # anyURI instead?
 yaml:
-- string ?          -> size?
+- string
+- string *          -> size
 
 type:       date
 xsd name:   date
@@ -54,7 +55,7 @@ jdbc load:
 - TINYINT # TODO? signed/unsigned byte?
 yaml:
 - short
-- short *           -> size
+- short *           -> size, none
 
 type:       int
 xsd name:   int
@@ -65,7 +66,7 @@ jdbc load:
 - INTEGER
 yaml:
 - int
-- int *             -> size
+- int *             -> size, none
 
 type:       long
 xsd name:   long
@@ -76,7 +77,7 @@ jdbc load:
 - BIGINT
 yaml:
 - long
-- long *            -> size
+- long *            -> size, none
 
 type:       integer
 xsd name:   integer
@@ -86,7 +87,7 @@ jdbc load:
 - NUMERIC 19..* 0   -> size, none
 yaml:
 - integer
-- integer *         -> *
+- integer *         -> size, none
 
 
 type:       float
@@ -113,10 +114,10 @@ jdbc load:
 - DECIMAL * 1..*    -> size, frac
 - NUMERIC * 1..*    -> size, frac
 yaml:
-- null    * *       -> size, frac
 - decimal
-- decimal *         -> size
+- decimal *         -> size, 0
 - decimal * *       -> size, frac
+- null    * *       -> size, frac
 
 
 type:       boolean
