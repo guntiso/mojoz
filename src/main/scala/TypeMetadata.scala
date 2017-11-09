@@ -16,8 +16,15 @@ case class JdbcLoadInfo(
 )
 
 case class YamlLoadInfo(
-  // TODO YamlLoadInfo
   // TODO naming patterns here?
+  typeName:             Option[String],
+  minSize:              Option[Int],
+  maxSize:              Option[Int],
+  minFractionDigits:    Option[Int],
+  maxFractionDigits:    Option[Int],
+  targetLength:         Option[Integer], // xxx Some(null) means copy from source
+  targetTotalDigits:    Option[Integer], // xxx Some(null) means copy from source
+  targetFractionDigits: Option[Integer]  // xxx Some(null) means copy from source
 )
 
 object TypeDef {

@@ -42,9 +42,13 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
       case "" | "*" => None
       case i => Some(i).map(_.toInt) // TODO try, explain
     }
-    val min = toIntOpt(parts(0))
-    val max = if (parts.size > 1) toIntOpt(parts(1)) else min
-    (min, max)
+    if (s == "*")
+      (Some(0), None)
+    else {
+      val min = toIntOpt(parts(0))
+      val max = if (parts.size > 1) toIntOpt(parts(1)) else min
+      (min, max)
+    }
   }
   private def toJdbcLoadInfo(s: String) = {
     val sParts = s.split("->", 2)
@@ -93,6 +97,49 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
     JdbcLoadInfo(jdbcNameOrCode, jdbcCode, minSize, maxSize, minFrac, maxFrac,
       targetLength, targetTotalDigits, targetFractionDigits)
   }
+  private def toYamlLoadInfo(s: String) = {
+    val sParts = s.split("->", 2)
+    val yamlPart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
+    if (yamlPart == null)
+      throw new RuntimeException(
+        "Unexpected format for yaml load info: " + s)
+    val targetPart =
+      if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
+      else null
+    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array()
+    val yamlPartParts = yamlPart.split("\\s+", 3)
+    val yamlName = Option(yamlPartParts(0)).filter(_ != "null")
+    val sizeInterval = if (yamlPartParts.size > 1) yamlPartParts(1) else ""
+    val (minSize, maxSize) = toMinMax(sizeInterval)
+    val fracInterval = if (yamlPartParts.size > 2) yamlPartParts(2) else ""
+    val (minFrac, maxFrac) = toMinMax(fracInterval)
+    val targetLength:         Option[Integer] =
+      if (targetPartParts.size == 1)
+        targetPartParts(0) match {
+          case "none" => None
+          case "size" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
+    val targetTotalDigits:    Option[Integer] =
+      if (targetPartParts.size == 2)
+        targetPartParts(0) match {
+          case "none" => None
+          case "size" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
+    val targetFractionDigits: Option[Integer] =
+      if (targetPartParts.size == 2)
+        targetPartParts(1) match {
+          case "none" => None
+          case "frac" => Some(null) // xxx Some(null) means copy from source
+          case fxSize => Some(new Integer(fxSize.toInt))
+        }
+      else None
+    YamlLoadInfo(yamlName, minSize, maxSize, minFrac, maxFrac,
+      targetLength, targetTotalDigits, targetFractionDigits)
+  }
   private def loadYamlTypeDef(typeDef: String) = {
     val tdMap =
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
@@ -108,7 +155,12 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
       .getOrElse(Nil)
       .map(toString(_, "Failed to load jdbc load definition"))
       .map(toJdbcLoadInfo)
-    val yamlLoad = Nil                          // TODO
+    val yamlLoad = tdMap.get("yaml")
+      .filter(_ != null)
+      .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
+      .getOrElse(Nil)
+      .map(toString(_, "Failed to load yaml load definition"))
+      .map(toYamlLoadInfo)
     val defaults = null                         // TODO
     val namingConventions: Seq[String] = Nil    // TODO
     val extras: Map[String, Any] = Map.empty    // TODO val extras = tdMap -- TypeDefKeyStrings
