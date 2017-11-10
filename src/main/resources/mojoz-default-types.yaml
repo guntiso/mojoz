@@ -21,6 +21,16 @@ jdbc load:
 yaml:
 - string
 - string *          -> size
+sql:
+- string            -> clob
+- string *          -> varchar(size)
+postgresql:
+- string            -> varchar
+- string *          -> varchar(size)
+oracle sql:
+- string 0..4000    -> varchar2(size char)
+- string 4001..*    -> clob
+- string            -> clob
 
 type:       date
 xsd name:   date
@@ -28,6 +38,8 @@ scala name: java.sql.Date
 jdbc load:
 - DATE
 yaml:
+- date
+sql:
 - date
 
 type:       time
@@ -45,6 +57,8 @@ jdbc load:
 - TIMESTAMP
 yaml:
 - dateTime
+sql:
+- timestamp
 
 
 type:       short
@@ -67,6 +81,12 @@ jdbc load:
 yaml:
 - int
 - int *             -> size, none
+sql:
+- int               -> integer
+- int *             -> numeric(size)
+oracle sql:
+- int               -> numeric(9)
+- int *             -> numeric(size)
 
 type:       long
 xsd name:   long
@@ -78,6 +98,12 @@ jdbc load:
 yaml:
 - long
 - long *            -> size, none
+sql:
+- long              -> bigint
+- long *            -> numeric(size)
+oracle sql:
+- long              -> numeric(18)
+- long *            -> numeric(size)
 
 type:       integer
 xsd name:   integer
@@ -88,6 +114,9 @@ jdbc load:
 yaml:
 - integer
 - integer *         -> size, none
+sql:
+- integer           -> numeric
+- integer *         -> numeric(size)
 
 
 type:       float
@@ -106,6 +135,8 @@ jdbc load:
 - FLOAT
 yaml:
 - double
+sql:
+- double precision
 
 type:       decimal
 xsd name:   decimal
@@ -118,6 +149,10 @@ yaml:
 - decimal *         -> size, 0
 - decimal * *       -> size, frac
 - null    * *       -> size, frac
+sql:
+- decimal           -> numeric
+- decimal *         -> numeric(size)
+- decimal * *       -> numeric(size, frac)
 
 
 type:       boolean
@@ -128,6 +163,12 @@ jdbc load:
 - BOOLEAN
 yaml:
 - boolean
+sql:
+- boolean
+postgresql:
+- bool
+oracle sql:
+- char
 
 
 type:       base64Binary
@@ -145,6 +186,10 @@ jdbc load:
 yaml:
 - base64Binary
 - base64Binary *    -> size
+sql:
+- blob
+postgresql:
+- bytea
 
 
 type:       anyType
