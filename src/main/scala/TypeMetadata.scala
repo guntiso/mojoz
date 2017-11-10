@@ -27,12 +27,21 @@ case class YamlLoadInfo(
   targetFractionDigits: Option[Integer]  // xxx Some(null) means copy from source
 )
 
+case class SqlWriteInfo(
+  minSize:              Option[Int],
+  maxSize:              Option[Int],
+  minFractionDigits:    Option[Int],
+  maxFractionDigits:    Option[Int],
+  targetNamePattern:    String
+)
+
 object TypeDef {
   trait TypeDefBase {
     val name: String
-    val targetNames: Map[String, String] // xsd, scala, java, db, postgres, oracle, ...?
+    val targetNames: Map[String, String] // xsd, scala, java, ...
     val jdbcLoad: Seq[JdbcLoadInfo]
     val yamlLoad: Seq[YamlLoadInfo]
+    val sqlWrite: Map[String, Seq[SqlWriteInfo]]
     val defaults: ColumnDefBase[Type]
     val namingConventions: Seq[String]
   }
@@ -44,6 +53,7 @@ case class TypeDef(
   targetNames: Map[String, String],
   jdbcLoad: Seq[JdbcLoadInfo],
   yamlLoad: Seq[YamlLoadInfo],
+  sqlWrite: Map[String, Seq[SqlWriteInfo]],
   defaults: ColumnDefBase[Type],
   namingConventions: Seq[String],
   extras: Map[String, Any]) extends TypeDefBase {

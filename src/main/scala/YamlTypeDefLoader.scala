@@ -140,6 +140,22 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
     YamlLoadInfo(yamlName, minSize, maxSize, minFrac, maxFrac,
       targetLength, targetTotalDigits, targetFractionDigits)
   }
+  private def toSqlWriteInfo(s: String) = {
+    val sParts = s.split("->", 2)
+    val typePart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
+    if (typePart == null)
+      throw new RuntimeException(
+        "Unexpected format for sql info: " + s)
+    val targetPattern =
+      if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "") getOrElse typePart
+      else null
+    val typePartParts = if (sParts.size == 1) Array(targetPattern) else typePart.split("\\s+", 3)
+    val sizeInterval = if (typePartParts.size > 1) typePartParts(1) else ""
+    val (minSize, maxSize) = toMinMax(sizeInterval)
+    val fracInterval = if (typePartParts.size > 2) typePartParts(2) else ""
+    val (minFrac, maxFrac) = toMinMax(fracInterval)
+    SqlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
+  }
   private def loadYamlTypeDef(typeDef: String) = {
     val tdMap =
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
@@ -161,9 +177,20 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
       .getOrElse(Nil)
       .map(toString(_, "Failed to load yaml load definition"))
       .map(toYamlLoadInfo)
+    val sqlWrite: Map[String, Seq[SqlWriteInfo]] = TreeMap()(math.Ordering.String) ++
+      tdMap.filterKeys(_ endsWith "sql").map {
+        case (k, v) =>
+        val sqlWriteInfoSeq =
+          Option(v)
+            .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
+            .getOrElse(Nil)
+            .map(toString(_, s"Failed to load sql write definition for $k"))
+            .map(toSqlWriteInfo)
+        (k, sqlWriteInfoSeq)
+      }
     val defaults = null                         // TODO
     val namingConventions: Seq[String] = Nil    // TODO
     val extras: Map[String, Any] = Map.empty    // TODO val extras = tdMap -- TypeDefKeyStrings
-    TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, defaults, namingConventions, extras)
+    TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, sqlWrite, defaults, namingConventions, extras)
   }
 }
