@@ -2,6 +2,7 @@ package mojoz.metadata
 
 import mojoz.metadata.in._
 import mojoz.metadata.ColumnDef.ColumnDefBase
+import scala.collection.immutable._
 
 case class JdbcLoadInfo(
   jdbcTypeNameOrCode:   String,
