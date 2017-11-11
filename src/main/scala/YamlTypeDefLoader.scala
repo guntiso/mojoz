@@ -148,7 +148,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
         "Unexpected format for sql info: " + s)
     val targetPattern =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "") getOrElse typePart
-      else null
+      else typePart
     val typePartParts = if (sParts.size == 1) Array(targetPattern) else typePart.split("\\s+", 3)
     val sizeInterval = if (typePartParts.size > 1) typePartParts(1) else ""
     val (minSize, maxSize) = toMinMax(sizeInterval)
