@@ -57,13 +57,22 @@ private[in] class ResourcesMdSource(
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toList
   override def defSets = typedefResources.map(r => YamlMd(r, 0,
-    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
+    Option(getClass.getResourceAsStream(r))
+      .map(Source.fromInputStream(_)("UTF-8").mkString)
+      .getOrElse(sys.error("Resource not found: " + r))))
 }
 
-private[in] class ResourceMdSource(val resourcePath: String) extends MdSource {
+private[in] class ResourceMdSource(val resourcePath: String,
+    requireResource: Boolean = true) extends MdSource {
   val typedefResources = Seq(resourcePath)
   override def defSets = typedefResources.map(r => YamlMd(r, 0,
-    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
+    Option(getClass.getResourceAsStream(r))
+      .map(Source.fromInputStream(_)("UTF-8").mkString)
+      .getOrElse {
+        if (requireResource)
+          sys.error("Resource not found: " + resourcePath)
+        else ""
+    }))
 }
 
 object YamlMd {
@@ -85,6 +94,6 @@ object YamlMd {
     nameFilter: (String) => Boolean = _ endsWith ".yaml",
     nameMap: (String) => String = "/" + _) =
     new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
-  def fromResource(resourcePath: String) =
-    new ResourceMdSource(resourcePath).defs
+  def fromResource(resourcePath: String, requireResource: Boolean = true) =
+    new ResourceMdSource(resourcePath, requireResource).defs
 }
