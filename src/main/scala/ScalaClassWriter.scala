@@ -2,6 +2,7 @@ package mojoz.metadata.out
 
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
+import mojoz.metadata.TypeMetadata
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 
@@ -18,22 +19,13 @@ trait ScalaClassWriter {
     else itemTypeName
   }
   def scalaCollectionTypeName(itemTypeName: String) = s"List[$itemTypeName]"
-  // TODO generic, extract
-  def scalaSimpleTypeName(t: Type) = t.name match {
-    case "integer" => "BigInt"
-    case "long" => "java.lang.Long"
-    case "int" => "java.lang.Integer"
-    case "double" => "java.lang.Double"
-    case "decimal" => "BigDecimal"
-    case "date" => "java.sql.Date"
-    case "dateTime" => "java.sql.Timestamp"
-    case "string" => "String"
-    case "boolean" => "java.lang.Boolean"
-    case "base64Binary" => "Array[Byte]"
-    case "anyType" => "Any"
-    case x =>
-      throw new RuntimeException("Unexpected type: " + t)
-  }
+  lazy val typeNameToScalaTypeName =
+    TypeMetadata.customizedTypeDefs
+      .map(td => td.name -> td.targetNames.get("scala").orNull)
+      .filter(_._2 != null)
+      .toMap
+  def scalaSimpleTypeName(t: Type) =
+    typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
   def initialValueString(col: FieldDef[Type]) =
     if (col.isCollection) "Nil" else "null"

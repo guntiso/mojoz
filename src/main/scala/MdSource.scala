@@ -57,14 +57,32 @@ private[in] class ResourcesMdSource(
         .getLines.toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toList
   override def defSets = typedefResources.map(r => YamlMd(r, 0,
-    Source.fromInputStream(getClass.getResourceAsStream(r))("UTF-8").mkString))
+    Option(getClass.getResourceAsStream(r))
+      .map(Source.fromInputStream(_)("UTF-8").mkString)
+      .getOrElse(sys.error("Resource not found: " + r))))
+}
+
+private[in] class ResourceMdSource(val resourcePath: String,
+    requireResource: Boolean = true) extends MdSource {
+  val typedefResources = Seq(resourcePath)
+  override def defSets = typedefResources.map(r => YamlMd(r, 0,
+    Option(getClass.getResourceAsStream(r))
+      .map(Source.fromInputStream(_)("UTF-8").mkString)
+      .getOrElse {
+        if (requireResource)
+          sys.error("Resource not found: " + resourcePath)
+        else ""
+    }))
 }
 
 object YamlMd {
-  private val tableDefPattern = "\\ncolumns\\s*:".r // XXX
+  private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
+  private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
+  private[in] def isCustomTypeDef(d: YamlMd) =
+    customTypeDefPattern.findFirstIn(d.body).isDefined
   private[in] def isTableDef(d: YamlMd) =
     tableDefPattern.findFirstIn(d.body).isDefined
-  private[in] def isViewDef(d: YamlMd) = !isTableDef(d)
+  private[in] def isViewDef(d: YamlMd) = !isTableDef(d) && !isCustomTypeDef(d)
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(
@@ -76,4 +94,6 @@ object YamlMd {
     nameFilter: (String) => Boolean = _ endsWith ".yaml",
     nameMap: (String) => String = "/" + _) =
     new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
+  def fromResource(resourcePath: String, requireResource: Boolean = true) =
+    new ResourceMdSource(resourcePath, requireResource).defs
 }

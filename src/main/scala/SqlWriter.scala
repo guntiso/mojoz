@@ -7,7 +7,7 @@ import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
 import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
 import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
-import scala.collection.immutable.Seq
+import scala.collection.immutable.{ Map, Seq }
 import SqlWriter._
 
 object SqlWriter {
@@ -184,17 +184,43 @@ trait SqlWriter { this: ConstraintNamingRules =>
       Option(r.onDeleteAction).map(" on delete " + _).getOrElse("") +
       Option(r.onUpdateAction).map(" on update " + _).getOrElse("") +
       ";"
-  def dbType(c: ColumnDef[Type]): String
+  val sqlWriteInfoKey = "sql"
+  lazy val typeNameToSqlWriteInfoSeq: Map[String, Seq[SqlWriteInfo]] =
+    TypeMetadata.customizedTypeDefs.map(td =>
+      td.name ->
+        td.sqlWrite.get(sqlWriteInfoKey).orElse(td.sqlWrite.get("sql")).getOrElse(Nil)
+    ).toMap
+  def dbType(c: ColumnDef[Type]): String = {
+    val t = c.type_
+    typeNameToSqlWriteInfoSeq.get(t.name).getOrElse(Nil).find { info =>
+      sizeOptionMatch(info.minSize, info.maxSize, t.length.orElse(t.totalDigits)) &&
+      sizeOptionMatch(info.minFractionDigits, info.maxFractionDigits, t.fractionDigits)
+    }.map { info =>
+      (t.length.orElse(t.totalDigits), t.fractionDigits) match {
+        case (None, _) => info.targetNamePattern
+        case (Some(size), None) => info.targetNamePattern.replace("size", "" + size)
+        case (Some(size), Some(frac)) =>
+          info.targetNamePattern.replace("size", "" + size).replace("frac", "" + frac)
+      }
+    }.getOrElse {
+      sys.error(s"Sql info (key '$sqlWriteInfoKey') for type $t in ${c.name} not found")
+    }
+  }
   def colCheck(c: ColumnDef[Type]): String
   def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] =
     t.ck.map(ck =>
       if (ck.name != null) s"constraint ${ck.name} check (${ck.expression})"
       else s"check (${ck.expression})")
+  private def sizeOptionMatch(min: Option[Int], max: Option[Int], value: Option[Int]) =
+    min.isEmpty && value.isEmpty ||
+      min.isDefined && value.isDefined && min.get <= value.get &&
+      max.map(_ >= value.get).getOrElse(true)
 }
 
 private[out] class HsqldbSqlWriter(
   constraintNamingRules: ConstraintNamingRules)
   extends StandardSqlWriter(constraintNamingRules) {
+  override val sqlWriteInfoKey = "hsqldb sql"
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
     if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
@@ -203,6 +229,7 @@ private[out] class HsqldbSqlWriter(
 private[out] class H2SqlWriter(
   constraintNamingRules: ConstraintNamingRules)
   extends HsqldbSqlWriter(constraintNamingRules) {
+  override val sqlWriteInfoKey = "h2 sql"
   // for index name jdbc roundtrip
   override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
   // how to retrieve column check constraint for h2? add to table instead 
@@ -223,21 +250,7 @@ private[out] class H2SqlWriter(
 private[out] class OracleSqlWriter(
   constraintNamingRules: ConstraintNamingRules)
   extends StandardSqlWriter(constraintNamingRules) {
-  override def dbType(c: ColumnDef[Type]) = {
-    val xt = c.type_
-    xt.name match {
-      case "long" =>
-        "numeric(" + (xt.totalDigits getOrElse 18) + ")"
-      case "int" =>
-        "numeric(" + (xt.totalDigits getOrElse 9) + ")"
-      case "string" =>
-        if (xt.length.isDefined && xt.length.get <= 4000)
-          "varchar2" + s"(${xt.length.get} char)"
-        else "clob"
-      case "boolean" => "char"
-      case _ => super.dbType(c)
-    }
-  }
+  override val sqlWriteInfoKey = "oracle sql"
   override def dbDefault(c: ColumnDef[Type]) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
     case ("boolean", f) if "false" equalsIgnoreCase f => "'N'"
@@ -268,37 +281,6 @@ private[out] class StandardSqlWriter(
     constraintNamingRules.idxName(tableName, idx)
   override def fkName(tableName: String, ref: Ref) =
     constraintNamingRules.fkName(tableName, ref)
-  override def dbType(c: ColumnDef[Type]) = {
-    val xt = c.type_
-    xt.name match {
-      case "integer" =>
-        "numeric" + xt.totalDigits.map(l => s"($l)").getOrElse("")
-      case "long" => xt.totalDigits match {
-        case None => "bigint"
-        case Some(d) => s"numeric($d)"
-      }
-      case "int" => xt.totalDigits match {
-        case None => "integer"
-        case Some(d) => s"numeric($d)"
-      }
-      case "decimal" =>
-        "numeric" + ((xt.totalDigits, xt.fractionDigits) match {
-          case (None, None) => ""
-          case (Some(t), None) => s"($t)"
-          case (None, Some(f)) => s"(*, $f)"
-          case (Some(t), Some(f)) => s"($t, $f)"
-        })
-      case "double" => "double precision"
-      case "date" => "date"
-      case "dateTime" => "timestamp"
-      case "string" =>
-        xt.length.map(l => s"varchar($l)") getOrElse ("clob")
-      case "boolean" => "boolean"
-      case "base64Binary" => "blob"
-      case x =>
-        throw new RuntimeException("Unexpected type: " + xt + " for " + c.name)
-    }
-  }
   override def colCheck(c: ColumnDef[Type]) = {
     val xt = c.type_
     xt.name match {
@@ -313,13 +295,5 @@ private[out] class StandardSqlWriter(
 private[out] class PostgreSqlWriter(
   constraintNamingRules: ConstraintNamingRules)
   extends StandardSqlWriter(constraintNamingRules) {
-  override def dbType(c: ColumnDef[Type]) = {
-    c.type_.name match {
-      case "boolean" => "bool"
-      case "base64Binary" => "bytea"
-      case "string" =>
-        "varchar" + c.type_.length.map(l => s"($l)").getOrElse("")
-      case x => super.dbType(c)
-    }
-  }
+  override val sqlWriteInfoKey = "postgresql"
 }

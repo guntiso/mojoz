@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 
 class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     xsdName: String => String = identity,
-    xsdTypeName: String => String = identity,
+    xsdComplexTypeName: String => String = identity,
     createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =
@@ -45,6 +45,13 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       </xs:annotation>
       """)
     else ""
+  lazy val simpleTypeNameToXsdSimpleTypeName =
+    TypeMetadata.customizedTypeDefs
+      .map(td => td.name -> td.targetNames.get("xsd").orNull)
+      .filter(_._2 != null)
+      .toMap
+  def xsdSimpleTypeName(t: Type) =
+    simpleTypeNameToXsdSimpleTypeName.get(t.name).getOrElse(sys.error("Unexpected type for xsd writer: " + t))
   private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
     val required = !col.nullable
     val maxOccurs = Option(col.maxOccurs) getOrElse {
@@ -56,8 +63,8 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"
     val typeName =
-      if (col.type_.isComplexType) "tns:" + xsdTypeName(col.type_.name)
-      else "xs:" + col.type_.name
+      if (col.type_.isComplexType) "tns:" + xsdComplexTypeName(col.type_.name)
+      else "xs:" + xsdSimpleTypeName(col.type_)
     val noBlankStr = required && typeName == "xs:string" &&
       (col.type_.length getOrElse 1) > 0
     val minLength = if (noBlankStr) Some(1) else None
@@ -110,13 +117,13 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       """)
     }
     indent(indentLevel, s"""
-    <xs:complexType name="${ xsdTypeName(typeDef.name) }">
+    <xs:complexType name="${ xsdComplexTypeName(typeDef.name) }">
       ${List(
       annotation(typeDef.comments, 3),
       if (typeDef.extends_ == null) createFields(3)
       else indent(3, s"""
         <xs:complexContent>
-          <xs:extension base="${ "tns:" + xsdTypeName(typeDef.extends_) }">
+          <xs:extension base="${ "tns:" + xsdComplexTypeName(typeDef.extends_) }">
             ${ createFields(6).trim }
           </xs:extension>
         </xs:complexContent>
@@ -126,7 +133,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     </xs:complexType>
     """)
   }
-  private def listWrapperXsdTypeName = xsdTypeName(listWrapperBaseName)
+  private def listWrapperXsdTypeName = xsdComplexTypeName(listWrapperBaseName)
   def listWrapperBase(indentLevel: Int = 1) =
     indent(indentLevel, s"""
     <xs:complexType name="${ listWrapperXsdTypeName }">
@@ -139,12 +146,12 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     """)
   def listWrapper(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) =
     indent(indentLevel, s"""
-    <xs:complexType name="${ xsdTypeName(listWrapperName(typeDef.name)) }">
+    <xs:complexType name="${ xsdComplexTypeName(listWrapperName(typeDef.name)) }">
       <xs:complexContent>
         <xs:extension base="${ "tns:" + listWrapperXsdTypeName }">
           <xs:sequence>
             <xs:element ${attribs("maxOccurs minOccurs nillable type name",
-              "unbounded", "0", "true", "tns:" + xsdTypeName(typeDef.name),
+              "unbounded", "0", "true", "tns:" + xsdComplexTypeName(typeDef.name),
               xsdName(typeDef.table))}/>
           </xs:sequence>
         </xs:extension>
@@ -179,9 +186,9 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
           (if (typedefs.exists(createListWrapper)) List(listWrapperBaseName) else Nil) ++
             typedefs.filter(createListWrapper).map(t => listWrapperName(t.name))
           names
-            .filter(name => xsdName(name) != xsdTypeName(name))
+            .filter(name => xsdName(name) != xsdComplexTypeName(name))
             .map { name =>
-              val path = "//xs:complexType[@name='" + xsdTypeName(name) + "']"
+              val path = "//xs:complexType[@name='" + xsdComplexTypeName(name) + "']"
               val className = xsdName(name)
               indent(4  , s"""
               <jaxb:bindings node="${ path }">

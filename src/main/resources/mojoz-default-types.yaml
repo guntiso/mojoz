@@ -1,0 +1,199 @@
+type:       string
+xsd name:   string
+scala name: String
+jdbc:
+- LONGNVARCHAR 0
+- LONGNVARCHAR 1..* -> size
+- LONGVARCHAR  0
+- LONGVARCHAR  1..* -> size
+- DISTINCT # TODO need base type to solve this correctly
+- 'NULL'
+- NCHAR             -> size
+- NCLOB             -> size
+- NVARCHAR          -> size
+- VARCHAR           -> size
+- REF               -> size
+- ROWID             -> size
+- SQLXML
+- CHAR              -> size
+- CLOB              -> size
+- DATALINK          -> size # anyURI instead?
+yaml:
+- string
+- string *          -> size
+sql:
+- string            -> clob
+- string *          -> varchar(size)
+postgresql:
+- string            -> varchar
+- string *          -> varchar(size)
+oracle sql:
+- string 0..4000    -> varchar2(size char)
+- string 4001..*    -> clob
+- string            -> clob
+
+type:       date
+xsd name:   date
+scala name: java.sql.Date
+jdbc:
+- DATE
+yaml:
+- date
+sql:
+- date
+
+type:       time
+xsd name:   time
+scala name: time
+jdbc:
+- TIME
+yaml:
+- time
+
+type:       dateTime
+xsd name:   dateTime
+scala name: java.sql.Timestamp
+jdbc:
+- TIMESTAMP
+yaml:
+- dateTime
+sql:
+- timestamp
+
+
+type:       short
+xsd name:   short
+scala name: short
+jdbc:
+- SMALLINT
+- TINYINT # TODO? signed/unsigned byte?
+yaml:
+- short
+- short *           -> size, none
+
+type:       int
+xsd name:   int
+scala name: java.lang.Integer
+jdbc:
+- DECIMAL *..9 0    -> size, none
+- NUMERIC *..9 0    -> size, none
+- INTEGER
+yaml:
+- int
+- int *             -> size, none
+sql:
+- int               -> integer
+- int *             -> numeric(size)
+oracle sql:
+- int               -> numeric(9)
+- int *             -> numeric(size)
+
+type:       long
+xsd name:   long
+scala name: java.lang.Long
+jdbc:
+- DECIMAL 10..18 0  -> size, none
+- NUMERIC 10..18 0  -> size, none
+- BIGINT
+yaml:
+- long
+- long *            -> size, none
+sql:
+- long              -> bigint
+- long *            -> numeric(size)
+oracle sql:
+- long              -> numeric(18)
+- long *            -> numeric(size)
+
+type:       integer
+xsd name:   integer
+scala name: BigInt
+jdbc:
+- DECIMAL 19..* 0   -> size, none
+- NUMERIC 19..* 0   -> size, none
+yaml:
+- integer
+- integer *         -> size, none
+sql:
+- integer           -> numeric
+- integer *         -> numeric(size)
+
+
+type:       float
+xsd name:   float
+scala name: float
+jdbc:
+- REAL
+yaml:
+- float
+
+type:       double
+xsd name:   double
+scala name: java.lang.Double
+jdbc:
+- DOUBLE
+- FLOAT
+yaml:
+- double
+sql:
+- double precision
+
+type:       decimal
+xsd name:   decimal
+scala name: BigDecimal
+jdbc:
+- DECIMAL * 1..*    -> size, frac
+- NUMERIC * 1..*    -> size, frac
+yaml:
+- decimal
+- decimal *         -> size, 0
+- decimal * *       -> size, frac
+- null    * *       -> size, frac
+sql:
+- decimal           -> numeric
+- decimal *         -> numeric(size)
+- decimal * *       -> numeric(size, frac)
+
+
+type:       boolean
+xsd name:   boolean
+scala name: java.lang.Boolean
+jdbc:
+- BIT
+- BOOLEAN
+yaml:
+- boolean
+sql:
+- boolean
+postgresql:
+- bool
+oracle sql:
+- char
+
+
+type:       base64Binary
+xsd name:   base64Binary
+scala name: Array[Byte]
+jdbc:
+- ARRAY
+- BINARY
+- BLOB
+- JAVA_OBJECT
+- LONGVARBINARY
+- OTHER
+- STRUCT
+- VARBINARY
+yaml:
+- base64Binary
+- base64Binary *    -> size
+sql:
+- blob
+postgresql:
+- bytea
+
+
+type:       anyType
+xsd name:   anyType
+scala name: Any
+yaml:
+- anyType

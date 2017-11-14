@@ -305,7 +305,7 @@ class YamlViewDefLoader(
       val orderBy = yfd.orderBy
       val comment = yfd.comments
       val extras = yfd.extras
-      val rawXsdType = Option(YamlMdLoader.xsdType(yfd, conventions))
+      val rawXsdType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
       if (isViewDef(yfd.extras))
         (yfd.typeName, yfd.extras.get("name").orNull) match {
           case (null, null) | (null, _) | (_, null) =>
