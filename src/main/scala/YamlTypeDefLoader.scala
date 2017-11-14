@@ -165,7 +165,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-defaul
       tdMap.filterKeys(_ endsWith " name").map {
         case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
       }
-    val jdbcLoad = tdMap.get("jdbc load")
+    val jdbcLoad = tdMap.get("jdbc")
       .filter(_ != null)
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
