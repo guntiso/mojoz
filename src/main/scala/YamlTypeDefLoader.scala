@@ -7,7 +7,7 @@ import scala.collection.immutable._
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-class YamlTypeDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResource("/mojoz-default-types.yaml")) {
+class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isCustomTypeDef)
   val typeDefs = {

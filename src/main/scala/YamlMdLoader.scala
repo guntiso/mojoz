@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 import scala.io.Source
+import mojoz.metadata.TypeMetadata
 import mojoz.metadata.io._
 import mojoz.metadata.ColumnDef
 import mojoz.metadata.TableDef
@@ -423,7 +424,7 @@ private[in] object YamlMdLoader {
   }
 
   lazy val yamlLoadInfoToTypeDef =
-    new YamlTypeDefLoader().typeDefs.flatMap(td => td.yamlLoad.map(_ -> td))
+    TypeMetadata.customizedTypeDefs.flatMap(td => td.yamlLoad.map(_ -> td))
   def yamlTypeToMojozType(f: YamlFieldDef, conventions: MdConventions): Type =
      yamlTypeToMojozType(f.typeName, f.length, f.fraction, conventions)
   def yamlTypeToMojozType(yamlTypeName: String, size: Option[Int], frac: Option[Int],

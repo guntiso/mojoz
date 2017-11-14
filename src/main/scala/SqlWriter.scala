@@ -3,7 +3,6 @@ package mojoz.metadata.out
 import scala.annotation.tailrec
 import scala.math.max
 import mojoz.metadata._
-import mojoz.metadata.in.YamlTypeDefLoader
 import mojoz.metadata.io._
 import mojoz.metadata.TableDef._
 import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
@@ -187,7 +186,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
       ";"
   val sqlWriteInfoKey = "sql"
   lazy val typeNameToSqlWriteInfoSeq: Map[String, Seq[SqlWriteInfo]] =
-    new YamlTypeDefLoader().typeDefs.map(td =>
+    TypeMetadata.customizedTypeDefs.map(td =>
       td.name ->
         td.sqlWrite.get(sqlWriteInfoKey).orElse(td.sqlWrite.get("sql")).getOrElse(Nil)
     ).toMap

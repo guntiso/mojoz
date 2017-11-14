@@ -3,7 +3,6 @@ package mojoz.metadata.out
 import mojoz.metadata._
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
-import mojoz.metadata.in.YamlTypeDefLoader
 import scala.collection.immutable.Seq
 
 class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
@@ -47,7 +46,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       """)
     else ""
   lazy val simpleTypeNameToXsdSimpleTypeName =
-    new YamlTypeDefLoader().typeDefs
+    TypeMetadata.customizedTypeDefs
       .map(td => td.name -> td.targetNames.get("xsd").orNull)
       .filter(_._2 != null)
       .toMap

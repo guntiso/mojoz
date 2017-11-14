@@ -2,8 +2,8 @@ package mojoz.metadata.out
 
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
+import mojoz.metadata.TypeMetadata
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
-import mojoz.metadata.in.YamlTypeDefLoader
 import scala.collection.immutable.Seq
 
 // TODO ScalaWriter, ScalaTraitWriter, Scala[Companion]ObjectWriter
@@ -20,7 +20,7 @@ trait ScalaClassWriter {
   }
   def scalaCollectionTypeName(itemTypeName: String) = s"List[$itemTypeName]"
   lazy val typeNameToScalaTypeName =
-    new YamlTypeDefLoader().typeDefs
+    TypeMetadata.customizedTypeDefs
       .map(td => td.name -> td.targetNames.get("scala").orNull)
       .filter(_._2 != null)
       .toMap

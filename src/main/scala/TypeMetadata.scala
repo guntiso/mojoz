@@ -57,12 +57,31 @@ case class TypeDef(
   sqlWrite: Map[String, Seq[SqlWriteInfo]],
   defaults: ColumnDefBase[Type],
   namingConventions: Seq[String],
-  extras: Map[String, Any]) extends TypeDefBase {
+  extras: Map[String, Any]
+  ) extends TypeDefBase {
+
+  def withFallback(other: TypeDef) = TypeDef(
+    Option(name).getOrElse(other.name),
+    other.targetNames ++ targetNames,
+    jdbcLoad ++ other.jdbcLoad,
+    yamlLoad ++ other.yamlLoad,
+    other.sqlWrite ++ sqlWrite,
+    Option(defaults).getOrElse(other.defaults),
+    Option(namingConventions).filter(_.size > 0).getOrElse(other.namingConventions), // ?
+    other.extras ++ extras
+  )
 }
 
-class TypeMetadata[+T <: TypeDefBase](
-  val typeDefs: Seq[T] = (new YamlTypeDefLoader()).typeDefs) {
-  private val typeNameToDef = typeDefs.map(td => (td.name, td)).toMap
-  def typeDef(typeName: String) =
-    typeNameToDef(typeName)
+object TypeMetadata {
+  def mergeTypeDefs(typeDefs: Seq[TypeDef], fallbackTypeDefs: Seq[TypeDef]): Seq[TypeDef] = {
+    val nameToTypeDef = typeDefs.map(t => t.name -> t).toMap
+    val nameToFallbackTypeDef = fallbackTypeDefs.map(t => t.name -> t).toMap
+    typeDefs.map { td =>
+      val fallbackTypeDefOpt = nameToFallbackTypeDef.get(td.name)
+      if (fallbackTypeDefOpt.isDefined) td.withFallback(fallbackTypeDefOpt.get) else td
+    } ++ fallbackTypeDefs.filterNot(ftd => nameToTypeDef.contains(ftd.name))
+  }
+  lazy val defaultTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-default-types.yaml")).typeDefs
+  lazy val customTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-custom-types.yaml", false)).typeDefs
+  lazy val customizedTypeDefs = mergeTypeDefs(customTypeDefs, defaultTypeDefs)
 }

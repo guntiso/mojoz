@@ -14,6 +14,7 @@ import mojoz.metadata.ColumnDef
 import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
 import mojoz.metadata.Type
+import mojoz.metadata.TypeMetadata
 
 abstract class JdbcTableDefLoader {
   import JdbcTableDefLoader._
@@ -273,7 +274,7 @@ abstract class JdbcTableDefLoader {
       .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }
   lazy val jdbcLoadInfoToTypeDef =
-    new YamlTypeDefLoader().typeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
+    TypeMetadata.customizedTypeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
   def jdbcTypeToMojozType(jdbcTypeCode: Int, size: Int, frac: Int) =
     jdbcLoadInfoToTypeDef.find { case (jl, td) =>
       jl.jdbcTypeCode == jdbcTypeCode &&
