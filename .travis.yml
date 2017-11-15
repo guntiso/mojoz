@@ -2,9 +2,9 @@ language: scala
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test it:test
 scala:
-  - 2.12.2
-  - 2.11.11
-  - 2.10.6
+  - 2.12.4
+  - 2.11.12
+  - 2.10.7
 env:
   - JDK=oraclejdk8
   - JDK=oraclejdk7
@@ -12,9 +12,9 @@ env:
 matrix:
   # scala 2.12 requires java 8
   exclude:
-    - scala: 2.12.2
+    - scala: 2.12.4
       env: JDK=oraclejdk7
-    - scala: 2.12.2
+    - scala: 2.12.4
       env: JDK=openjdk7
 sudo: required # for setting hostname
 addons:
