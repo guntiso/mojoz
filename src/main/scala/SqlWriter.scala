@@ -203,7 +203,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
           info.targetNamePattern.replace("size", "" + size).replace("frac", "" + frac)
       }
     }.getOrElse {
-      sys.error(s"Sql info (key '$sqlWriteInfoKey') for type $t in ${c.name} not found")
+      sys.error(s"Missing sql info (key '$sqlWriteInfoKey' or 'sql') for type $t in ${c.name}")
     }
   }
   def colCheck(c: ColumnDef[Type]): String
