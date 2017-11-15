@@ -11,7 +11,8 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =
-      Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull) {
+      Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   private val typedefs = viewDefs
   private val indentString: String = "  "
   private def indent(level: Int, s: String) = {
@@ -46,7 +47,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       """)
     else ""
   lazy val simpleTypeNameToXsdSimpleTypeName =
-    TypeMetadata.customizedTypeDefs
+    typeDefs
       .map(td => td.name -> td.targetNames.get("xsd").orNull)
       .filter(_._2 != null)
       .toMap

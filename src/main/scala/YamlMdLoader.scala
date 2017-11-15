@@ -6,6 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 import scala.io.Source
+import mojoz.metadata.TypeDef
 import mojoz.metadata.TypeMetadata
 import mojoz.metadata.io._
 import mojoz.metadata.ColumnDef
@@ -73,7 +74,9 @@ private[in] object YamlTableDefLoader {
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
-  conventions: MdConventions = new SimplePatternMdConventions) {
+    conventions: MdConventions = new SimplePatternMdConventions,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
+
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
@@ -248,6 +251,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         + "\nentry: " + x.toString)
     }
   }
+  lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
   private def loadYamlTableDef(typeDef: String) = {
     val tdMap =
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
@@ -317,7 +321,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
 }
 
-private[in] object YamlMdLoader {
+private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
   val FieldDef = {
     val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
     val qualifiedIdent = s"$ident(\\.$ident)*"
@@ -424,7 +428,7 @@ private[in] object YamlMdLoader {
   }
 
   lazy val yamlLoadInfoToTypeDef =
-    TypeMetadata.customizedTypeDefs.flatMap(td => td.yamlLoad.map(_ -> td))
+    typeDefs.flatMap(td => td.yamlLoad.map(_ -> td))
   def yamlTypeToMojozType(f: YamlFieldDef, conventions: MdConventions): Type =
      yamlTypeToMojozType(f.typeName, f.length, f.fraction, conventions)
   def yamlTypeToMojozType(yamlTypeName: String, size: Option[Int], frac: Option[Int],

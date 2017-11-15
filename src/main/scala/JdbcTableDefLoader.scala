@@ -14,9 +14,10 @@ import mojoz.metadata.ColumnDef
 import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
 import mojoz.metadata.Type
+import mojoz.metadata.TypeDef
 import mojoz.metadata.TypeMetadata
 
-abstract class JdbcTableDefLoader {
+abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   import JdbcTableDefLoader._
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
@@ -274,7 +275,7 @@ abstract class JdbcTableDefLoader {
       .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }
   lazy val jdbcLoadInfoToTypeDef =
-    TypeMetadata.customizedTypeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
+    typeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
   def jdbcTypeToMojozType(jdbcTypeCode: Int, size: Int, frac: Int) =
     jdbcLoadInfoToTypeDef.find { case (jl, td) =>
       jl.jdbcTypeCode == jdbcTypeCode &&
@@ -316,7 +317,7 @@ object JdbcTableDefLoader {
     jdbcTypeCode: Int,
     size: Int,
     fractionDigits: Int)
-  class H2 extends JdbcTableDefLoader {
+  class H2(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
       // FIXME table def loaders: use like or equals (like may fail!)? escape _?
@@ -337,12 +338,12 @@ object JdbcTableDefLoader {
       checks
     }
   }
-  class Hsqldb extends JdbcTableDefLoader {
+  class Hsqldb(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,
       catalog: String, schemaPattern: String, tableNamePattern: String) =
       standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
   }
-  class Oracle extends JdbcTableDefLoader {
+  class Oracle(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
       val ps = conn.prepareStatement("""
@@ -357,27 +358,27 @@ object JdbcTableDefLoader {
       checks
     }
   }
-  class Postgresql extends JdbcTableDefLoader {
+  class Postgresql(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,
       catalog: String, schemaPattern: String, tableNamePattern: String) =
       standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
   }
-  private[in] class Other extends JdbcTableDefLoader {
+  private[in] class Other(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
       Nil
     }
   }
-  def jdbcTableDefLoader(conn: Connection) = {
+  def jdbcTableDefLoader(conn: Connection, typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) = {
     conn.getMetaData.getDatabaseProductName match {
-      case "H2" => new H2
-      case "HSQL Database Engine" => new Hsqldb
-      case "Oracle" => new Oracle
-      case "PostgreSQL" => new Postgresql
+      case "H2" => new H2(typeDefs)
+      case "HSQL Database Engine" => new Hsqldb(typeDefs)
+      case "Oracle" => new Oracle(typeDefs)
+      case "PostgreSQL" => new Postgresql(typeDefs)
       case x =>
         println("JdbcTableDefLoader - unsupported database " + x +
           ", ignoring check constraints!")
-        new Other
+        new Other(typeDefs)
     }
   }
   def tableDefs(conn: Connection,

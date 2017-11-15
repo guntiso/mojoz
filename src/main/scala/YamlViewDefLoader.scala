@@ -152,7 +152,8 @@ class YamlViewDefLoader(
     yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     joinsParser: JoinsParser = (_, _) => Nil, 
     conventions: MdConventions = new SimplePatternMdConventions,
-    uninheritableExtras: Seq[String] = Seq()) {
+    uninheritableExtras: Seq[String] = Seq(),
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
 
@@ -255,6 +256,7 @@ class YamlViewDefLoader(
     }
     if (List(xtnds, draftOf, detailsOf).filter(_ != null).size > 1) sys.error(
       "extends, draft-of, details-of are not supported simultaneously, type: " + name)
+    val YamlMdLoader = new YamlMdLoader(typeDefs)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
     def typeName(v: Map[String, Any], defaultSuffix: String) =
       if (v.contains("name")) "" + v("name")

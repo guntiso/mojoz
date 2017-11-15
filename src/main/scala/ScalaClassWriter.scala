@@ -2,12 +2,13 @@ package mojoz.metadata.out
 
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import mojoz.metadata.Type
+import mojoz.metadata.TypeDef
 import mojoz.metadata.TypeMetadata
 import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 
 // TODO ScalaWriter, ScalaTraitWriter, Scala[Companion]ObjectWriter
-trait ScalaClassWriter {
+class ScalaClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def nl = System.getProperty("line.separator")
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
@@ -20,7 +21,7 @@ trait ScalaClassWriter {
   }
   def scalaCollectionTypeName(itemTypeName: String) = s"List[$itemTypeName]"
   lazy val typeNameToScalaTypeName =
-    TypeMetadata.customizedTypeDefs
+    typeDefs
       .map(td => td.name -> td.targetNames.get("scala").orNull)
       .filter(_._2 != null)
       .toMap
@@ -76,7 +77,7 @@ trait ScalaClassWriter {
       .mkString("", nl, nl)
 }
 
-trait ScalaCaseClassWriter extends ScalaClassWriter {
+class ScalaCaseClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaClassWriter(typeDefs) {
   override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
     s"$fieldName: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   override def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) = {
@@ -93,5 +94,5 @@ trait ScalaCaseClassWriter extends ScalaClassWriter {
   }
 }
 
-object ScalaClassWriter extends ScalaClassWriter
-object ScalaCaseClassWriter extends ScalaCaseClassWriter
+object ScalaClassWriter extends ScalaClassWriter(TypeMetadata.customizedTypeDefs)
+object ScalaCaseClassWriter extends ScalaCaseClassWriter(TypeMetadata.customizedTypeDefs)

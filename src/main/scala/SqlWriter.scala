@@ -95,20 +95,25 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
 }
 
-def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new StandardSqlWriter(constraintNamingRules)
-def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new H2SqlWriter(constraintNamingRules)
-def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new HsqldbSqlWriter(constraintNamingRules)
-def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules): SqlWriter =
-  new OracleSqlWriter(constraintNamingRules)
-def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules): SqlWriter =
-  new PostgreSqlWriter(constraintNamingRules)
+def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+  new StandardSqlWriter(constraintNamingRules, typeDefs)
+def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+  new H2SqlWriter(constraintNamingRules, typeDefs)
+def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+  new HsqldbSqlWriter(constraintNamingRules, typeDefs)
+def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+  new OracleSqlWriter(constraintNamingRules, typeDefs)
+def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+  new PostgreSqlWriter(constraintNamingRules, typeDefs)
 
 }
 
-trait SqlWriter { this: ConstraintNamingRules =>
+abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =>
   private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   /** Returns full sql schema string (tables, comments, keys, indices, refs)
@@ -186,7 +191,7 @@ trait SqlWriter { this: ConstraintNamingRules =>
       ";"
   val sqlWriteInfoKey = "sql"
   lazy val typeNameToSqlWriteInfoSeq: Map[String, Seq[SqlWriteInfo]] =
-    TypeMetadata.customizedTypeDefs.map(td =>
+    typeDefs.map(td =>
       td.name ->
         td.sqlWrite.get(sqlWriteInfoKey).orElse(td.sqlWrite.get("sql")).getOrElse(Nil)
     ).toMap
@@ -218,8 +223,9 @@ trait SqlWriter { this: ConstraintNamingRules =>
 }
 
 private[out] class HsqldbSqlWriter(
-  constraintNamingRules: ConstraintNamingRules)
-  extends StandardSqlWriter(constraintNamingRules) {
+    constraintNamingRules: ConstraintNamingRules,
+    typeDefs: Seq[TypeDef])
+  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "hsqldb sql"
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
@@ -227,8 +233,9 @@ private[out] class HsqldbSqlWriter(
 }
 
 private[out] class H2SqlWriter(
-  constraintNamingRules: ConstraintNamingRules)
-  extends HsqldbSqlWriter(constraintNamingRules) {
+    constraintNamingRules: ConstraintNamingRules,
+    typeDefs: Seq[TypeDef])
+  extends HsqldbSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "h2 sql"
   // for index name jdbc roundtrip
   override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
@@ -248,8 +255,9 @@ private[out] class H2SqlWriter(
 }
 
 private[out] class OracleSqlWriter(
-  constraintNamingRules: ConstraintNamingRules)
-  extends StandardSqlWriter(constraintNamingRules) {
+    constraintNamingRules: ConstraintNamingRules,
+    typeDefs: Seq[TypeDef])
+  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "oracle sql"
   override def dbDefault(c: ColumnDef[Type]) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
@@ -272,7 +280,8 @@ private[out] class OracleSqlWriter(
 }
 
 private[out] class StandardSqlWriter(
-  constraintNamingRules: ConstraintNamingRules) extends SqlWriter with ConstraintNamingRules {
+    constraintNamingRules: ConstraintNamingRules,
+    typeDefs: Seq[TypeDef]) extends SqlWriter(typeDefs) with ConstraintNamingRules {
   override def pkName(tableName: String) =
     constraintNamingRules.pkName(tableName)
   override def ukName(tableName: String, uk: DbIndex) =
@@ -293,7 +302,8 @@ private[out] class StandardSqlWriter(
 }
 
 private[out] class PostgreSqlWriter(
-  constraintNamingRules: ConstraintNamingRules)
-  extends StandardSqlWriter(constraintNamingRules) {
+    constraintNamingRules: ConstraintNamingRules,
+    typeDefs: Seq[TypeDef])
+  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "postgresql"
 }
