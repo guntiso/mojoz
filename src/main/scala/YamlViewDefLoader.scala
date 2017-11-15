@@ -690,8 +690,9 @@ object YamlViewDefLoader {
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _) => Nil,
     conventions: MdConventions = new SimplePatternMdConventions,
-    uninheritableExtras: Seq[String] = Seq()) =
+    uninheritableExtras: Seq[String] = Seq(),
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) =
     new YamlViewDefLoader(
-      tableMetadata, yamlMd, joinsParser, conventions, uninheritableExtras)
+      tableMetadata, yamlMd, joinsParser, conventions, uninheritableExtras, typeDefs)
 }
 }
