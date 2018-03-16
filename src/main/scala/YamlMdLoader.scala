@@ -251,6 +251,16 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         + "\nentry: " + x.toString)
     }
   }
+  private def toList(src: Option[Any]): List[Any] =
+    src
+      .filter(_ != null)
+      .map(_ match {
+        case s: String =>
+          List(s)
+        case x =>
+          x.asInstanceOf[java.util.ArrayList[_]].asScala.toList
+      })
+      .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
   private def loadYamlTableDef(typeDef: String) = {
     val tdMap =
@@ -263,21 +273,16 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
-    val pk = tdMap.get("pk").map(loadYamlIndexDef)
-    val uk = tdMap.get("uk")
-      .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-      .getOrElse(Nil)
+    val pk_list = toList(tdMap.get("pk"))
       .map(loadYamlIndexDef)
-    val idx = tdMap.get("idx")
-      .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-      .getOrElse(Nil)
+    if (pk_list.size > 1)
+      throw new RuntimeException("Multiple primary keys are not allowed")
+    val pk = pk_list.headOption
+    val uk = toList(tdMap.get("uk"))
       .map(loadYamlIndexDef)
-    val refs = tdMap.get("refs")
-      .filter(_ != null)
-      .map(_.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-      .getOrElse(Nil)
+    val idx = toList(tdMap.get("idx"))
+      .map(loadYamlIndexDef)
+    val refs = toList(tdMap.get("refs"))
       .map(loadYamlRefDef)
     val extras = tdMap -- TableDefKeyStrings
     YamlTableDef(table, comment, colDefs, pk, uk, idx, refs, extras)
