@@ -192,12 +192,27 @@ class YamlViewDefLoader(
   private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
   val extendedViewDefs = viewDefs.map(t =>
     if (t.extends_ == null) t else {
+      def maybeAssignTable(tableName: String)(f: FieldDef[Type]) = {
+        if (tableName == null ||
+            f.table != null || f.saveTo != null || f.isExpression || f.isCollection ||
+            f.type_ != null && f.type_.isComplexType)
+          f
+        else
+          tableMetadata.col(tableName, f.name).map(c => f.copy(table = dbName(tableName))) getOrElse f
+      }
       @tailrec
-      def baseFields(v: ViewDef[FieldDef[Type]], fields: t.fields.type): t.fields.type =
-        if (v.extends_ == null) (v.fields ++ fields).asInstanceOf[t.fields.type]
-        else baseFields(nameToViewDef(v.extends_),
-          (v.fields ++ fields).asInstanceOf[t.fields.type])
-      t.copy(fields = baseFields(t, Nil.asInstanceOf[t.fields.type]))
+      def baseFields(
+          v: ViewDef[FieldDef[Type]],
+          fields: Seq[FieldDef[Type]],
+          tableName: String): Seq[FieldDef[Type]] =
+        if (v.extends_ == null) (v.fields.map(maybeAssignTable(tableName)) ++ fields)
+        else
+          baseFields(
+            nameToViewDef(v.extends_),
+            (v.fields.map(maybeAssignTable(tableName)) ++ fields),
+            v.table
+          )
+      t.copy(fields = baseFields(t, Nil, null))
     })
     .map(t => (t.name, t)).toMap
   def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
