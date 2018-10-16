@@ -111,6 +111,12 @@ class WithAnonymousInlineViewSomeChildren extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null
 }
+class WithEmptyChildSaveTo extends Dto {
+  var singleChild: WithEmptyChildSaveToSingleChild = null
+}
+class WithEmptyChildSaveToSingleChild extends Dto {
+  var childName: String = null
+}
 class WithNamedInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null

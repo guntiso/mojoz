@@ -514,6 +514,18 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithEmptyChildSaveToType">
+    <xs:sequence>
+      <xs:element name="SingleChild" nillable="true" minOccurs="0" type="tns:WithEmptyChildSaveToSingleChildType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithEmptyChildSaveToSingleChildType">
+    <xs:sequence>
+      <xs:element name="ChildName" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithNamedInlineViewType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">
