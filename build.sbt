@@ -9,7 +9,7 @@ lazy val dependencies = Seq(
 )
 def tresqlDependency(scalaVersion: String) = scalaVersion match {
   case "2.10.7" => "org.tresql" %% "tresql" % "7.3" % "it,test"
-  case _ => "org.tresql" %% "tresql" % "8.0-SNAPSHOT" % "it,test"
+  case _ => "org.tresql" %% "tresql" % "8.6-SNAPSHOT" % "it,test"
 }
 
 lazy val commonSettings = Seq(
