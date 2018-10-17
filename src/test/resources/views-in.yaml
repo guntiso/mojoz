@@ -97,6 +97,18 @@ fields:
     fields:
     - child_name
 
+name: with_empty_child_save_to
+table:
+save-to:
+- table1
+- table2
+fields:
+- single_child:
+    table:
+    save-to:
+    fields:
+    - child_name
+
 name: resolver_test_1
 table: person
 fields:
