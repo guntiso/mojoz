@@ -74,12 +74,6 @@
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewSomeChildrenType']">
       <jaxb:class name="WithAnonymousInlineViewSomeChildren"/>
     </jaxb:bindings>
-    <jaxb:bindings node="//xs:complexType[@name='WithEmptyChildSaveToType']">
-      <jaxb:class name="WithEmptyChildSaveTo"/>
-    </jaxb:bindings>
-    <jaxb:bindings node="//xs:complexType[@name='WithEmptyChildSaveToSingleChildType']">
-      <jaxb:class name="WithEmptyChildSaveToSingleChild"/>
-    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineViewType']">
       <jaxb:class name="WithNamedInlineView"/>
     </jaxb:bindings>

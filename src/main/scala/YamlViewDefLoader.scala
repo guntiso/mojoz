@@ -223,26 +223,28 @@ class YamlViewDefLoader(
       .getOrElse(Nil)
   }
   def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
-    def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
-      case null => null
-      case Nil => ""
+    def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name, true) match {
+      case Nil => null
       case x => x mkString ""
     }
-    def getStringSeq(name: ViewDefKeys.ViewDefKeys): Seq[String] = {
-      Option(getSeq(name)).map(_ map {
+    def getStringSeq(name: ViewDefKeys.ViewDefKeys,
+        nullToString: Boolean = false): Seq[String] = {
+      getSeq(name, nullToString) map {
         case s: java.lang.String => s
         case m: java.util.Map[_, _] =>
           if (m.size == 1) m.entrySet.asScala.toList(0).getKey.toString
           else m.toString // TODO error?
         case x => x.toString
-      }).orNull
+      }
     }
-    def getSeq(name: ViewDefKeys.ViewDefKeys): Seq[_] = tdMap.get(name.toString) match {
+    def getSeq(name: ViewDefKeys.ViewDefKeys,
+        nullToString: Boolean = false): Seq[_] = tdMap.get(name.toString) match {
       case Some(s: java.lang.String) => Seq(s)
       case Some(a: java.util.ArrayList[_]) => a.asScala.toList.filter(_ != null)
+      case None => Nil
+      case Some(null) if nullToString => Seq("")
       case Some(null) => Nil
       case Some(x) => Seq(x)
-      case None => null
     }
     val k = ViewDefKeys
     val rawName = get(k.name)
@@ -423,20 +425,13 @@ class YamlViewDefLoader(
         case tableComments => t.copy(comments = tableComments)
       }
 
-    def mergeStringSeqs(s1: Seq[String], s2: Seq[String]) = (s1, s2) match {
-      case (null, null) => null
-      case (null, list) => list
-      case (list, null) => list
-      case (seq1, seq2) => seq1 ++ seq2
-    }
-
     def mergeSeqs(t: ViewDef[FieldDef[Type]], base: ViewDef[FieldDef[Type]]) =
       t.copy(
-        joins = mergeStringSeqs(base.joins, t.joins),
-        filter = mergeStringSeqs(base.filter, t.filter),
-        groupBy = mergeStringSeqs(base.groupBy, t.groupBy),
-        having = mergeStringSeqs(base.having, t.having),
-        orderBy = mergeStringSeqs(base.orderBy, t.orderBy),
+        joins = base.joins ++ t.joins,
+        filter = base.filter ++ t.filter,
+        groupBy = base.groupBy ++ t.groupBy,
+        having = base.having ++ t.having,
+        orderBy = base.orderBy ++ t.orderBy,
         extras = base.extras -- uninheritableExtras ++ t.extras)
 
     def inheritSeqs(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =

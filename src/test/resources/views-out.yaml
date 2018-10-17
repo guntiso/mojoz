@@ -157,20 +157,6 @@ fields:
 - child_id
 - child_name
 
-name:    with_empty_child_save_to
-table:
-save-to:
-- table1
-- table2
-fields:
-- single_child             with_empty_child_save_to_single_child
-
-name:    with_empty_child_save_to_single_child
-table:
-save-to:
-fields:
-- child_name
-
 name:    with_named_inline_view
 table:
 fields:

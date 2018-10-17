@@ -111,12 +111,6 @@ case class WithAnonymousInlineViewSomeChildren (
   childId: java.lang.Long = null,
   childName: String = null
 )
-case class WithEmptyChildSaveTo (
-  singleChild: WithEmptyChildSaveToSingleChild = null
-)
-case class WithEmptyChildSaveToSingleChild (
-  childName: String = null
-)
 case class WithNamedInlineView (
   someId: java.lang.Long = null,
   someName: String = null,

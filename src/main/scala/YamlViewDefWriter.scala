@@ -109,9 +109,6 @@ class YamlViewDefWriter {
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)
         .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),
-      Option(saveTo).map(x => "save-to:"),
-      Option(saveTo).filter(_.size > 0)
-        .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),
       Some("fields:"),
       Option(fields.map(f => "- " + toYaml(f)).mkString("\n")),
       Option(groupBy).filter(_.size > 0).map(x => "group:"),
