@@ -256,7 +256,7 @@ class YamlViewDefLoader(
     val draftOf = get(k.draftOf)
     val detailsOf = get(k.detailsOf)
     val comment = get(k.comment)
-    val fieldsSrc = getSeq(k.fields).toList
+    val fieldsSrc = Option(getSeq(k.fields)).getOrElse(Nil).toList
     val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
     val extendsOrModifies =
