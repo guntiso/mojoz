@@ -70,6 +70,8 @@ jdbc:
 yaml:
 - short
 - short *           -> size, none
+sql:
+- smallint
 
 type:       int
 xsd name:   int
