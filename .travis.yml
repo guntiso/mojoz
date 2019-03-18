@@ -8,8 +8,6 @@ scala:
   - 2.10.7
 jdk:
   - oraclejdk11
-  - oraclejdk9
-  - oraclejdk8
   - openjdk11
   - openjdk8
 sudo: required # for setting hostname
