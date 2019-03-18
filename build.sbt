@@ -15,9 +15,9 @@ def tresqlDependency(scalaVersion: String) = scalaVersion match {
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.12.7",
+  scalaVersion := "2.12.8",
   crossScalaVersions := Seq(
-    "2.12.7",
+    "2.12.8",
     "2.11.12",
     "2.10.7"
   ),
