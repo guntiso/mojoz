@@ -10,13 +10,13 @@ env:
   - JDK=oraclejdk11
   - JDK=oraclejdk9
   - JDK=oraclejdk8
-  - JDK=oraclejdk7
   - JDK=openjdk8
+  - JDK=openjdk7
 matrix:
   # scala 2.12 requires java 8
   exclude:
     - scala: 2.12.7
-      env: JDK=oraclejdk7
+      env: JDK=openjdk7
 sudo: required # for setting hostname
 addons:
   postgresql: 9.5
