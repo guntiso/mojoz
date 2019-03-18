@@ -6,18 +6,17 @@ scala:
   - 2.12.7
   - 2.11.12
   - 2.10.7
-env:
-  - JDK=oraclejdk11
-  - JDK=oraclejdk9
-  - JDK=oraclejdk8
-  - JDK=openjdk11
-  - JDK=openjdk8
+jdk:
+  - oraclejdk11
+  - oraclejdk9
+  - oraclejdk8
+  - openjdk11
+  - openjdk8
 sudo: required # for setting hostname
 addons:
   postgresql: 9.5
   hostname: localhost #https://github.com/travis-ci/travis-ci/issues/5227
 before_script:
-  - jdk_switcher use $JDK
   - psql -f src/it/mojoz-postgresql-setup.sql -U postgres
   - cp src/it/resources/application.conf.travis src/it/resources/application.conf
   - sudo chmod +x /usr/local/bin/sbt #https://github.com/travis-ci/travis-ci/issues/7703
