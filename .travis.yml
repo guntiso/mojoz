@@ -1,5 +1,5 @@
 language: scala
-dist: trusty
+dist: xenial
 script:
   - sbt ++$TRAVIS_SCALA_VERSION clean update compile test it:test
 scala:
@@ -7,8 +7,10 @@ scala:
   - 2.11.12
   - 2.10.7
 env:
+  - JDK=oraclejdk11
   - JDK=oraclejdk9
   - JDK=oraclejdk8
+  - JDK=openjdk11
   - JDK=openjdk8
 sudo: required # for setting hostname
 addons:
