@@ -1,5 +1,6 @@
 type:       string
 xsd name:   string
+json name:  string
 scala name: String
 jdbc:
 - LONGNVARCHAR 0
@@ -34,6 +35,7 @@ oracle sql:
 
 type:       date
 xsd name:   date
+json name:  string
 scala name: java.sql.Date
 jdbc:
 - DATE
@@ -44,6 +46,7 @@ sql:
 
 type:       time
 xsd name:   time
+json name:  string
 scala name: time
 jdbc:
 - TIME
@@ -52,6 +55,7 @@ yaml:
 
 type:       dateTime
 xsd name:   dateTime
+json name:  string
 scala name: java.sql.Timestamp
 jdbc:
 - TIMESTAMP
@@ -63,6 +67,7 @@ sql:
 
 type:       short
 xsd name:   short
+json name:  number
 scala name: short
 jdbc:
 - SMALLINT
@@ -75,6 +80,7 @@ sql:
 
 type:       int
 xsd name:   int
+json name:  number
 scala name: java.lang.Integer
 jdbc:
 - DECIMAL *..9 0    -> size, none
@@ -92,6 +98,7 @@ oracle sql:
 
 type:       long
 xsd name:   long
+json name:  number
 scala name: java.lang.Long
 jdbc:
 - DECIMAL 10..18 0  -> size, none
@@ -109,6 +116,7 @@ oracle sql:
 
 type:       integer
 xsd name:   integer
+json name:  number
 scala name: BigInt
 jdbc:
 - DECIMAL 19..* 0   -> size, none
@@ -123,6 +131,7 @@ sql:
 
 type:       float
 xsd name:   float
+json name:  number
 scala name: float
 jdbc:
 - REAL
@@ -131,6 +140,7 @@ yaml:
 
 type:       double
 xsd name:   double
+json name:  number
 scala name: java.lang.Double
 jdbc:
 - DOUBLE
@@ -142,6 +152,7 @@ sql:
 
 type:       decimal
 xsd name:   decimal
+json name:  number
 scala name: BigDecimal
 jdbc:
 - DECIMAL * 1..*    -> size, frac
@@ -159,6 +170,7 @@ sql:
 
 type:       boolean
 xsd name:   boolean
+json name:  boolean
 scala name: java.lang.Boolean
 jdbc:
 - BIT
