@@ -5,19 +5,16 @@ lazy val dependencies = Seq(
   "com.h2database" % "h2" % "1.4.178" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "9.4.1212.jre7" % "it,test",   // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest" % "3.0.1" % "it,test"
+  "org.scalatest" %% "scalatest" % "3.0.8" % "it,test"
 )
-def tresqlDependency(scalaVersion: String) = scalaVersion match {
-  case "2.10.7" => "org.tresql" %% "tresql" % "7.3" % "it,test"
-  case _ => "org.tresql" %% "tresql" % "8.6-SNAPSHOT" % "it,test"
-}
 
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.0",
   crossScalaVersions := Seq(
-    "2.12.8",
+    "2.13.0",
+    "2.12.10",
     "2.11.12",
     "2.10.7"
   ),
@@ -26,7 +23,6 @@ lazy val commonSettings = Seq(
     "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   ),
   libraryDependencies ++= dependencies,
-  libraryDependencies += tresqlDependency(scalaVersion.value)
 )
 
 lazy val mojoz = (project in file("."))

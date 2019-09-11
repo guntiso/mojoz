@@ -1,7 +1,6 @@
 package mojoz.metadata.in
 
 import java.io.File
-import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._

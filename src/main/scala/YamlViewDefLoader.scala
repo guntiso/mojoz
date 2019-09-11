@@ -3,7 +3,6 @@ package mojoz.metadata
 import java.io.File
 import java.util.ArrayList
 
-import scala.Array.canBuildFrom
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
