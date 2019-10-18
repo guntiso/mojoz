@@ -18,3 +18,5 @@ columns:
 - mother.id              person.id
 - father.id              person.id
 ```
+
+## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/index.html)
