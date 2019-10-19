@@ -9,12 +9,26 @@ Used by [querease](https://github.com/guntiso/querease) to save and retrieve dat
 
 ## Table metadata
 
-Table metadata can be loaded from YAML files
-(see [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTableDefLoader.html))
-or from database using JDBC connection
+Table metadata is typically loaded from YAML resource files bundled with application
+(see [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTableDefLoader.html)).
+Table metadata can also be loaded from database using JDBC connection
 (see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/JdbcTableDefLoader$.html)).
-Table metadata is described in [yaml 1.1](https://yaml.org/spec/1.1/), but yaml keys are further parsed by mojoz. For example, table definition
 
+[Yaml 1.1](https://yaml.org/spec/1.1/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
+Key names are:
+
+* **table** - table name
+* **comment**
+* **columns** - collection of columns
+* **pk** - primary key. If not provided, might be implied (based on columns) to be `id` or `code` or a pair of refs,
+  as defined in [MdConventions](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/io/MdConventions.html).fromExternalPk
+* **uk** - collection of unique keys
+* **idx** - collection of indices
+* **refs** - collection of customized or additional references to columns (foreign keys)
+* any other (custom) keys can be used and are sent to `extras` field of [TableDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/TableDef.html)
+  by YamlTableDefLoader.
+
+For example, table definition
 ```yaml
 table:   person
 columns:
@@ -24,9 +38,7 @@ columns:
 - mother.id              person.id
 - father.id              person.id
 ```
-
 corresponds to the following sql (as converted by [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$.html)):
-
 ```sql
 create table person(
   id bigint,
