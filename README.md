@@ -53,5 +53,23 @@ alter table person add constraint pk_person primary key (id);
 alter table person add constraint fk_person_mother_id foreign key (mother_id) references person(id);
 alter table person add constraint fk_person_father_id foreign key (father_id) references person(id);
 ```
+### Columns
+
+Column information is mostly contained in yaml string or key except for comment which is \[first string\] value for the key.
+General pattern for column information is:
+```
+name [nullability] [type] [length_or_total_digits] [fraction_digits] [(enum)] [= default] [: comment]
+```
+where
+* _name_ is column name or for refs - _table_name.column_name_ or _alias.column_name_ (dot (.) is replaced with underscore(\_) to create column name)
+* _nullability_ is optional exclamation mark (!) meaning **not** null
+* _type_ is optional type name or for refs - _table_name.column_name_
+* _length_or_total_digits_ is optional column length or total digits for number columns
+* _fraction_digits_ is optional fraction digits for decimals
+* _enum_ is optional list of comma and/or space separated values for the column (to enable spaces in values, all values should be wrapped in single quotes ('))
+* _default_ is optional default value for the column
+* _comment_ is optional text
+* additionally, any (custom) keys can be used and are sent to `extras` field of [ColumnDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/ColumnDef.html)
+  by YamlTableDefLoader.
 
 ## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/index.html)
