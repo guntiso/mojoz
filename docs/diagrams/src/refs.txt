@@ -1,0 +1,26 @@
+Diagram(
+  Choice(0,
+    OneOrMore(NonTerminal('column-name'), ','),
+    Sequence(
+      NonTerminal('ref-name'),
+      '(',
+      OneOrMore(NonTerminal('column-name'), ','),
+      ')'
+    )
+  ),
+  '->',
+  Sequence(
+    NonTerminal('ref-table-name'),
+    '(',
+    OneOrMore(NonTerminal('ref-column-name'), ','),
+    ')'
+  ),
+  Optional(Sequence(
+    'on delete',
+    Choice(2, 'restrict', 'set null', 'cascade', 'no action'),
+  ), 'skip'),
+  Optional(Sequence(
+    'on update',
+    Choice(2, 'restrict', 'set null', 'cascade', 'no action'),
+  ), 'skip'),
+)
