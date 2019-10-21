@@ -2,16 +2,18 @@
 
 [![Build Status](https://travis-ci.org/guntiso/mojoz.svg?branch=develop)](https://travis-ci.org/guntiso/mojoz)
 
-Manages relational database table metadata and queries.
-Can generate SQL [DDL](https://en.wikipedia.org/wiki/Data_definition_language) statements.
-Can generate Scala classes or [XSD](https://en.wikipedia.org/wiki/XML_Schema_(W3C)) to receive query results.
+Manages relational database table metadata and query definitions.
+Generates SQL [DDL](https://en.wikipedia.org/wiki/Data_definition_language) statements from table metadata.
+Generates Scala classes or [XSD](https://en.wikipedia.org/wiki/XML_Schema_(W3C)) to receive query results.
 Used by [querease](https://github.com/guntiso/querease) to save and retrieve data.
 
 ## Table metadata
 
 Table metadata is typically loaded from YAML resource files bundled with application
 (see [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTableDefLoader.html)).
-Table metadata can also be loaded from database using JDBC connection
+Table metadata can also be extracted from
+[java.sql.DatabaseMetaData](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html)
+using JDBC connection and saved to yaml files for later use
 (see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/JdbcTableDefLoader$.html)).
 
 [Yaml 1.1](https://yaml.org/spec/1.1/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
