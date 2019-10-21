@@ -72,4 +72,24 @@ where
 * additionally, any (custom) keys can be used and are sent to `extras` field of [ColumnDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/ColumnDef.html)
   by YamlTableDefLoader.
 
+### Indices (pk, uk, idx)
+
+Two formats can be used:
+* _comma_separated_column_names_with_optional_asc_or_desc_
+* _index_name_(_comma_separated_column_names_with_optional_asc_or_desc_)
+
+If index name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
+to create automatic index name.
+
+Examples:
+```yaml
+idx:
+- id
+- id, col1
+- idx_col2(col2)
+- idx_col3_col4(col3, col4)
+- idx_col3_col5d(col3, col5 desc)
+```
+
 ## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/index.html)
