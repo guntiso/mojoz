@@ -63,7 +63,7 @@ name [nullability] [type] [length_or_total_digits] [fraction_digits] [(enum)] [=
 where
 * _name_ is column name or for refs - _table_name.column_name_ or _alias.column_name_ (dot (.) is replaced with underscore(\_) to create column name)
 * _nullability_ is optional exclamation mark (!) meaning **not** null
-* _type_ is optional type name or for refs - _table_name.column_name_
+* _type_ is optional type name or for refs - optional _table_name.column_name_
 * _length_or_total_digits_ is optional column length or total digits for number columns
 * _fraction_digits_ is optional fraction digits for decimals
 * _enum_ is optional list of comma and/or space separated values for the column (to enable spaces in values, all values should be wrapped in single quotes ('))
@@ -90,6 +90,22 @@ idx:
 - idx_col2(col2)
 - idx_col3_col4(col3, col4)
 - idx_col3_col5d(col3, col5 desc)
+```
+
+### Refs (foreign keys)
+
+Refs are implied from column definitions where column name or type is _table_name.column_name_. Refs can be defined explicitly for: name customization, multi-column ref creation or _on delete_ / _on update_ settings.
+![Refs syntax diagram](docs/diagrams/png/refs.png)
+If ref name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
+to create automatic ref name.
+
+Examples:
+```yaml
+refs:
+- bank_id -> bank(id) on delete cascade
+- code, name -> table1(code, col1) on delete cascade
+- fk_table2_custom_name(code, name) -> table2(code, col2)
 ```
 
 ## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/index.html)
