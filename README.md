@@ -110,4 +110,42 @@ refs:
 - fk_table2_custom_name(code, name) -> table2(code, col2)
 ```
 
+## Types
+
+Default supported types are defined in [mojoz-default-types.yaml](src/main/resources/mojoz-default-types.yaml).
+Types can be customized and additional types can be added by including **mojoz-custom-types.yaml** file in resources.
+Key names are:
+* **type** - [mojoz] type name
+* **_[some]_ name** - type name for specific purpose:
+  * **scala name** - used by [ScalaClassWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/ScalaClassWriter.html)
+  * **xsd name** - used by [XsdWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/XsdWriter.html)
+  * any other (custom) name will also be loaded into
+    `targetNames` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/TypeDef.html)
+    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTypeDefLoader.html)
+* **jdbc** - type mappings from JDBC,
+  used by [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/JdbcTableDefLoader$.html)
+  to map jdbc type to mojoz type
+* **yaml** - type mappings for table and view metadata loading from mojoz yaml files,
+  used by [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTableDefLoader.html)
+  and [YamlViewDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlViewDefLoader.html)
+* **sql** - type info used by [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$.html),
+  can be overiden for specific database, for example:
+  * **oracle sql** - type name specific to Oracle
+  * **postgresql** - type name specific to PostgreSQL
+  * **_[other db]_ sql** - any other keys ending with `sql` will also be loaded into
+    `sqlWrite` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/TypeDef.html)
+    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTypeDefLoader.html)
+    and can be used by corresponding sql writer.
+
+Example:
+```yaml
+type:       euro
+xsd name:   decimal
+scala name: BigDecimal
+yaml:
+- euro
+sql:
+- numeric(12, 2)
+```
+
 ## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/index.html)
