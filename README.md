@@ -76,9 +76,7 @@ where
 
 ### Indices (pk, uk, idx)
 
-Two formats can be used:
-* _comma_separated_column_names_with_optional_asc_or_desc_
-* _index_name_(_comma_separated_column_names_with_optional_asc_or_desc_)
+![Indices syntax diagram](docs/diagrams/png/indices.png)
 
 If index name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter.html) uses
 [ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
@@ -98,6 +96,7 @@ idx:
 
 Refs are implied from column definitions where column name or type is _table_name.column_name_. Refs can be defined explicitly for: name customization, multi-column ref creation or _on delete_ / _on update_ settings.
 ![Refs syntax diagram](docs/diagrams/png/refs.png)
+
 If ref name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter.html) uses
 [ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
 to create automatic ref name.

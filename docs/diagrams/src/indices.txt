@@ -1,0 +1,21 @@
+Diagram(
+  Choice(0,
+    OneOrMore(Sequence(
+      NonTerminal('column-name'),
+      Optional(Sequence(
+        Choice(0, 'asc', 'desc'),
+      ), 'skip'),
+    ), ','),
+    Sequence(
+      NonTerminal('index-name'),
+      '(',
+      OneOrMore(Sequence(
+        NonTerminal('column-name'),
+        Optional(Sequence(
+          Choice(0, 'asc', 'desc'),
+        ), 'skip'),
+      ), ','),
+      ')'
+    )
+  ),
+)
