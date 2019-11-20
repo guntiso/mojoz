@@ -81,6 +81,8 @@ create table test_table1(
   col4 varchar2(1 char),
   col5 varchar2(1 char)
 );
+comment on table test_table1 is 'Test comment for table - to be escape''d';
+comment on column test_table1.col5 is 'Test comment - to be escape''d';
 
 create table test_table2(
   id numeric(18) not null,

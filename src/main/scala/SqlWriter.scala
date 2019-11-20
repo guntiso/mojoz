@@ -173,10 +173,10 @@ abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =
   private[out] def explicitNotNullForColumn(t: TableDef[_], c: ColumnDef[Type]) =
     !c.nullable && !t.pk.exists(_.cols.contains(c.name))
   def tableComment(t: TableDef[_]) = Option(t.comments).filter(_ != "").map(c =>
-    s"comment on table ${t.name} is '$c';")
+    s"comment on table ${t.name} is '${c.replace("'", "''")}';")
   def columnComments(t: TableDef[ColumnDef[_]]) =
     t.cols.filter(_.comments != null).filter(_.comments != "").map(c =>
-      s"comment on column ${t.name}.${c.name} is '${c.comments}';")
+      s"comment on column ${t.name}.${c.name} is '${c.comments.replace("'", "''")}';")
   def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
     t.refs map foreignKey(t.name)
   }.flatten.mkString("\n")

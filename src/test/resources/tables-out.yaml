@@ -53,6 +53,7 @@ columns:
 - father.id              person.id
 
 table:   test_table1
+comment: Test comment for table - to be escape'd
 columns:
 - id
 - code                 ! 1
@@ -60,7 +61,7 @@ columns:
 - col2                   1
 - col3                   1
 - col4                   1
-- col5                   1
+- col5                   1             : Test comment - to be escape'd
 pk: pk_tt1_spec_id_code(id, code)
 uk:
 - code
