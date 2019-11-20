@@ -1,8 +1,8 @@
 lazy val dependencies = Seq(
   "org.yaml" % "snakeyaml" % "1.18",
   // test
-  "org.hsqldb" % "hsqldb" % "2.3.2" % "test",
-  "com.h2database" % "h2" % "1.4.178" % "test",
+  "org.hsqldb" % "hsqldb" % "2.5.0" % "test",
+  "com.h2database" % "h2" % "1.4.200" % "test",
   "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "9.4.1212.jre7" % "it,test",   // XXX POM fix - not in test scope
   "org.scalatest" %% "scalatest" % "3.0.8" % "it,test"

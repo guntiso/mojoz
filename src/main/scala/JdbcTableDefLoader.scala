@@ -438,7 +438,7 @@ private[in] object CkParser {
   val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qi = s"$ident(\\.$ident)*"
   val quotQi = s""""$qi""""
-  val checkIn1 = """\s*(\w+(\.\w+)*)\s*[iI][nN]\s*\(\s*('[\w\.\s]+'(\s*\,\s*'[\w\.\s]+')*)\s*\)\s*"""
+  val checkIn1 = """\s*(\"?\w+(\.\w+)*\"?")\s*[iI][nN]\s*\(\s*('[\w\.\s]+'(\s*\,\s*'[\w\.\s]+')*)\s*\)\s*"""
   val checkIn2 = s"$s\\($checkIn1\\)$s"
   val checkIn3 = """\(\(?\(?(\w+(\.\w+)*)\)?::text = ANY \(\(?ARRAY""" +
     """\[('[\w\.\s]+'::character varying(\,\s*'[\w\.\s]+'::character varying)*)\]\)?::text\[\]\)\)\)?"""
