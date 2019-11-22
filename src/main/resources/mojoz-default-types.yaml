@@ -12,19 +12,30 @@ jdbc:
 - NCHAR             -> size
 - NCLOB             -> size
 - NVARCHAR          -> size
-- VARCHAR           -> size
+- VARCHAR *..2147483646 -> size
+- VARCHAR 2147483647..*
 - REF               -> size
 - ROWID             -> size
 - SQLXML
 - CHAR              -> size
-- CLOB              -> size
+- CLOB *..2147483646    -> size
+- CLOB 2147483647..*
 - DATALINK          -> size # anyURI instead?
+hsqldb jdbc:
+- VARCHAR *..1073741823 -> size
+- VARCHAR 1073741824..*
+- CLOB    *..1073741823 -> size
+- CLOB    1073741824..*
 yaml:
 - string
 - string *          -> size
 sql:
 - string            -> clob
 - string *          -> varchar(size)
+hsqldb sql:
+- string 0..1073741823  -> varchar(size)
+- string 1073741824..*  -> clob
+- string                -> clob
 postgresql:
 - string            -> varchar
 - string *          -> varchar(size)

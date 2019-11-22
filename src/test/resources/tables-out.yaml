@@ -82,6 +82,7 @@ columns:
 - id
 - code                   1
 - name                 ! 1
+- description
 pk: name
 refs:
 - code, name -> test_table1(code, col1) on delete cascade

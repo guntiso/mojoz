@@ -89,7 +89,8 @@ comment on column test_table1.col5 is 'Test comment - to be escape''d';
 create table test_table2(
   id bigint not null,
   code varchar(1),
-  name varchar(1) not null
+  name varchar(1) not null,
+  description clob
 );
 
 create table test_table3(

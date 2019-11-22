@@ -87,7 +87,8 @@ comment on column test_table1.col5 is 'Test comment - to be escape''d';
 create table test_table2(
   id numeric(18) not null,
   code varchar2(1 char),
-  name varchar2(1 char)
+  name varchar2(1 char),
+  description clob
 );
 
 create table test_table3(
