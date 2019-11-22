@@ -11,6 +11,7 @@ import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.Seq
 
 import mojoz.metadata.ColumnDef
+import mojoz.metadata.JdbcLoadInfo
 import mojoz.metadata.TableDef
 import mojoz.metadata.TableDef._
 import mojoz.metadata.Type
@@ -274,8 +275,13 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       .toList
       .sortBy(_.name) // TODO sorting refs somehow for test stability, improve?
   }
-  lazy val jdbcLoadInfoToTypeDef =
-    typeDefs.flatMap(td => td.jdbcLoad.map(_ -> td))
+  val jdbcLoadInfoKey = "jdbc"
+  lazy val jdbcLoadInfoToTypeDef: Seq[(JdbcLoadInfo, TypeDef)] =
+    typeDefs.flatMap { td =>
+      val specific = td.jdbcLoad.get(jdbcLoadInfoKey).getOrElse(Nil)
+      val generic = td.jdbcLoad.get("jdbc").getOrElse(Nil)
+      (specific ++ (generic filterNot specific.contains)).map(_ -> td)
+    }
   def jdbcTypeToMojozType(jdbcTypeCode: Int, size: Int, frac: Int) =
     jdbcLoadInfoToTypeDef.find { case (jl, td) =>
       jl.jdbcTypeCode == jdbcTypeCode &&
@@ -318,6 +324,7 @@ object JdbcTableDefLoader {
     size: Int,
     fractionDigits: Int)
   class H2(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
+    override val jdbcLoadInfoKey = "h2 jdbc"
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
       // FIXME table def loaders: use like or equals (like may fail!)? escape _?
@@ -339,11 +346,13 @@ object JdbcTableDefLoader {
     }
   }
   class Hsqldb(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
+    override val jdbcLoadInfoKey = "hsqldb jdbc"
     override def checkConstraints(conn: Connection,
       catalog: String, schemaPattern: String, tableNamePattern: String) =
       standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
   }
   class Oracle(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
+    override val jdbcLoadInfoKey = "oracle jdbc"
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
       val ps = conn.prepareStatement("""
@@ -359,6 +368,7 @@ object JdbcTableDefLoader {
     }
   }
   class Postgresql(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
+    override val jdbcLoadInfoKey = "postgresql jdbc"
     override def checkConstraints(conn: Connection,
       catalog: String, schemaPattern: String, tableNamePattern: String) =
       standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)

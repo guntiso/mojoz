@@ -40,7 +40,7 @@ object TypeDef {
   trait TypeDefBase {
     val name: String
     val targetNames: Map[String, String] // xsd, scala, java, ...
-    val jdbcLoad: Seq[JdbcLoadInfo]
+    val jdbcLoad: Map[String, Seq[JdbcLoadInfo]]
     val yamlLoad: Seq[YamlLoadInfo]
     val sqlWrite: Map[String, Seq[SqlWriteInfo]]
     val defaults: ColumnDefBase[Type]
@@ -52,7 +52,7 @@ import TypeDef.TypeDefBase
 case class TypeDef(
   name: String,
   targetNames: Map[String, String],
-  jdbcLoad: Seq[JdbcLoadInfo],
+  jdbcLoad: Map[String, Seq[JdbcLoadInfo]],
   yamlLoad: Seq[YamlLoadInfo],
   sqlWrite: Map[String, Seq[SqlWriteInfo]],
   defaults: ColumnDefBase[Type],

@@ -165,12 +165,17 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       tdMap.filterKeys(_ endsWith " name").map {
         case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
       }
-    val jdbcLoad = tdMap.get("jdbc")
-      .filter(_ != null)
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-      .getOrElse(Nil)
-      .map(toString(_, "Failed to load jdbc load definition"))
-      .map(toJdbcLoadInfo)
+    val jdbcLoad: Map[String, Seq[JdbcLoadInfo]] = TreeMap()(math.Ordering.String) ++
+      tdMap.filterKeys(_ endsWith "jdbc").map {
+        case (k, v) =>
+        val jdbcLoadInfoSeq =
+          Option(v)
+            .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
+            .getOrElse(Nil)
+            .map(toString(_, s"Failed to load jdbc load definition for $k"))
+            .map(toJdbcLoadInfo)
+        (k, jdbcLoadInfoSeq)
+      }
     val yamlLoad = tdMap.get("yaml")
       .filter(_ != null)
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)

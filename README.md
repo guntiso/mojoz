@@ -124,6 +124,7 @@ Key names are:
 * **jdbc** - type mappings from JDBC,
   used by [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/JdbcTableDefLoader$.html)
   to map jdbc type to mojoz type
+  * **_[some db]_ jdbc** - db-specific type mappings from JDBC
 * **yaml** - type mappings for table and view metadata loading from mojoz yaml files,
   used by [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlTableDefLoader.html)
   and [YamlViewDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.1/mojoz/metadata/in/YamlViewDefLoader.html)
