@@ -53,6 +53,18 @@ fields:
 - is_boolean_expr =
 - is_not_boolean date : should be date
 
+name:   no_fields
+table:  bank
+fields: []
+
+name:    no_fields_extended_with_fields
+extends: no_fields
+fields:
+- id
+- code
+- name
+- country.name
+
 name:   one_fielder
 table:
 fields: the_one

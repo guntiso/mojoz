@@ -27,6 +27,14 @@ case class NamedInlineView2 (
 case class NamedInlineView3 (
   childName: String = null
 )
+case class NoFields (
+)
+case class NoFieldsExtendedWithFields (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null,
+  countryName: String = null
+)
 case class NoTable (
   someId: java.lang.Long = null,
   someName: String = null,

@@ -36,6 +36,19 @@ table:
 fields:
 - child_name
 
+name:    no_fields
+table:   bank
+fields:
+
+
+name:    no_fields_extended_with_fields
+extends: no_fields
+fields:
+- id
+- code
+- name
+- country.name
+
 name:    no_table
 table:
 fields:

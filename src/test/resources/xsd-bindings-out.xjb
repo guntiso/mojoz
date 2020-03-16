@@ -23,6 +23,12 @@
     <jaxb:bindings node="//xs:complexType[@name='NamedInlineView3Type']">
       <jaxb:class name="NamedInlineView3"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NoFieldsType']">
+      <jaxb:class name="NoFields"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NoFieldsExtendedWithFieldsType']">
+      <jaxb:class name="NoFieldsExtendedWithFields"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NoTableType']">
       <jaxb:class name="NoTable"/>
     </jaxb:bindings>
