@@ -461,15 +461,15 @@ class YamlViewDefLoader(
       }
 
     def resolveFieldNamesAndTypes_(t: ViewDef[FieldDef[Type]]) = {
-      val joins = parseJoins(
+      lazy val joins = parseJoins(
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
           .orNull,
         t.joins)
-      val aliasToTable =
+      lazy val aliasToTable =
         joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap ++
           Seq(t.tableAlias).filter(_ != null).map(_ -> t.table).toMap
-      val tableOrAliasToJoin =
+      lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def reduceExpression[T](f: FieldDef[T]) =
         if (f.isExpression && f.name.indexOf(".") < 0 && f.expression != null &&
