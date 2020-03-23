@@ -18,7 +18,6 @@ addons:
 before_script:
   - psql -f src/it/mojoz-postgresql-setup.sql -U postgres
   - cp src/it/resources/application.conf.travis src/it/resources/application.conf
-  - sudo chmod +x /usr/local/bin/sbt #https://github.com/travis-ci/travis-ci/issues/7703
 notifications:
   email:
     - guntiso@uniso.lv
