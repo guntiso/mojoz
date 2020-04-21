@@ -55,7 +55,7 @@ class TableDefTests extends FlatSpec with Matchers {
   }
   "generated h2 roundtrip file" should "almost equal sample file" in {
     Class.forName("org.h2.Driver") // fix "sbt +test" - No suitable driver found
-    implicit val ci = ("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "SA", "")
+    implicit val ci = h2Ci
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements =
       SqlWriter.h2().schema(tableDefs)
@@ -77,7 +77,7 @@ class TableDefTests extends FlatSpec with Matchers {
     skipSome(expected) should be(skipSome(produced))
   }
   "generated hsqldb roundtrip file" should "almost equal sample file" in {
-    implicit val ci = ("jdbc:hsqldb:mem:mymemdb", "SA", "")
+    implicit val ci = hsqldbCi
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements = SqlWriter.hsqldb().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
@@ -117,6 +117,8 @@ class TableDefTests extends FlatSpec with Matchers {
 
 object TableDefTests {
   val nl = System.getProperty("line.separator")
+  val h2Ci = ("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "SA", "")
+  val hsqldbCi = ("jdbc:hsqldb:mem:mymemdb", "SA", "")
   def skipSome(s: String) = {
     // h2 and hsqldb ignores 'desc' on index cols, do not compare these lines
     s.split("\\r?\\n")
