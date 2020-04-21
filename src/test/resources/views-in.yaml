@@ -70,6 +70,19 @@ table:
 fields: the_one
 extra: some extra
 
+name:   with_scala_keywords
+table:
+fields:
+- this  =
+- super =
+- new   =
+- true  =
+- lazy  =
+- null  =
+- case  =
+- final =
+- type  =
+
 name: with_anonymous_inline_view
 table:
 fields:

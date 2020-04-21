@@ -602,6 +602,28 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithScalaKeywordsType">
+    <xs:sequence>
+      <xs:element name="This" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Super" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="New" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="True" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Lazy" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Null" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Case" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Final" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Type" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="ListWrapperType">
     <xs:sequence>
       <xs:element type="xs:int" name="Count"/>

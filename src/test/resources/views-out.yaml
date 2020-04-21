@@ -200,3 +200,16 @@ name:    with_named_inline_view3
 table:
 fields:
 - single_child             named_inline_view3
+
+name:    with_scala_keywords
+table:
+fields:
+- this                                   =
+- super                                  =
+- new                                    =
+- true                                   =
+- lazy                                   =
+- null                                   =
+- case                                   =
+- final                                  =
+- type                                   =

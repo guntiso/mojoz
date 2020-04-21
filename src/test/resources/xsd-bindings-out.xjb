@@ -95,6 +95,9 @@
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineView3Type']">
       <jaxb:class name="WithNamedInlineView3"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithScalaKeywordsType']">
+      <jaxb:class name="WithScalaKeywords"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ListWrapperType']">
       <jaxb:class name="ListWrapper"/>
     </jaxb:bindings>

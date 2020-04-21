@@ -136,4 +136,15 @@ class WithNamedInlineView2 extends Dto {
 class WithNamedInlineView3 extends Dto {
   var singleChild: NamedInlineView3 = null
 }
+class WithScalaKeywords extends Dto {
+  var `this`: String = null
+  var `super`: String = null
+  var `new`: String = null
+  var `true`: String = null
+  var `lazy`: String = null
+  var `null`: String = null
+  var `case`: String = null
+  var `final`: String = null
+  var `type`: String = null
+}
 // end

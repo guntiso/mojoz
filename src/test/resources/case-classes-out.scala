@@ -136,4 +136,15 @@ case class WithNamedInlineView2 (
 case class WithNamedInlineView3 (
   singleChild: NamedInlineView3 = null
 )
+case class WithScalaKeywords (
+  `this`: String = null,
+  `super`: String = null,
+  `new`: String = null,
+  `true`: String = null,
+  `lazy`: String = null,
+  `null`: String = null,
+  `case`: String = null,
+  `final`: String = null,
+  `type`: String = null
+)
 // end
