@@ -242,7 +242,7 @@ private[out] class H2SqlWriter(
   // how to retrieve column check constraint for h2? add to table instead 
   override def colCheck(c: ColumnDef[Type]): String = ""
   override def explicitNotNullForColumn(t: TableDef[_], c: ColumnDef[Type]) =
-    !c.nullable
+    !c.nullable || t.pk.exists(_.cols.contains(c.name))
   override def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] = t.cols.map { c =>
     val xt = c.type_
     xt.name match {

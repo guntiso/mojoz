@@ -330,7 +330,7 @@ class YamlViewDefLoader(
         if (yfd.typeName == null && isViewDef(yfd.extras))
           new Type(typeName(yfd.extras, name), true)
         else if (isExpression || rawTable == "")
-          conventions.fromExternal(name, rawXsdType, None)._1
+          conventions.typeFromExternal(name, rawXsdType)
         else null
       val xsdType =
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
@@ -529,7 +529,7 @@ class YamlViewDefLoader(
       def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
-          f.copy(type_ = conventions.fromExternal(f.name, Option(f.type_), None)._1)
+          f.copy(type_ = conventions.typeFromExternal(f.name, Option(f.type_)))
         else if (f.table == null) f
         else if (t.table == null) f
         else {

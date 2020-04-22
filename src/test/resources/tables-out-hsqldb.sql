@@ -85,7 +85,7 @@ comment on table test_table1 is 'Test comment for table - to be escape''d';
 comment on column test_table1.col5 is 'Test comment - to be escape''d';
 
 create table test_table2(
-  id bigint not null,
+  id bigint,
   code varchar(1),
   name varchar(1),
   description clob
@@ -124,6 +124,16 @@ create table test_table5(
   enum_ws varchar(6) check (enum_ws in ('list 1', 'list 2'))
 );
 
+create table test_table6(
+  id bigint,
+  name varchar(50)
+);
+
+create table test_table7(
+  key1 varchar(20),
+  key2 varchar(20)
+);
+
 alter table account add constraint pk_account primary key (id);
 
 alter table bank add constraint pk_bank primary key (id);
@@ -148,6 +158,10 @@ create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
 create index idx_tt1_spec_col3_col5d on test_table1(col3, col5);
 
 alter table test_table2 add constraint pk_test_table2 primary key (name);
+
+alter table test_table6 add constraint pk_test_table6 primary key (id);
+
+alter table test_table7 add constraint pk_test_table7 primary key (key1, key2);
 
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);

@@ -275,7 +275,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val pk_list = toList(tdMap.get("pk"))
       .map(loadYamlIndexDef)
     if (pk_list.size > 1)
-      throw new RuntimeException("Multiple primary keys are not allowed")
+      throw new RuntimeException(
+        "Multiple primary keys are not allowed, composite key columns should be comma-separated")
     val pk = pk_list.headOption
     val uk = toList(tdMap.get("uk"))
       .map(loadYamlIndexDef)

@@ -122,3 +122,17 @@ columns:
 - enum_ws                6 ('list 1', 'list 2')
 refs:
 - bank_id -> bank(id) on delete cascade
+
+table:   test_table6
+columns:
+- id
+- name                   50
+pk:
+- id
+
+table:   test_table7
+columns:
+- key1                   20
+- key2                   20
+pk:
+- key1, key2

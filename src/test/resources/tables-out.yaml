@@ -27,7 +27,7 @@ extra-for-bank: extra for bank
 table:   country
 comment: Valstu klasifikators
 columns:
-- code                 ! 2          (LV, TO, LT) : ISO 3166-1 divu burtu valsts kods
+- code                   2          (LV, TO, LT) : ISO 3166-1 divu burtu valsts kods
 - code3                ! 3             : ISO 3-burtu valsts kods
 - code_n3              ! 3             : ISO 3166-1 trīsciparu valsts kods
 - name                 ! 64            : Valsts nosaukums.
@@ -35,14 +35,16 @@ columns:
 - name_rus               64            : Valsts nosaukums krieviski.
 - is_active            !
 - is_eu                !               : Vai valsts ir Eiropas Savienības dalībvalsts
+pk: code
 
 table:   currency
 comment: Sistēmā uzturēto valūtu klasifikators.
 columns:
-- code                 ! 3          (USD, EUR) : Starptautiski pieņemtais valūtas apzīmējums (burti).
+- code                   3          (USD, EUR) : Starptautiski pieņemtais valūtas apzīmējums (burti).
 - name                 ! 100           : Valūtas nosaukums.
 - name_eng             ! 100           : Valūtas nosaukums angliski.
 - name_rus             ! 100           : Valūtas nosaukums krieviski.
+pk: code
 
 table:   person
 columns:
@@ -56,7 +58,7 @@ table:   test_table1
 comment: Test comment for table - to be escape'd
 columns:
 - id
-- code                 ! 1
+- code                   1
 - col1                   1
 - col2                   1
 - col3                   1
@@ -81,7 +83,7 @@ table:   test_table2
 columns:
 - id
 - code                   1
-- name                 ! 1
+- name                   1
 - description
 pk: name
 refs:
@@ -122,3 +124,14 @@ columns:
 - enum_ws                6          ('list 1', 'list 2')
 refs:
 - bank_id -> bank(id) on delete cascade
+
+table:   test_table6
+columns:
+- id
+- name                   50
+
+table:   test_table7
+columns:
+- key1                   20
+- key2                   20
+pk: key1, key2
