@@ -97,7 +97,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     td foreach checkRepeatingColumnNames
   }
   private def checkTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
-    def checkIndices(t: TableDef[ColumnDef[_]]) {
+    def checkIndices(t: TableDef[ColumnDef[_]]): Unit = {
       val colNames = t.cols.map(_.name).toSet
       def checkIdx(indexType: String, idx: DbIndex) = {
         if (idx.cols == null || idx.cols.size == 0) sys.error(

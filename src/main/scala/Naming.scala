@@ -10,7 +10,7 @@ object Naming {
   }
   def camelizeLower(name: String) = camelize(name) match {
     case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>
-      x(0).toLower + x.substring(1)
+      s"${x(0).toLower}${x.substring(1)}"
     case x => x
   }
   def dbName(name: String) = {

@@ -138,7 +138,7 @@ object TableDefTests {
     }).flatten.toSet
   def getConn(implicit ci: (String, String, String)) =
     DriverManager.getConnection(ci._1, ci._2, ci._3)
-  def executeStatements(statements: String*)(implicit ci: (String, String, String)) {
+  def executeStatements(statements: String*)(implicit ci: (String, String, String)): Unit = {
     val conn = getConn(ci)
     try {
       val statement = conn.createStatement
@@ -151,7 +151,7 @@ object TableDefTests {
     source.close()
     body.replace(nl, "\n") // normalize newlines
   }
-  def toFile(filename: String, message: String) {
+  def toFile(filename: String, message: String): Unit = {
     val out = new PrintWriter(filename, "UTF-8")
     try out.print(message) finally out.close
   }

@@ -94,7 +94,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     user = conf.getString(prefix + "user"),
     password = conf.getString(prefix + "password"),
     debug = conf.getBoolean(prefix + "debug"))
-  def clearOracleDbSchema(cfg: Cfg) {
+  def clearOracleDbSchema(cfg: Cfg): Unit = {
     try executeStatements(cfg, "drop user mojoz cascade") catch {
       case ex: Exception => println("failed to drop test user: " + ex.toString)
     }
@@ -102,13 +102,13 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       "create user mojoz identified by mojoz",
       "grant connect, resource to mojoz")
   }
-  def clearPostgresqlDbSchema(cfg: Cfg) {
+  def clearPostgresqlDbSchema(cfg: Cfg): Unit = {
     try executeStatements(cfg, "drop schema mojoz cascade") catch {
       case ex: Exception => println("failed to drop schema: " + ex.toString)
     }
     executeStatements(cfg, "create schema mojoz authorization mojoz")
   }
-  def executeStatements(cfg: Cfg, statements: String*) {
+  def executeStatements(cfg: Cfg, statements: String*): Unit = {
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
     try {
       val statement = conn.createStatement
@@ -124,7 +124,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     source.close()
     body.replace(nl, "\n") // normalize newlines
   }
-  def toFile(filename: String, message: String) {
+  def toFile(filename: String, message: String): Unit = {
     val out = new PrintWriter(filename, "UTF-8")
     try out.print(message) finally out.close
   }

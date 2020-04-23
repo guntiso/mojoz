@@ -86,7 +86,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     source.close()
     body.replace(nl, "\n") // normalize newlines
   }
-  def toFile(filename: String, message: String) {
+  def toFile(filename: String, message: String): Unit = {
     val out = new PrintWriter(filename, "UTF-8")
     try out.print(message) finally out.close
   }
