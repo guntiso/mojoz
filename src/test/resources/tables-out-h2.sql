@@ -42,7 +42,7 @@ create table country(
   name_rus varchar(64),
   is_active boolean not null,
   is_eu boolean not null,
-  check code in ('LV', 'TO', 'LT')
+  check (code in ('LV', 'TO', 'LT'))
 );
 comment on table country is 'Valstu klasifikators';
 comment on column country.code is 'ISO 3166-1 divu burtu valsts kods';
@@ -58,7 +58,7 @@ create table currency(
   name varchar(100) not null,
   name_eng varchar(100) not null,
   name_rus varchar(100) not null,
-  check code in ('USD', 'EUR')
+  check (code in ('USD', 'EUR'))
 );
 comment on table currency is 'Sistēmā uzturēto valūtu klasifikators.';
 comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmējums (burti).';
@@ -122,10 +122,16 @@ create table test_table4(
 
 create table test_table5(
   bank_id bigint,
+  enum_for_int integer,
+  enum_for_long bigint,
+  enum_for_decimal numeric(3, 1),
   enum varchar(5),
   enum_ws varchar(6),
-  check enum in ('list1', 'list2'),
-  check enum_ws in ('list 1', 'list 2')
+  check (enum_for_int in (-1, 0, 1)),
+  check (enum_for_long in (-99, 0, 99)),
+  check (enum_for_decimal in (-9.9, 0, 9.9)),
+  check (enum in ('list1', 'list2')),
+  check (enum_ws in ('list 1', 'list 2'))
 );
 
 create table test_table6(

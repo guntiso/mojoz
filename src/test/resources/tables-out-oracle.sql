@@ -120,6 +120,9 @@ create table test_table4(
 
 create table test_table5(
   bank_id numeric(18),
+  enum_for_int numeric(9) check (enum_for_int in (-1, 0, 1)),
+  enum_for_long numeric(18) check (enum_for_long in (-99, 0, 99)),
+  enum_for_decimal numeric(3, 1) check (enum_for_decimal in (-9.9, 0, 9.9)),
   enum varchar2(5 char) check (enum in ('list1', 'list2')),
   enum_ws varchar2(6 char) check (enum_ws in ('list 1', 'list 2'))
 );

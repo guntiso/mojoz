@@ -448,13 +448,14 @@ private[in] object CkParser {
   val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qi = s"$ident(\\.$ident)*"
   val quotQi = s""""$qi""""
-  val checkIn1 = """\s*(\"?\w+(\.\w+)*\"?")\s*[iI][nN]\s*\(\s*('[\w\.\s]+'(\s*\,\s*'[\w\.\s]+')*)\s*\)\s*"""
+  val checkIn1 = """\s*(\"?\w+(\.\w+)*\"?")\s*[iI][nN]\s*\(\s*('?[\+\-\w\.\s]+'?(\s*\,\s*'?[\+\-\w\.\s]+'?)*)\s*\)\s*"""
   val checkIn2 = s"$s\\($checkIn1\\)$s"
-  val checkIn3 = """\(\(?\(?(\w+(\.\w+)*)\)?::text = ANY \(\(?ARRAY""" +
-    """\[('[\w\.\s]+'::character varying(\,\s*'[\w\.\s]+'::character varying)*)\]\)?::text\[\]\)\)\)?"""
-  val checkIn4 = """\((\w+(\.\w+)*)\s*[iI][nN]\s*\(('[\w\.\s]+'(\,\s*'[\w\.\s]+')*)\)\)"""
-  val checkIn5 = """\((\w+(\.\w+)*)\)\s*[iI][nN]\s*\((\('[\w\.\s]+'\)(\,\s*\('[\w\.\s]+'\))*)\)"""
+  val checkIn3 = """\(\(?\(?(\w+(\.\w+)*)\)?(::[\w\.\s]+)? = ANY \(\(?ARRAY""" +
+    """\[(\(?'?[\+\-\w\.\s]+'?(::[\w\.\s]+)?\)?(::[\w\.\s]+)?(\,\s*\(?'?[\+\-\w\.\s]+'?(::[\w\.\s]+)?\)?(::[\w\.\s]+)?)*)\]\)?(::[\w\.\s]+)?(\[\])?\)\)\)?"""
+  val checkIn4 = """\((\w+(\.\w+)*)\s*[iI][nN]\s*\(('?[\+\-\w\.\s]+'?(\,\s*'?[\+\-\w\.\s]+'?)*)\)\)"""
+  val checkIn5 = """\((\w+(\.\w+)*)\)\s*[iI][nN]\s*\((\('?[\+\-\w\.\s]+'?\)(\,\s*\('?[\+\-\w\.\s]+'?\))*)\)"""
   val checkNotNull = s"$s($qi|$quotQi)(?i) is not null$s".replace(" ", "\\s+")
+  val castR = """::\w+""".r
   private def regex(pattern: String) = ("^" + pattern + "$").r
   val CheckIn1 = regex(checkIn1)
   val CheckIn2 = regex(checkIn2)
@@ -470,8 +471,8 @@ private[in] object CkParser {
       Some(toColEnum(col, values))
     case CheckIn2(col, _, values, _) =>
       Some(toColEnum(col, values))
-    case CheckIn3(col, _, values, _) =>
-      Some(toColEnum(col, values.replace("::character varying", "")))
+    case CheckIn3(col, _, _, values, _, _, _, _, _, _, _) =>
+      Some(toColEnum(col, castR.replaceAllIn(values.replace("::character varying", ""), "")))
     case CheckIn4(col, _, values, _) =>
       Some(toColEnum(col, values))
     case CheckIn5(col, _, values, _) =>

@@ -118,6 +118,9 @@ columns:
 table:   test_table5
 columns:
 - bank.id
+- enum_for_int           int  (-1, 0, 1)
+- enum_for_long          long  (-99, 0, 99)
+- enum_for_decimal       decimal 3 1 (-9.9, 0, 9.9)
 - enum                   5 (list1, list2)
 - enum_ws                6 ('list 1', 'list 2')
 refs:

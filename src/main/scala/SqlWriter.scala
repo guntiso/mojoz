@@ -244,13 +244,7 @@ private[out] class H2SqlWriter(
   override def explicitNotNullForColumn(t: TableDef[_], c: ColumnDef[Type]) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
   override def tableChecks(t: TableDef[ColumnDef[Type]]): Seq[String] = t.cols.map { c =>
-    val xt = c.type_
-    xt.name match {
-      case "string" if c.enum != null =>
-        c.enum.map("'" + _ + "'")
-          .mkString("check " + c.name + " in (", ", ", ")")
-      case _ => ""
-    }
+    super.colCheck(c).trim
   }.filter(_ != "") ++ super.tableChecks(t)
 }
 
@@ -295,6 +289,9 @@ private[out] class StandardSqlWriter(
     xt.name match {
       case "string" if c.enum != null =>
         c.enum.map("'" + _ + "'")
+          .mkString(" check (" + c.name + " in (", ", ", "))")
+      case _ if c.enum != null =>
+        c.enum
           .mkString(" check (" + c.name + " in (", ", ", "))")
       case _ => ""
     }
