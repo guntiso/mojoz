@@ -447,36 +447,33 @@ private[in] object CkParser {
   val s = "\\s*"
   val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qi = s"$ident(\\.$ident)*"
-  val quotQi = s""""$qi""""
-  val checkIn1 = """\s*(\"?\w+(\.\w+)*\"?")\s*[iI][nN]\s*\(\s*('?[\+\-\w\.\s]+'?(\s*\,\s*'?[\+\-\w\.\s]+'?)*)\s*\)\s*"""
-  val checkIn2 = s"$s\\($checkIn1\\)$s"
-  val checkIn3 = """\(\(?\(?(\w+(\.\w+)*)\)?(::[\w\.\s]+)? = ANY \(\(?ARRAY""" +
-    """\[(\(?'?[\+\-\w\.\s]+'?(::[\w\.\s]+)?\)?(::[\w\.\s]+)?(\,\s*\(?'?[\+\-\w\.\s]+'?(::[\w\.\s]+)?\)?(::[\w\.\s]+)?)*)\]\)?(::[\w\.\s]+)?(\[\])?\)\)\)?"""
-  val checkIn4 = """\((\w+(\.\w+)*)\s*[iI][nN]\s*\(('?[\+\-\w\.\s]+'?(\,\s*'?[\+\-\w\.\s]+'?)*)\)\)"""
-  val checkIn5 = """\((\w+(\.\w+)*)\)\s*[iI][nN]\s*\((\('?[\+\-\w\.\s]+'?\)(\,\s*\('?[\+\-\w\.\s]+'?\))*)\)"""
-  val checkNotNull = s"$s($qi|$quotQi)(?i) is not null$s".replace(" ", "\\s+")
+  val in = "[iI][nN]"
+  val enum = """\(?'?[\+\-_\w0-9\.\s]+'?\)?"""
+  val cast = """::[\w\.\s]+"""
+  val qiQuotQi = s"""$qi|"$qi""""
+  val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enum( , $enum)*))_"""
+  val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enum($cast)?)_ ($cast)?( , $enum($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
+  val checkNotNull = s"$s($qiQuotQi)(?i) is not null$s".replace(" ", "\\s+")
   val castR = """::\w+""".r
-  private def regex(pattern: String) = ("^" + pattern + "$").r
+  private def regex(pattern: String) =
+    ("^" + pattern
+      .replace("_[", "\\[")
+      .replace("]_", "\\]")
+      .replace("_(", "[\\s\\(]*")
+      .replace(")_", "[\\s\\)]*")
+      .replace(" ", "\\s*") +
+    "$").r
   val CheckIn1 = regex(checkIn1)
   val CheckIn2 = regex(checkIn2)
-  val CheckIn3 = regex(checkIn3)
-  val CheckIn4 = regex(checkIn4)
-  val CheckIn5 = regex(checkIn5)
   val CheckNotNull = regex(checkNotNull)
   private def toColEnum(col: String, values: String) =
     (col.replace(""""""", ""),
       values.split("[\\(,\\)]+").toList.map(_.trim.replace("'", "")).filter(_.trim != ""))
   def colAndEnum(ck: String) = ck match {
-    case CheckIn1(col, _, values, _) =>
+    case CheckIn1(col, _, _, values, _) =>
       Some(toColEnum(col, values))
-    case CheckIn2(col, _, values, _) =>
-      Some(toColEnum(col, values))
-    case CheckIn3(col, _, _, values, _, _, _, _, _, _, _) =>
+    case CheckIn2(col, _, _, _, values, _, _, _, _, _, _, _) =>
       Some(toColEnum(col, castR.replaceAllIn(values.replace("::character varying", ""), "")))
-    case CheckIn4(col, _, values, _) =>
-      Some(toColEnum(col, values))
-    case CheckIn5(col, _, values, _) =>
-      Some(toColEnum(col, values))
     case _ =>
       None
   }
