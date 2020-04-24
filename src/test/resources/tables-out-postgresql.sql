@@ -123,6 +123,7 @@ create table test_table5(
   enum_for_int integer check (enum_for_int in (-1, 0, 1)),
   enum_for_long bigint check (enum_for_long in (-99, 0, 99)),
   enum_for_decimal numeric(3, 1) check (enum_for_decimal in (-9.9, 0, 9.9)),
+  enum_with_diacritics varchar(6) check (enum_with_diacritics in ('rūķīši', 'darbā', 'vai', 'mājās')),
   enum varchar(5) check (enum in ('list1', 'list2')),
   enum_ws varchar(6) check (enum_ws in ('list 1', 'list 2'))
 );

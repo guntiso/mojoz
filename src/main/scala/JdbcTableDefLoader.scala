@@ -448,7 +448,7 @@ private[in] object CkParser {
   val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qi = s"$ident(\\.$ident)*"
   val in = "[iI][nN]"
-  val enum = """\(?'?[\+\-_\w0-9\.\s]+'?\)?"""
+  val enum = """\(?'?[\+\-_\p{IsLatin}0-9\.\s]+'?\)?"""
   val cast = """::[\w\.\s]+"""
   val qiQuotQi = s"""$qi|"$qi""""
   val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enum( , $enum)*))_"""
