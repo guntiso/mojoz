@@ -126,12 +126,14 @@ create table test_table5(
   enum_for_long bigint,
   enum_for_decimal numeric(3, 1),
   enum_with_diacritics varchar(6),
+  enum_spešal_diacritics varchar(6),
   enum varchar(5),
   enum_ws varchar(6),
   check (enum_for_int in (-1, 0, 1)),
   check (enum_for_long in (-99, 0, 99)),
   check (enum_for_decimal in (-9.9, 0, 9.9)),
   check (enum_with_diacritics in ('rūķīši', 'darbā', 'vai', 'mājās')),
+  check (enum_spešal_diacritics in ('bladāc')),
   check (enum in ('list1', 'list2')),
   check (enum_ws in ('list 1', 'list 2'))
 );

@@ -452,7 +452,8 @@ private[in] object CkParser {
   val cast = """::[\w\.\s]+"""
   val qiQuotQi = s"""$qi|"$qi""""
   val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enum( , $enum)*))_"""
-  val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enum($cast)?)_ ($cast)?( , $enum($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
+  val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = (_($enum($cast)?)_ ($cast)?))_"""
+  val checkIn3 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enum($cast)?)_ ($cast)?( , $enum($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
   val checkNotNull = s"$s($qiQuotQi)(?i) is not null$s".replace(" ", "\\s+")
   val castR = """::\w+""".r
   private def regex(pattern: String) =
@@ -465,6 +466,7 @@ private[in] object CkParser {
     "$").r
   val CheckIn1 = regex(checkIn1)
   val CheckIn2 = regex(checkIn2)
+  val CheckIn3 = regex(checkIn3)
   val CheckNotNull = regex(checkNotNull)
   private def toColEnum(col: String, values: String) =
     (col.replace(""""""", ""),
@@ -472,7 +474,9 @@ private[in] object CkParser {
   def colAndEnum(ck: String) = ck match {
     case CheckIn1(col, _, _, values, _) =>
       Some(toColEnum(col, values))
-    case CheckIn2(col, _, _, _, values, _, _, _, _, _, _, _) =>
+    case CheckIn2(col, _, _, _, values, _, _) =>
+      Some(toColEnum(col, castR.replaceAllIn(values.replace("::character varying", ""), "")))
+    case CheckIn3(col, _, _, _, values, _, _, _, _, _, _, _) =>
       Some(toColEnum(col, castR.replaceAllIn(values.replace("::character varying", ""), "")))
     case _ =>
       None
