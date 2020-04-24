@@ -327,7 +327,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
 }
 
 private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
-  val FieldDef = {
+  val FieldPattern = {
     val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
     val qualifiedIdent = s"$ident(\\.$ident)*"
     val int = "[0-9]+"
@@ -357,7 +357,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String,
         child: Map[String, Any]) = nameEtc match {
-      case FieldDef(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
+      case FieldPattern(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
         len, frac, order, _, enum,
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
