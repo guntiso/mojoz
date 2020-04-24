@@ -232,7 +232,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       table =
         if (table == null) ""
         else if (name == table ||
-          extends_ != null || detailsOf != null) null
+          extends_ != null) null
         else table,
       comments = Option(comments)
         .filter(tableDef == null || _ != tableDef.comments).orNull,

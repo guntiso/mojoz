@@ -104,7 +104,6 @@ class YamlViewDefWriter {
       Option(comments).filter(_ != "").map(c =>
         wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
       Option(extends_).map(escapeYamlValue).map("extends: " + _),
-      Option(detailsOf).map(escapeYamlValue).map("details-of: " + _),
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)
         .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),
