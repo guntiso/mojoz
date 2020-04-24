@@ -28,7 +28,6 @@ object ViewDef {
     val having: Seq[String]
     val orderBy: Seq[String]
     val extends_ : String
-    val draftOf: String
     val detailsOf: String
     val comments: String
     val fields: Seq[F]
@@ -45,7 +44,6 @@ case class ViewDef[+F](
   having: Seq[String],
   orderBy: Seq[String],
   extends_ : String,
-  draftOf: String,
   detailsOf: String,
   comments: String,
   fields: Seq[F],
@@ -249,22 +247,21 @@ class YamlViewDefLoader(
     val having = getStringSeq(k.having)
     val order = getStringSeq(k.order)
     val xtnds = get(k.extends_)
-    val draftOf = get(k.draftOf)
     val detailsOf = get(k.detailsOf)
     val comment = get(k.comment)
     val fieldsSrc = Option(getSeq(k.fields)).getOrElse(Nil).toList
     val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
     val extendsOrModifies =
-      Option(xtnds).orElse(Option(detailsOf)).getOrElse(draftOf)
+      Option(xtnds).getOrElse(detailsOf)
     val (name, table) = (rawName, rawTable, extendsOrModifies) match {
       case (name, null, null) => (name, dbName(name)) // FIXME matches null null null => nullpointer
       case (name, null, _) => (name, null)
       case (null, table, null) => (table, dbName(table))
       case (name, table, _) => (name, dbName(table))
     }
-    if (List(xtnds, draftOf, detailsOf).filter(_ != null).size > 1) sys.error(
-      "extends, draft-of, details-of are not supported simultaneously, type: " + name)
+    if (List(xtnds, detailsOf).filter(_ != null).size > 1) sys.error(
+      "extends, details-of are not supported simultaneously, type: " + name)
     val YamlMdLoader = new YamlMdLoader(typeDefs)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
     def typeName(v: Map[String, Any], defaultSuffix: String) =
@@ -347,7 +344,7 @@ class YamlViewDefLoader(
             .filterNot(_.isEmpty).orNull)
       }
     ViewDef(name, table, null, joins, filter, group, having, order,
-      xtnds, draftOf, detailsOf, comment, fieldDefs, saveTo, extras) ::
+      xtnds, detailsOf, comment, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
       .zip(fieldDefs)
@@ -364,7 +361,7 @@ class YamlViewDefLoader(
     def checkExtends(t: ViewDef[_], nameToTypeDef: Map[String, ViewDef[_]],
       visited: List[String]): Boolean = {
       val extendsOrModifies =
-        Option(t.extends_).orElse(Option(t.detailsOf)).getOrElse(t.draftOf)
+        Option(t.extends_).getOrElse(t.detailsOf)
       if (visited contains t.name) sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
       else if (extendsOrModifies == null) true
@@ -554,57 +551,6 @@ class YamlViewDefLoader(
         .map(resolveTypeFromDbMetadata))
     }
 
-    // drafts logic
-    def resolveDraft(draft: ViewDef[FieldDef[Type]], addMissing: (ViewDef[FieldDef[Type]]) => Any) = {
-      def canReuseSimpleFieldsForDraft(t: ViewDef[FieldDef[Type]]) = {
-        // FIXME this is not exactly correct, or should be pluggable
-        !t.fields
-          .filter(isSimpleType)
-          .filter(!_.isCollection)
-          .filter(!_.nullable)
-          .exists(_.isForcedCardinality)
-      }
-      def canReuseComplexFieldsForDraft(t: ViewDef[FieldDef[Type]]) = {
-        !t.fields
-          .filter(isComplexType)
-          .exists(f => !canReuseAsDraft(m(f.type_.name)))
-      }
-      def canReuseFieldsForDraft(t: ViewDef[FieldDef[Type]]) =
-        canReuseSimpleFieldsForDraft(t) && canReuseComplexFieldsForDraft(t)
-      def canReuseAsDraft(t: ViewDef[FieldDef[Type]]): Boolean =
-        canReuseFieldsForDraft(t) &&
-          (t.extends_ == null || canReuseAsDraft(m(t.extends_)))
-      def addMissingDraftOf(draftOf: ViewDef[FieldDef[Type]]) = addMissing(
-        draftOf.copy(name = draftName(draftOf.name), table = null, joins = null,
-          extends_ = null, draftOf = draftOf.name, fields = Nil))
-      def draftField(f: FieldDef[Type]) =
-        if (isComplexType(f)) {
-          val t = m(f.type_.name)
-          def fCopy = f.copy(type_ = f.type_.copy(name = draftName(t.name)))
-          if (isDefined(draftName(t.name))) fCopy
-          else if (canReuseAsDraft(t)) f
-          else { addMissingDraftOf(t); fCopy }
-        } else if (f.isForcedCardinality && !f.nullable && !f.isCollection)
-          f.copy(nullable = true)
-        else f
-      val draftOf = m(draft.draftOf)
-      if (canReuseAsDraft(draftOf))
-        draft.copy(extends_ = draftOf.name, draftOf = null)
-      else {
-        val xDraftName = Option(draftOf.extends_).map(draftName).orNull
-        val xtnds =
-          if (draftOf.extends_ == null) null
-          else if (isDefined(xDraftName)) xDraftName
-          else if (canReuseAsDraft(m(draftOf.extends_))) draftOf.extends_
-          else { addMissingDraftOf(m(draftOf.extends_)); xDraftName }
-        val table = Option(draft.table) getOrElse draftOf.table
-        val joins = Option(draft.joins) getOrElse draftOf.joins
-        draft.copy(
-          table = table, joins = joins, extends_ = xtnds, draftOf = null,
-          fields = draftOf.fields.map(draftField) ++ draft.fields)
-      }
-    }
-
     // details logic
     def resolveDetails(details: ViewDef[FieldDef[Type]], addMissing: (ViewDef[FieldDef[Type]]) => Any) = {
       def hasChildrenWithDetails(t: ViewDef[FieldDef[Type]]): Boolean =
@@ -668,12 +614,9 @@ class YamlViewDefLoader(
     def resolveType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
       resolvedTypesMap.getOrElse(t.name, resolveUnresolvedType(t))
     def resolveUnresolvedType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] = typeResolved {
-      (t.draftOf, t.detailsOf) match {
-        case (null, null) => t
-        case (draftOf, null) => resolveDraft(t, addMissing)
-        case (null, detailsOf) => resolveDetails(t, addMissing)
-        case (_, _) => sys.error(
-          "extends, draft-of, details-of are not supported simultaneously, type: " + t.name)
+      t.detailsOf match {
+        case null => t
+        case detailsOf => resolveDetails(t, addMissing)
       }
     }
 
@@ -695,7 +638,6 @@ object YamlViewDefLoader {
     type ViewDefKeys = Value
     val name, table, joins, filter, group, having, order = Value
     val extends_ = Value("extends")
-    val draftOf = Value("draft-of")
     val detailsOf = Value("details-of")
     val saveTo = Value("save-to")
     val comment, fields = Value
