@@ -93,7 +93,6 @@ case class FieldDef[+T](
   enum: Seq[String],
   joinToParent: String,
   orderBy: String,
-  isI18n: Boolean,
   comments: String,
   extras: Map[String, Any]) extends FieldDefBase[T] {
   def this(name: String, type_ : T = null) = this(
@@ -115,7 +114,6 @@ case class FieldDef[+T](
     enum = null,
     joinToParent = null,
     orderBy = null,
-    isI18n = false,
     comments = null,
     extras = null
   )
@@ -138,7 +136,6 @@ case class FieldDef[+T](
     enum = that.enum,
     joinToParent = that.joinToParent,
     orderBy = that.orderBy,
-    isI18n = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isI18n else false,
     comments = that.comments,
     extras = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].extras else null
   )
@@ -337,7 +334,7 @@ class YamlViewDefLoader(
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
         isExpression, expression, saveTo, resolver, nullable, initial, isForcedCardinality,
-        xsdType, enum, joinToParent, orderBy, false, comment, extras)
+        xsdType, enum, joinToParent, orderBy, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")

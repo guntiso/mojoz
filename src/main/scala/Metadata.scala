@@ -3,7 +3,6 @@ package mojoz.metadata
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 
-import mojoz.metadata.in.I18nRules
 import mojoz.metadata.in.YamlTableDefLoader
 import TableDef._
 import ColumnDef._

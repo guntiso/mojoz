@@ -21,7 +21,6 @@ class ViewDefTests extends FlatSpec with Matchers {
     viewDefs,
     Naming.camelize _,
     Naming.camelize(_) + "Type")
-    // TODO I18nRules.suffixI18n(i18nSuffixes = Set("_eng", "_rus")))
   val nl = System.getProperty("line.separator")
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "views-out.yaml")
