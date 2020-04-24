@@ -65,6 +65,15 @@ fields:
 - name
 - country.name
 
+name:   no_fields_b
+table:  bank
+fields:
+
+name:    no_fields_extended_b
+extends: no_fields_b
+fields:
+- id
+
 name:   one_fielder
 table:
 fields: the_one

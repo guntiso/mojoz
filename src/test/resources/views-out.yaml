@@ -41,6 +41,16 @@ table:   bank
 fields:
 
 
+name:    no_fields_b
+table:   bank
+fields:
+
+
+name:    no_fields_extended_b
+extends: no_fields_b
+fields:
+- id
+
 name:    no_fields_extended_with_fields
 extends: no_fields
 fields:

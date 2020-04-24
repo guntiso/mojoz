@@ -29,6 +29,11 @@ class NamedInlineView3 extends Dto {
 }
 class NoFields extends Dto {
 }
+class NoFieldsB extends Dto {
+}
+class NoFieldsExtendedB extends NoFieldsB with DtoWithId {
+  var id: java.lang.Long = null
+}
 class NoFieldsExtendedWithFields extends NoFields with DtoWithId {
   var id: java.lang.Long = null
   var code: String = null

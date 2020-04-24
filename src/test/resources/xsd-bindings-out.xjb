@@ -26,6 +26,12 @@
     <jaxb:bindings node="//xs:complexType[@name='NoFieldsType']">
       <jaxb:class name="NoFields"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NoFieldsBType']">
+      <jaxb:class name="NoFieldsB"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='NoFieldsExtendedBType']">
+      <jaxb:class name="NoFieldsExtendedB"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NoFieldsExtendedWithFieldsType']">
       <jaxb:class name="NoFieldsExtendedWithFields"/>
     </jaxb:bindings>

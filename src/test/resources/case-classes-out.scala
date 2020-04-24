@@ -29,6 +29,11 @@ case class NamedInlineView3 (
 )
 case class NoFields (
 )
+case class NoFieldsB (
+)
+case class NoFieldsExtendedB (
+  id: java.lang.Long = null
+)
 case class NoFieldsExtendedWithFields (
   id: java.lang.Long = null,
   code: String = null,
