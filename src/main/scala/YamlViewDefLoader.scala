@@ -5,8 +5,8 @@ import java.util.ArrayList
 
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
+import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
-import scala.collection.mutable.Queue
 import scala.io.Source
 import scala.util.control.NonFatal
 
@@ -386,21 +386,12 @@ class YamlViewDefLoader(
       }
     }
   }
-  // TODO draftName to inputs!
-  def draftName(n: String) = // XXX
-    if (n endsWith "_details") n.replace("_details", "_draft_details")
-    else n + "_draft"
-  // TODO detailsName to inputs!
-  def detailsName(n: String) = n + "_details"
   private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[FieldDef[Type]]]) = {
-    //checkTypedefs(rawTypeDefs) FIXME does not allow draft names in type hierarchy
     val rawTypesMap: Map[String, ViewDef[FieldDef[Type]]] = rawTypeDefs.map(t => (t.name, t)).toMap
-    val resolvedTypes = new collection.mutable.ArrayBuffer[ViewDef[FieldDef[Type]]]()
-    val resolvedTypesMap = collection.mutable.Map[String, ViewDef[FieldDef[Type]]]()
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
-      else t.copy(table = try baseTable(t, resolvedTypesMap, Nil) catch {
+      else t.copy(table = try baseTable(t, rawTypesMap, Nil) catch {
         case ex: Exception => throw new RuntimeException("Failed to find base table for " + t.name, ex)
       })
 
@@ -429,7 +420,7 @@ class YamlViewDefLoader(
 
     def inheritSeqs(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
       if (t.extends_ == null) t
-      else mergeSeqs(t, inheritSeqs(m(t.extends_)))
+      else mergeSeqs(t, inheritSeqs(rawTypesMap(t.extends_)))
 
     def resolveBaseTableAlias[T](t: ViewDef[T]) = {
       val partsList =
@@ -545,30 +536,7 @@ class YamlViewDefLoader(
         .map(resolveNameAndTable)
         .map(resolveTypeFromDbMetadata))
     }
-
-    def isDefined(tName: String) = rawTypesMap.contains(tName)
-    def typeResolved(t: ViewDef[FieldDef[Type]]) = {
-      resolvedTypes += t
-      resolvedTypesMap(t.name) = t
-      t
-    }
-    def addMissing(t: ViewDef[FieldDef[Type]]) = {
-      // println("Adding missing type: " + t.name) // TODO not distinct
-      resolveType(t)
-    }
-    // TODO add stack overflow protection
-    def m(tName: String) = resolveTypeByName(tName)
-    def resolveTypeByName(tName: String): ViewDef[FieldDef[Type]] =
-      resolvedTypesMap.getOrElse(tName,
-        resolveUnresolvedType(rawTypesMap(tName)))
-    def resolveType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
-      resolvedTypesMap.getOrElse(t.name, resolveUnresolvedType(t))
-    def resolveUnresolvedType(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] = typeResolved {
-      t
-    }
-
-    rawTypeDefs foreach resolveType
-    val result = resolvedTypes.toList
+    val result = rawTypeDefs.toList
       .map(inheritTable)
       .map(inheritSeqs)
       .map(resolveBaseTableAlias)
