@@ -82,7 +82,6 @@ case class FieldDef[+T](
   saveTo: String,
   resolver: String, // expression, calculates value to be saved
   nullable: Boolean,
-  isForcedCardinality: Boolean,
   type_ : T,
   enum: Seq[String],
   joinToParent: String,
@@ -102,7 +101,6 @@ case class FieldDef[+T](
     saveTo = null,
     resolver = null, // expression, calculates value to be saved
     nullable = true,
-    isForcedCardinality = false,
     type_  = type_,
     enum = null,
     joinToParent = null,
@@ -123,7 +121,6 @@ case class FieldDef[+T](
     saveTo = that.saveTo,
     resolver = that.resolver, // expression, calculates value to be saved
     nullable = that.nullable,
-    isForcedCardinality = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].isForcedCardinality else false,
     type_ = that.type_,
     enum = that.enum,
     joinToParent = that.joinToParent,
@@ -144,7 +141,7 @@ class YamlViewDefLoader(
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
-
+  val MojozExplicitNullability = "mojoz.explicit.nullability"
   val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawTypeDefs = sources.map { md: YamlMd =>
@@ -302,7 +299,10 @@ class YamlViewDefLoader(
       val enum = yfd.enum
       val orderBy = yfd.orderBy
       val comment = yfd.comments
-      val extras = yfd.extras
+      val extras =
+        if  (isForcedCardinality)
+             Option(yfd.extras).getOrElse(Map.empty) + (MojozExplicitNullability -> true)
+        else yfd.extras
       val rawXsdType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
       if (isViewDef(yfd.extras))
         (yfd.typeName, yfd.extras.get("name").orNull) match {
@@ -320,7 +320,7 @@ class YamlViewDefLoader(
         if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
-        isExpression, expression, saveTo, resolver, nullable, isForcedCardinality,
+        isExpression, expression, saveTo, resolver, nullable,
         xsdType, enum, joinToParent, orderBy, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
@@ -516,7 +516,7 @@ class YamlViewDefLoader(
             // TODO make use of join col type info?
             joinOpt.map(_.columns).getOrElse(Nil).filter(_.name == f.name).headOption
           val nullable =
-            if (f.isForcedCardinality) f.nullable
+            if (f.extras != null && f.extras.get(MojozExplicitNullability) == Some(true)) f.nullable
             else joinColOpt.map(_.nullable).getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
@@ -526,10 +526,15 @@ class YamlViewDefLoader(
             comments = Option(f.comments) getOrElse col.comments)
         }
       }
+      def cleanExtras(f: FieldDef[Type]) =
+        if  (f.extras != null && f.extras.contains(MojozExplicitNullability))
+             f.copy(extras = Option(f.extras).map(_ - MojozExplicitNullability).filterNot(_.isEmpty).orNull)
+        else f
       t.copy(fields = t.fields
         .map(reduceExpression)
         .map(resolveNameAndTable)
-        .map(resolveTypeFromDbMetadata))
+        .map(resolveTypeFromDbMetadata)
+        .map(cleanExtras))
     }
     val result = rawTypeDefs.toList
       .map(inheritTable)
