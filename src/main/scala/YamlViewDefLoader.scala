@@ -141,8 +141,8 @@ class YamlViewDefLoader(
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
-  val MojozExplicitNullability = "mojoz.explicit.nullability"
-  val parseJoins = joinsParser
+  private val MojozExplicitNullability = "mojoz.explicit.nullability"
+  private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawViewDefs = sources.map { md: YamlMd =>
     try loadRawViewDefs(md.body) catch {
