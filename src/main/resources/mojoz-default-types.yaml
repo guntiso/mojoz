@@ -196,7 +196,7 @@ oracle sql:
 - char
 
 
-type:       base64Binary
+type:       bytes
 xsd name:   base64Binary
 scala name: Array[Byte]
 jdbc:
@@ -209,8 +209,8 @@ jdbc:
 - STRUCT
 - VARBINARY
 yaml:
-- base64Binary
-- base64Binary *    -> size
+- bytes
+- bytes *           -> size
 sql:
 - blob
 postgresql:

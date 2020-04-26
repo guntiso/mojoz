@@ -101,7 +101,7 @@ columns:
 - string60_col           60
 - string6k_col           6000
 - boolean_col            boolean
-- bytes_col              base64Binary
+- bytes_col              bytes
 
 table:   test_table4
 columns:
