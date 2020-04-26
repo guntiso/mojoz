@@ -144,19 +144,19 @@ class YamlViewDefLoader(
   val MojozExplicitNullability = "mojoz.explicit.nullability"
   val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
-  private val rawTypeDefs = sources.map { md: YamlMd =>
-    try loadRawTypeDefs(md.body) catch {
+  private val rawViewDefs = sources.map { md: YamlMd =>
+    try loadRawViewDefs(md.body) catch {
       case e: Exception => throw new RuntimeException(
         "Failed to load viewdef from " + md.filename, e) // TODO line number
     }
   }.flatten
-  private val nameToRawTypeDef = {
+  private val nameToRawViewDef = {
     val duplicateNames =
-      rawTypeDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
+      rawViewDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
     if (duplicateNames.size > 0)
       throw new RuntimeException(
         "Duplicate view definitions: " + duplicateNames.mkString(", "))
-    rawTypeDefs.map(t => (t.name, t)).toMap
+    rawViewDefs.map(t => (t.name, t)).toMap
   }
   private def isSimpleType(f: FieldDef[Type]) =
     f.type_ == null || !f.type_.isComplexType
@@ -164,16 +164,16 @@ class YamlViewDefLoader(
     f.type_ != null && f.type_.isComplexType
   @tailrec
   private def baseTable(t: ViewDef[_],
-    nameToTypeDef: collection.Map[String, ViewDef[_]],
+    nameToViewDef: collection.Map[String, ViewDef[_]],
     visited: List[String]): String =
     if (visited contains t.name)
       sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
-    else baseTable(nameToTypeDef.get(t.extends_)
+    else baseTable(nameToViewDef.get(t.extends_)
       .getOrElse(sys.error("Base table not found, type: " + t.name)),
-      nameToTypeDef, t.name :: visited)
-  val viewDefs = buildTypeDefs(rawTypeDefs).sortBy(_.name)
+      nameToViewDef, t.name :: visited)
+  val viewDefs = buildViewDefs(rawViewDefs).sortBy(_.name)
   private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
   val extendedViewDefs = viewDefs.map(t =>
     if (t.extends_ == null) t else {
@@ -200,14 +200,14 @@ class YamlViewDefLoader(
       t.copy(fields = baseFields(t, Nil, null))
     })
     .map(t => (t.name, t)).toMap
-  def loadRawTypeDefs(typeDef: String): List[ViewDef[FieldDef[Type]]] = {
-    Option((new Yaml).load(typeDef))
+  def loadRawViewDefs(defs: String): List[ViewDef[FieldDef[Type]]] = {
+    Option((new Yaml).load(defs))
       .map(v => v.asInstanceOf[java.util.Map[String, _]].asScala)
       .map(_.toMap)
-      .map(loadRawTypeDefs)
+      .map(loadRawViewDefs)
       .getOrElse(Nil)
   }
-  def loadRawTypeDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
+  def loadRawViewDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
       case null => null
       case Nil => ""
@@ -340,25 +340,25 @@ class YamlViewDefLoader(
       .zip(fieldDefs)
       .filter(f => isViewDef(f._1))
       .map(f => f._1 + (("name", f._2.type_.name)))
-      .map(loadRawTypeDefs)
+      .map(loadRawViewDefs)
       .flatten
   }
-  private def checkTypedefs(td: Seq[ViewDef[FieldDef[_]]]) = {
+  private def checkViewDefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
     @tailrec
-    def checkExtends(t: ViewDef[_], nameToTypeDef: Map[String, ViewDef[_]],
+    def checkExtends(t: ViewDef[_], nameToViewDef: Map[String, ViewDef[_]],
       visited: List[String]): Boolean = {
       val extendsOrModifies =
         t.extends_
       if (visited contains t.name) sys.error("Cyclic extends: " +
         (t.name :: visited).reverse.mkString(" -> "))
       else if (extendsOrModifies == null) true
-      else checkExtends(nameToTypeDef.get(extendsOrModifies)
+      else checkExtends(nameToViewDef.get(extendsOrModifies)
         .getOrElse(sys.error("Type " + t.name +
           " extends or modifies non-existing type " + extendsOrModifies)),
-        nameToTypeDef, t.name :: visited)
+        nameToViewDef, t.name :: visited)
     }
     td.foreach(t => checkExtends(t, m, Nil))
     def propName(f: FieldDef[_]) = Option(f.alias) getOrElse f.name
@@ -381,8 +381,8 @@ class YamlViewDefLoader(
       }
     }
   }
-  private def buildTypeDefs(rawTypeDefs: Seq[ViewDef[FieldDef[Type]]]) = {
-    val rawTypesMap: Map[String, ViewDef[FieldDef[Type]]] = rawTypeDefs.map(t => (t.name, t)).toMap
+  private def buildViewDefs(rawViewDefs: Seq[ViewDef[FieldDef[Type]]]) = {
+    val rawTypesMap: Map[String, ViewDef[FieldDef[Type]]] = rawViewDefs.map(t => (t.name, t)).toMap
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
@@ -536,13 +536,13 @@ class YamlViewDefLoader(
         .map(resolveTypeFromDbMetadata)
         .map(cleanExtras))
     }
-    val result = rawTypeDefs.toList
+    val result = rawViewDefs.toList
       .map(inheritTable)
       .map(inheritSeqs)
       .map(resolveBaseTableAlias)
       .map(resolveFieldNamesAndTypes)
       .map(inheritTableComments)
-    checkTypedefs(result)
+    checkViewDefs(result)
     checkTypedefMapping(result)
     result
   }
