@@ -146,7 +146,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)
           .map(c => (tc._1, c)))
         .getOrElse(sys.error("Bad ref: " + ref))
-    def overwriteXsdType(base: Type, overwrite: Type) = Type(
+    def overwriteMojozType(base: Type, overwrite: Type) = Type(
       Option(base.name) getOrElse overwrite.name,
       overwrite.length orElse base.length,
       overwrite.totalDigits orElse base.totalDigits,
@@ -175,13 +175,13 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
           val colName = c.name.replace('.', '_')
           val (refTable, refCol) =
             refToCol(Option(c.type_.name) getOrElse c.name)
-          val xsdType = overwriteXsdType(
+          val mojozType = overwriteMojozType(
             refChain.foldLeft(new Type(null))((t, ref) =>
-              overwriteXsdType(t, refToCol(ref)._2.type_)),
+              overwriteMojozType(t, refToCol(ref)._2.type_)),
             c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
             null, defaultRefTableAlias, null, null)
-          (c.copy(name = colName, type_ = xsdType), List(ref))
+          (c.copy(name = colName, type_ = mojozType), List(ref))
         }
       }
       def mergeRefs(implicitRefs: Seq[Ref], explicitRefs: Seq[Ref]) = {
@@ -319,9 +319,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
     val comment = yfd.comments
-    val rawXsdType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
+    val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
     val extras = yfd.extras
-    ColumnDef(name, IoColumnType(nullable, rawXsdType),
+    ColumnDef(name, IoColumnType(nullable, rawMojozType),
       nullable getOrElse true, dbDefault, enum, comment, extras)
   }
 }
@@ -465,7 +465,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         if (conventions.isRefName(yamlTypeName))
           Type(yamlTypeName, size, None, frac, false) // FIXME len <> totalDigits, resolve!
         else
-          // if no known xsd type name found - let it be complex type!
+          // if no known mojoz type name found - let it be complex type!
           new Type(yamlTypeName, true)
       }
   }

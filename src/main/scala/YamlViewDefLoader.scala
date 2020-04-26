@@ -255,7 +255,7 @@ class YamlViewDefLoader(
     def typeName(v: Map[String, Any], defaultSuffix: String) =
       if (v.contains("name")) "" + v("name")
       else name + "_" + defaultSuffix
-    def toXsdFieldDef(yfd: YamlFieldDef, viewName: String, viewTable: String, viewSaveTo: Seq[String]) = {
+    def toMojozFieldDef(yfd: YamlFieldDef, viewName: String, viewTable: String, viewSaveTo: Seq[String]) = {
       val table = null
       val tableAlias = null
       val name = yfd.name
@@ -303,30 +303,30 @@ class YamlViewDefLoader(
         if  (isForcedCardinality)
              Option(yfd.extras).getOrElse(Map.empty) + (MojozExplicitNullability -> true)
         else yfd.extras
-      val rawXsdType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
+      val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
       if (isViewDef(yfd.extras))
         (yfd.typeName, yfd.extras.get("name").orNull) match {
           case (null, null) | (null, _) | (_, null) =>
           case (fType, cType) => if (fType != cType)
             sys.error(s"Name conflict for inline view: $fType != $cType")
         }
-      val xsdTypeFe =
+      val mojozTypeFe =
         if (yfd.typeName == null && isViewDef(yfd.extras))
           new Type(typeName(yfd.extras, name), true)
         else if (isExpression || rawTable == "")
-          conventions.typeFromExternal(name, rawXsdType)
+          conventions.typeFromExternal(name, rawMojozType)
         else null
-      val xsdType =
-        if (xsdTypeFe != null) xsdTypeFe else rawXsdType getOrElse null
+      val mojozType =
+        if (mojozTypeFe != null) mojozTypeFe else rawMojozType getOrElse null
 
       FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
         isExpression, expression, saveTo, resolver, nullable,
-        xsdType, enum, joinToParent, orderBy, comment, extras)
+        mojozType, enum, joinToParent, orderBy, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
     val fieldDefs = yamlFieldDefs
-      .map(toXsdFieldDef(_, name, table, saveTo))
+      .map(toMojozFieldDef(_, name, table, saveTo))
       .map { f =>
         if (f.extras == null) f
         else f.copy(
