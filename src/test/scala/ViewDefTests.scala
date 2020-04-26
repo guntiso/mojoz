@@ -11,6 +11,20 @@ import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 
 class ViewDefTests extends FlatSpec with Matchers {
+  object Naming {
+    def camelize(name: String) = {
+      val parts = name.split("[_\\-\\.]+")
+      parts.toList
+        .map(_.toLowerCase)
+        .map(_.capitalize)
+        .mkString
+    }
+    def camelizeLower(name: String) = camelize(name) match {
+      case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>
+        s"${x(0).toLower}${x.substring(1)}"
+      case x => x
+    }
+  }
   val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "-in.yaml")
