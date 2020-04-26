@@ -87,7 +87,7 @@ case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
     name = transform(name),
     refs = refs.map(r => r.copy(refTable = transform(r.refTable)))).asInstanceOf[this.type]
   def mapColumnNames(transform: (String) => String): this.type = copy(
-    cols = cols.map(c => c.rename(transform(c.name))),
+    cols = cols.map(c => c.withName(transform(c.name))),
     pk = pk.map(x => x.copy(cols = x.cols.map(transform))),
     uk = uk.map(x => x.copy(cols = x.cols.map(transform))),
     idx = idx.map(x => x.copy(cols = x.cols.map(transform))),
@@ -114,7 +114,7 @@ object ColumnDef {
     val dbDefault: String
     val enum: Seq[String]
     val comments: String
-    def rename(name: String): this.type
+    def withName(name: String): this.type
   }
 }
 case class ColumnDef[+T](
@@ -125,7 +125,7 @@ case class ColumnDef[+T](
   enum: Seq[String],
   comments: String,
   extras: Map[String, Any]) extends ColumnDefBase[T] {
-  override def rename(name: String) = copy(name = name).asInstanceOf[this.type]
+  override def withName(name: String) = copy(name = name).asInstanceOf[this.type]
 }
 
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
