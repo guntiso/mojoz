@@ -29,7 +29,6 @@ private[in] case class YamlFieldDef(
   name: String,
   options: String, // persistence options
   cardinality: String,
-  maxOccurs: Option[Int],
   typeName: String,
   length: Option[Int],
   fraction: Option[Int],
@@ -303,8 +302,6 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
     val name = yfd.name
-    if (yfd.maxOccurs.isDefined)
-      sys.error("maxOccurs not supported for table columns")
     val dbDefault = yfd.expression
     val nullable = yfd.cardinality match {
       case null => None
@@ -357,7 +354,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comment: String,
         child: Map[String, Any]) = nameEtc match {
-      case FieldPattern(name, _, options, quant, _, _, _, maxOcc, joinToParent, typ, _,
+      case FieldPattern(name, _, options, quant, _, _, _, _, joinToParent, typ, _,
         len, frac, order, _, enum,
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
@@ -372,7 +369,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
           }
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
-        def cardinality = Option(t(quant)).map(_.take(1)).orNull
+        def cardinality = t(quant)
         val isExpr = exprOrResolverDelimiter != null && exprOrResolverDelimiter.indexOf('=') >= 0
         val isResolvable =
           exprOrResolverWithDelimiter != null &&
@@ -387,7 +384,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
           Option(saveAndResolverString).map(_.split("\\s*=\\s*", 2)) getOrElse Array[String]()
         val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
         val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
-        YamlFieldDef(name, t(options), cardinality, i(maxOcc), t(typ), i(len), i(frac),
+        YamlFieldDef(name, t(options), cardinality, t(typ), i(len), i(frac),
           isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
           child)
       case _ => throw new RuntimeException(ThisFail +

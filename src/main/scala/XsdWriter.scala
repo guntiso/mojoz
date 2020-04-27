@@ -53,14 +53,20 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       .toMap
   def xsdSimpleTypeName(t: Type) =
     simpleTypeNameToXsdSimpleTypeName.get(t.name).getOrElse(sys.error("Unexpected type for xsd writer: " + t))
-  private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
-    val required = !col.nullable
+  protected def getMaxOccurs(col: FieldDef[Type]): String = {
+    if (col.isCollection) "unbounded" else null
+    /*
     val maxOccurs = Option(col.maxOccurs) getOrElse {
       if (col.isCollection) "unbounded" else null
     } match {
       case "1" => null
       case maxOccurs => maxOccurs
     }
+    */
+  }
+  private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
+    val required = !col.nullable
+    val maxOccurs = getMaxOccurs(col)
     val minOccurs = if (required) null else "0"
     val nillable = if (required || col.isCollection) null else "true"
     val typeName =

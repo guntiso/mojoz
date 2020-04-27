@@ -56,7 +56,6 @@ object FieldDef {
     val alias: String
     val options: String // persistence options
     val isCollection: Boolean
-    val maxOccurs: String
     val isExpression: Boolean
     val expression: String
     val saveTo: String
@@ -76,7 +75,6 @@ case class FieldDef[+T](
   alias: String,
   options: String, // persistence options
   isCollection: Boolean,
-  maxOccurs: String,
   isExpression: Boolean,
   expression: String,
   saveTo: String,
@@ -95,7 +93,6 @@ case class FieldDef[+T](
     alias = null,
     options = null, // persistence options
     isCollection = false,
-    maxOccurs = null,
     isExpression = false,
     expression = null,
     saveTo = null,
@@ -115,7 +112,6 @@ case class FieldDef[+T](
     alias = that.alias,
     options = that.options, // persistence options
     isCollection = that.isCollection,
-    maxOccurs = that.maxOccurs,
     isExpression = that.isExpression,
     expression = that.expression,
     saveTo = that.saveTo,
@@ -261,8 +257,8 @@ class YamlViewDefLoader(
       val name = yfd.name
       val alias = null
       val options = yfd.options
-      val maxOccurs = yfd.maxOccurs.map(_.toString).orNull
-      val isCollection = Set("*", "+").contains(yfd.cardinality) && (maxOccurs == null || maxOccurs.toInt > 1)
+      val cardinality = Option(yfd.cardinality).map(_.take(1)).orNull
+      val isCollection = Set("*", "+").contains(cardinality)
       val isExpression = yfd.isExpression
       val expression = yfd.expression
       val isResolvable = yfd.isResolvable
@@ -292,9 +288,9 @@ class YamlViewDefLoader(
         } else null
       }
       val resolver = yfd.resolver
-      val nullable = Option(yfd.cardinality)
+      val nullable = Option(cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
-      val isForcedCardinality = yfd.cardinality != null
+      val isForcedCardinality = cardinality != null
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
       val orderBy = yfd.orderBy
@@ -319,20 +315,21 @@ class YamlViewDefLoader(
       val mojozType =
         if (mojozTypeFe != null) mojozTypeFe else rawMojozType getOrElse null
 
-      FieldDef(table, tableAlias, name, alias, options, isCollection, maxOccurs,
+      FieldDef(table, tableAlias, name, alias, options, isCollection,
         isExpression, expression, saveTo, resolver, nullable,
         mojozType, enum, joinToParent, orderBy, comment, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
     val fieldDefs = yamlFieldDefs
-      .map(toMojozFieldDef(_, name, table, saveTo))
-      .map { f =>
+      .map(yfd => yfd -> toMojozFieldDef(yfd, name, table, saveTo))
+      .map { case (yfd, f) => yfd -> (
         if (f.extras == null) f
         else f.copy(
           extras = Option(f.extras).map(_ -- ViewDefKeyStrings)
             .filterNot(_.isEmpty).orNull)
-      }
+      )}
+      .map{ case (yfd, f) => transformRawFieldDef(yfd, f) }
     ViewDef(name, table, null, joins, filter, group, having, order,
       xtnds, comment, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
@@ -343,6 +340,9 @@ class YamlViewDefLoader(
       .map(loadRawViewDefs)
       .flatten
   }
+  /** can be overriden to send cardinality to extras - for maxOccurs custom processing */
+  protected def transformRawFieldDef(
+    yfd: YamlFieldDef, mojozFieldDef: FieldDef[Type]): FieldDef[Type] = mojozFieldDef
   private def checkViewDefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
