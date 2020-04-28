@@ -31,7 +31,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val catalog = rs.getString("TABLE_CAT")
       val schema = rs.getString("TABLE_SCHEM")
       val tableName = rs.getString("TABLE_NAME")
-      val comment = rs.getString("REMARKS")
+      val comments = rs.getString("REMARKS")
       val cols = colDefs(dmd.getColumns(catalog, schema, tableName, null))
       val pk = this.pk(dmd.getPrimaryKeys(catalog, schema, tableName))
       val (uk, idx) =
@@ -62,7 +62,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
       val extras = Map[String, Any]()
-      tableDefs += TableDef(tableFullName, comment, mappedCols,
+      tableDefs += TableDef(tableFullName, comments, mappedCols,
           pk, uk, unmappedCk, idx, refs, extras)
     }
 
@@ -76,10 +76,10 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         tableDefs transform { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
-          val comment = if (rs.next) rs.getString(1) else null
+          val comments = if (rs.next) rs.getString(1) else null
           rs.close()
           st.clearParameters()
-          if (comment == null) td else td.copy(comments = comment)
+          if (comments == null) td else td.copy(comments = comments)
         }
       }
       if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
@@ -177,12 +177,12 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         case (_, d) if (d.indexOf("::") > 0) => d.substring(0, d.indexOf("::"))
         case (_, d) => d
       }
-      val comment = rs.getString("REMARKS")
+      val comments = rs.getString("REMARKS")
       val check = null
       val dbType =
         JdbcColumnType(dbTypeName, jdbcTypeCode, size, fractionDigits)
       val extras = Map[String, Any]()
-      cols += ColumnDef(name, dbType, nullable, dbDefault, check, comment, extras)
+      cols += ColumnDef(name, dbType, nullable, dbDefault, check, comments, extras)
     }
     rs.close
     cols.toList

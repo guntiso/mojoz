@@ -38,11 +38,11 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       .filter(_._2 != null)
       .map(e => s"""${e._1}="${escAttr(e._2)}"""")
       .mkString(" ")
-  private def annotation(comment: String, level: Int) =
-    if (comment != null && comment.trim.length > 0)
+  private def annotation(comments: String, level: Int) =
+    if (comments != null && comments.trim.length > 0)
       indent(level, s"""
       <xs:annotation>
-        <xs:documentation>${ esc(comment) }</xs:documentation>
+        <xs:documentation>${ esc(comments) }</xs:documentation>
       </xs:annotation>
       """)
     else ""

@@ -234,7 +234,7 @@ class YamlViewDefLoader(
     val having = getStringSeq(k.having)
     val order = getStringSeq(k.order)
     val xtnds = get(k.extends_)
-    val comment = get(k.comment)
+    val comments = get(k.comments)
     val fieldsSrc = Option(getSeq(k.fields)).getOrElse(Nil).toList
     val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
@@ -294,7 +294,7 @@ class YamlViewDefLoader(
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
       val orderBy = yfd.orderBy
-      val comment = yfd.comments
+      val comments = yfd.comments
       val extras =
         if  (isForcedCardinality)
              Option(yfd.extras).getOrElse(Map.empty) + (MojozExplicitNullability -> true)
@@ -317,7 +317,7 @@ class YamlViewDefLoader(
 
       FieldDef(table, tableAlias, name, alias, options, isCollection,
         isExpression, expression, saveTo, resolver, nullable,
-        mojozType, enum, joinToParent, orderBy, comment, extras)
+        mojozType, enum, joinToParent, orderBy, comments, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && m.contains("fields")
@@ -331,7 +331,7 @@ class YamlViewDefLoader(
       )}
       .map{ case (yfd, f) => transformRawFieldDef(yfd, f) }
     ViewDef(name, table, null, joins, filter, group, having, order,
-      xtnds, comment, fieldDefs, saveTo, extras) ::
+      xtnds, comments, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
       .zip(fieldDefs)
@@ -554,7 +554,7 @@ object YamlViewDefLoader {
     val name, table, joins, filter, group, having, order = Value
     val extends_ = Value("extends")
     val saveTo = Value("save-to")
-    val comment, fields = Value
+    val comments, fields = Value
   }
   private val ViewDefKeyStrings = ViewDefKeys.values.map(_.toString)
   def apply(

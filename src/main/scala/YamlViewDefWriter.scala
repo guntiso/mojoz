@@ -74,10 +74,10 @@ class YamlViewDefWriter {
       // TODO handle various types of extras
       val prefix = "  -"
       val indent = "    "
-      val comment =
+      val w_comments =
         if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
         else ""
-      val lines = (defString + " :") :: comment :: extras.map(e =>
+      val lines = (defString + " :") :: w_comments :: extras.map(e =>
         s"$prefix ${escapeYamlValue(e._1)}" + (
           if (e._1 == e._2) ""
           else s": ${escapeYamlValue("" + e._2)}")).toList
@@ -104,7 +104,7 @@ class YamlViewDefWriter {
         .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
       Option(comments).filter(_ != "").map(c =>
-        wrapped(escapeYamlValue(c.trim), "comment: ", " " * 10)),
+        wrapped(escapeYamlValue(c.trim), "comments:", " " * 10)),
       Option(extends_).map(escapeYamlValue).map("extends:  " + _),
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)

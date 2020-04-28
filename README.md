@@ -20,7 +20,7 @@ using JDBC connection and saved to yaml files for later use
 Key names are:
 
 * **table** - table name
-* **comment**
+* **comments**
 * **columns** - collection of columns
 * **pk** - primary key. If not provided, might be implied (based on columns) to be `id` or `code` or a pair of refs,
   as defined in [MdConventions](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/io/MdConventions.html).fromExternalPk
@@ -60,7 +60,7 @@ alter table person add constraint fk_person_father_id foreign key (father_id) re
 Column information is mostly contained in yaml string or key except for comment which is \[first string\] value for the key.
 General pattern for column information is:
 ```
-name [nullability] [type] [length_or_total_digits] [fraction_digits] [(enum)] [= default] [: comment]
+name [nullability] [type] [length_or_total_digits] [fraction_digits] [(enum)] [= default] [: comments]
 ```
 where
 * _name_ is column name or for refs - _table_name.column_name_ or _alias.column_name_ (dot (.) is replaced with underscore(\_) to create column name)

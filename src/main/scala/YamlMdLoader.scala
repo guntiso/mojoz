@@ -67,7 +67,7 @@ private[in] object YamlTableDefLoader {
   val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
   object TableDefKeys extends Enumeration {
     type TableDefKeys = Value
-    val table, comment, columns, pk, uk, idx, refs = Value
+    val table, comments, columns, pk, uk, idx, refs = Value
   }
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
@@ -265,7 +265,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
     val table = tdMap.get("table").map(_.toString)
       .getOrElse(sys.error("Missing table name"))
-    val comment = tdMap.get("comment").map(_.toString) getOrElse null
+    val comments = tdMap.get("comments").map(_.toString) getOrElse null
     val colSrc = tdMap.get("columns")
       .filter(_ != null)
       .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
@@ -284,12 +284,12 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val refs = toList(tdMap.get("refs"))
       .map(loadYamlRefDef)
     val extras = tdMap -- TableDefKeyStrings
-    YamlTableDef(table, comment, colDefs, pk, uk, idx, refs, extras)
+    YamlTableDef(table, comments, colDefs, pk, uk, idx, refs, extras)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     // TODO cleanup?
     val name = y.table
-    val comment = y.comments
+    val comments = y.comments
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = y.pk
     val uk = y.uk
@@ -297,7 +297,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val idx = y.idx
     val refs = y.refs
     val extras = y.extras
-    val exTypeDef = TableDef(name, comment, cols, pk, uk, ck, idx, refs, extras)
+    val exTypeDef = TableDef(name, comments, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
@@ -315,11 +315,11 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       sys.error("joinToParent not supported for table columns")
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
-    val comment = yfd.comments
+    val comments = yfd.comments
     val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
     val extras = yfd.extras
     ColumnDef(name, IoColumnType(nullable, rawMojozType),
-      nullable getOrElse true, dbDefault, enum, comment, extras)
+      nullable getOrElse true, dbDefault, enum, comments, extras)
   }
 }
 
@@ -352,7 +352,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
 
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
-    def colDef(nameEtc: String, comment: String,
+    def colDef(nameEtc: String, comments: String,
         child: Map[String, Any]) = nameEtc match {
       case FieldPattern(name, _, options, quant, _, _, _, _, joinToParent, typ, _,
         len, frac, order, _, enum,
@@ -385,7 +385,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
         val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
         YamlFieldDef(name, t(options), cardinality, t(typ), i(len), i(frac),
-          isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comment,
+          isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comments,
           child)
       case _ => throw new RuntimeException(ThisFail +
         " - unexpected format: " + nameEtc.trim)
@@ -398,7 +398,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         if (m.size == 1) {
           val entry = m.entrySet.asScala.toList(0)
           val nameEtc = entry.getKey
-          val (comment, child) = entry.getValue match {
+          val (comments, child) = entry.getValue match {
             case s: String => (s, null)
             case m: java.util.Map[_, _] =>
               (null, m.asInstanceOf[java.util.Map[String, _]].asScala.toMap)
@@ -419,7 +419,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)
           }
-          colDef(nameEtc.toString, Option(comment).map(_.toString).orNull, child)
+          colDef(nameEtc.toString, Option(comments).map(_.toString).orNull, child)
         } else throw new RuntimeException(ThisFail +
           // TODO do not throw, allow decomposed or with custom extras instead
           " - more than one entry for column: " + m.asScala.toMap.toString())
