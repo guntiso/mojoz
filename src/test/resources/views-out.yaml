@@ -1,9 +1,9 @@
 name:    account
 fields:
-- id                   ?
+- id                    ?
 - bank_id
 - billing_account
-- currency               * 3             =
+- currency              * 3             =
 
 name:    account_details
 extends: account
@@ -18,7 +18,7 @@ fields:
 - code
 - country_code                        (LT, LV, RU)
 - country.name
-- name                                   : <p>special xml 'chars' & "strings" test</p>
+- name                                  : <p>special xml 'chars' & "strings" test</p>
 
 name:    named_inline_view
 table:
@@ -65,13 +65,13 @@ fields:
 - some_id
 - some_name
 - some_date
-- some_date_time                         :
+- some_date_time                        :
   - comments (with extra) for some_date_time
   - extra-for-some-date-time: some-date-time
   - some-other-extra-for-some-date-time
 - is_boolean
-- is_boolean_expr                        =
-- is_not_boolean           date          : should be date
+- is_boolean_expr                       =
+- is_not_boolean          date          : should be date
 
 name:    one_fielder
 table:
@@ -85,9 +85,9 @@ fields:
 - surname
 - mother.name
 - father.name
-- maternal_grandmother_name              = mother.mother.name
-- maternal_grandfather_name              = mother.father.name
-- maternal_grandfather_surname           = mother.father.surname
+- maternal_grandmother_name             = mother.mother.name
+- maternal_grandfather_name             = mother.father.name
+- maternal_grandfather_surname          = mother.father.surname
 - father.mother.name
 - father.father.name
 - father.father.father.surname
@@ -96,83 +96,83 @@ name:    resolver_test_1
 table:   person
 fields:
 - id
-- mother                                 = mother.name || mother.surname -> mother_id
-- father                                 = father.name || father.surname -> father_id = person[name || surname = _]{id}
+- mother                                = mother.name || mother.surname -> mother_id
+- father                                = father.name || father.surname -> father_id = person[name || surname = _]{id}
 
 name:    resolver_test_2
 table:   account_currency
 fields:
-- account                                = account.billing_account -> account_id
-- currency.name                          -> currency_code
+- account                               = account.billing_account -> account_id
+- currency.name                         -> currency_code
 
 name:    resolver_test_3
 table:   account
 fields:
 - id
-- code                                   = -> bank_id
+- code                                  = -> bank_id
 
 name:    resolver_test_4
 table:   bank
 fields:
 - id
-- name                                   -> = 'My bank'
+- name                                  -> = 'My bank'
 
 name:    resolver_test_5
 table:   bank
 fields:
 - id
-- name                                   -> = _ || ' saved'
+- name                                  -> = _ || ' saved'
 
 name:    resolver_test_6
 table:   bank
 fields:
 - id
-- name                                   = name || '.' ->
+- name                                  = name || '.' ->
 
 name:    resolver_test_7
 table:   bank b
 fields:
 - id
 - name
-- country                                = country.name -> country_code
+- country                               = country.name -> country_code
 
 name:    resolver_test_7b
 table:   bank b
 fields:
 - id
-- country                                = country.name -> country_code = to_country_code(_)
+- country                               = country.name -> country_code = to_country_code(_)
 
 name:    resolver_test_8
 table:   account
 fields:
 - id
-- bank                                   = bank.name -> bank_id
+- bank                                  = bank.name -> bank_id
 
 name:    resolver_test_8b
 table:   account a_
 fields:
 - id
-- bank_id                                -> = 33
+- bank_id                               -> = 33
 
 name:    resolver_test_9
 table:   person
 fields:
 - id
-- mother                                 = mother.name || mother.surname -> mother_id
-- father                                 = father.name || ' ' || father.surname -> father_id
+- mother                                = mother.name || mother.surname -> mother_id
+- father                                = father.name || ' ' || father.surname -> father_id
 
 name:    type_override_test
 table:   account
 fields:
-- bank                                   = bank_id
-- last_modified            date          : Last modified
+- bank                                  = bank_id
+- last_modified           date          : Last modified
 
 name:    with_anonymous_inline_view
 table:
 fields:
 - some_id
 - some_name
-- some_children          * with_anonymous_inline_view_some_children
+- some_children         * with_anonymous_inline_view_some_children
 
 name:    with_anonymous_inline_view_some_children
 table:
@@ -186,7 +186,7 @@ save-to:
 - table1
 - table2
 fields:
-- single_child             with_empty_child_save_to_single_child
+- single_child            with_empty_child_save_to_single_child
 
 name:    with_empty_child_save_to_single_child
 table:
@@ -199,27 +199,27 @@ table:
 fields:
 - some_id
 - some_name
-- some_children          * named_inline_view
+- some_children         * named_inline_view
 
 name:    with_named_inline_view2
 table:
 fields:
-- some_children          * named_inline_view2
+- some_children         * named_inline_view2
 
 name:    with_named_inline_view3
 table:
 fields:
-- single_child             named_inline_view3
+- single_child            named_inline_view3
 
 name:    with_scala_keywords
 table:
 fields:
-- this                                   =
-- super                                  =
-- new                                    =
-- true                                   =
-- lazy                                   =
-- null                                   =
-- case                                   =
-- final                                  =
-- type                                   =
+- this                                  =
+- super                                 =
+- new                                   =
+- true                                  =
+- lazy                                  =
+- null                                  =
+- case                                  =
+- final                                 =
+- type                                  =

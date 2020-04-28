@@ -62,6 +62,9 @@ columns:
 - col3                   1
 - col4                   1
 - col5                   1            : Test comment - to be escape'd
+- longer_comments_col    1            : Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                        Mauris rhoncus pharetra lorem, in pretium lacus interdum
+                                        proin.
 pk: pk_tt1_spec_id_code(id, code)
 uk:
 - code

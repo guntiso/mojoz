@@ -35,33 +35,39 @@ class YamlTableDefWriter {
     val hasDefault = (dbDefault != null && dbDefault != "")
     val default = if (hasDefault) " = " + dbDefault else ""
     val defString = List(
-      (name, 20),
-      (colDef.type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
-      (typeString, 10),
+      (name, 22),
+      (colDef.type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 2),
+      (typeString, 12),
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (
-        List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
-        r._2 + t._2 + 1))._1 +
+        List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2 - 1, " ").mkString,
+        r._2 + t._2))._1 +
         default // TODO formatting?
 
     val hasComment = (comments != null && comments.trim != "")
     val hasExtras = extras != null && !extras.isEmpty
     val slComment =
       if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
-    if (!hasComment) defString.trim
+    if (!hasComment && !hasExtras) defString.trim
     else if (hasExtras) {
       // TODO handle various types of extras
       val prefix = "  -"
       val indent = "    "
-      val comment = wrapped(escapeYamlValue(comments.trim), prefix, indent)
+      val comment =
+        if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
+        else ""
       val lines = (defString + " :") :: comment :: extras.map(e =>
-        s"$prefix ${escapeYamlValue(e._1)}: ${escapeYamlValue(e._2.toString)}").toList
-      lines.mkString("\n")
+        s"$prefix ${escapeYamlValue(e._1)}" + (
+          if (e._1 == e._2) ""
+          else s": ${escapeYamlValue("" + e._2)}")).toList
+      lines
+        .filter(_ != "")
+        .mkString("\n")
     } else if (MaxLineLength >= defString.length + slComment.length)
       (defString + slComment).trim
     else {
       val indent =
-        if (MaxLineLength < defString.length + 20) " " * 41
+        if (MaxLineLength < defString.length + 20) " " * 42
         else " " * (2 + defString.length + 3)
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }

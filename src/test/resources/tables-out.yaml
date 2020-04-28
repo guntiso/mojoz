@@ -1,69 +1,73 @@
 table:   account
 comment: Klienta norēķina konts
 columns:
-- id                                   : Ieraksta identifikators.
-- bank.id              !               : Bankas ID, sasaiste ar Bankas.
-- billing_account      ! 64            : Norēķinu konts.
-- last_modified        ! dateTime      : Pēdējo izmaiņu datums un laiks.
+- id                                    : Ieraksta identifikators.
+- bank.id               !               : Bankas ID, sasaiste ar Bankas.
+- billing_account       ! 64            : Norēķinu konts.
+- last_modified         ! dateTime      : Pēdējo izmaiņu datums un laiks.
 
 table:   account_currency
 comment: Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu
 columns:
-- account.id           !               : Konta identifikators.
-- currency.code        !               : Valūtas kods.
+- account.id            !               : Konta identifikators.
+- currency.code         !               : Valūtas kods.
 
 table:   bank
 columns:
-- id                                   : Ieraksta identifikators.
-- code                 ! 16            :
+- id                                    : Ieraksta identifikators.
+- code                  ! 16            :
   - Bankas SWIFT kods.
   - extra-for-bank-code: extra for bank.code
-- country.code                         : Bankas valsts, izvēle no klasifikatora.
-- name                 ! 240           : Bankas pilnais nosaukums.
-- name_eng               240           : Bankas pilnais nosaukums, angliski.
-- name_rus               240           : Bankas pilnais nosaukums, transliterēts krieviski.
+- country.code                          : Bankas valsts, izvēle no klasifikatora.
+- name                  ! 240           : Bankas pilnais nosaukums.
+- name_eng                240           : Bankas pilnais nosaukums, angliski.
+- name_rus                240           : Bankas pilnais nosaukums, transliterēts krieviski.
 extra-for-bank: extra for bank
 
 table:   country
 comment: Valstu klasifikators
 columns:
-- code                   2          (LV, TO, LT) : ISO 3166-1 divu burtu valsts kods
-- code3                ! 3             : ISO 3-burtu valsts kods
-- code_n3              ! 3             : ISO 3166-1 trīsciparu valsts kods
-- name                 ! 64            : Valsts nosaukums.
-- name_eng               64            : Valsts nosaukums angliski.
-- name_rus               64            : Valsts nosaukums krieviski.
-- is_active            !
-- is_eu                !               : Vai valsts ir Eiropas Savienības dalībvalsts
+- code                    2           (LV, TO, LT) : ISO 3166-1 divu burtu valsts kods
+- code3                 ! 3             : ISO 3-burtu valsts kods
+- code_n3               ! 3             : ISO 3166-1 trīsciparu valsts kods
+- name                  ! 64            : Valsts nosaukums.
+- name_eng                64            : Valsts nosaukums angliski.
+- name_rus                64            : Valsts nosaukums krieviski.
+- is_active             !
+- is_eu                 !               : Vai valsts ir Eiropas Savienības dalībvalsts
 pk: code
 
 table:   currency
 comment: Sistēmā uzturēto valūtu klasifikators.
 columns:
-- code                   3          (USD, EUR) : Starptautiski pieņemtais valūtas apzīmējums (burti).
-- name                 ! 100           : Valūtas nosaukums.
-- name_eng             ! 100           : Valūtas nosaukums angliski.
-- name_rus             ! 100           : Valūtas nosaukums krieviski.
+- code                    3           (USD, EUR) : Starptautiski pieņemtais valūtas apzīmējums
+                                                   (burti).
+- name                  ! 100           : Valūtas nosaukums.
+- name_eng              ! 100           : Valūtas nosaukums angliski.
+- name_rus              ! 100           : Valūtas nosaukums krieviski.
 pk: code
 
 table:   person
 columns:
 - id
-- name                 ! 51
-- surname                52
-- mother.id              person.id
-- father.id              person.id
+- name                  ! 51
+- surname                 52
+- mother.id               person.id
+- father.id               person.id
 
 table:   test_table1
 comment: Test comment for table - to be escape'd
 columns:
 - id
-- code                   1
-- col1                   1
-- col2                   1
-- col3                   1
-- col4                   1
-- col5                   1             : Test comment - to be escape'd
+- code                    1
+- col1                    1
+- col2                    1
+- col3                    1
+- col4                    1
+- col5                    1             : Test comment - to be escape'd
+- longer_comments_col     1             : Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                                          Mauris rhoncus pharetra lorem, in pretium lacus interdum
+                                          proin.
 pk: pk_tt1_spec_id_code(id, code)
 uk:
 - code
@@ -82,8 +86,8 @@ idx:
 table:   test_table2
 columns:
 - id
-- code                   1
-- name                   1
+- code                    1
+- name                    1
 - description
 pk: name
 refs:
@@ -92,51 +96,51 @@ refs:
 
 table:   test_table3
 columns:
-- int_col                int
-- int6_col               int 6
-- integer36_col          integer 36
-- long_col               long
-- long16_col             long 16
-- decimal266_col         decimal 26 6
-- date_col               date
-- datetime_col           dateTime
-- string60_col           60
-- string6k_col           6000
-- boolean_col            boolean
-- bytes_col              bytes
+- int_col                 int
+- int6_col                int 6
+- integer36_col           integer 36
+- long_col                long
+- long16_col              long 16
+- decimal266_col          decimal 26 6
+- date_col                date
+- datetime_col            dateTime
+- string60_col            60
+- string6k_col            6000
+- boolean_col             boolean
+- bytes_col               bytes
 
 table:   test_table4
 columns:
-- int_col                int           = 6
-- int6_col7              int 6         = 7
-- integer36_col8         integer 36    = 8
-- long_col               long          = 6
-- long16_col7            long 16       = 7
-- decimal266_col8        decimal 26 6  = 8.000000
-- string_col             60            = default value
-- boolean_col_f          boolean       = false
-- boolean_col_t          boolean       = true
+- int_col                 int           = 6
+- int6_col7               int 6         = 7
+- integer36_col8          integer 36    = 8
+- long_col                long          = 6
+- long16_col7             long 16       = 7
+- decimal266_col8         decimal 26 6  = 8.000000
+- string_col              60            = default value
+- boolean_col_f           boolean       = false
+- boolean_col_t           boolean       = true
 
 table:   test_table5
 columns:
 - bank.id
-- enum_for_int           int        (-1, 0, 1)
-- enum_for_long          long       (-99, 0, 99)
-- enum_for_decimal       decimal 3 1 (-9.9, 0, 9.9)
-- enum_with_diacritics   6          (rūķīši, darbā, vai, mājās)
-- enum_spešal_diacritics 6          (bladāc)
-- enum                   5          (list1, list2)
-- enum_ws                6          ('list 1', 'list 2')
+- enum_for_int            int         (-1, 0, 1)
+- enum_for_long           long        (-99, 0, 99)
+- enum_for_decimal        decimal 3 1 (-9.9, 0, 9.9)
+- enum_with_diacritics    6           (rūķīši, darbā, vai, mājās)
+- enum_spešal_diacritics  6           (bladāc)
+- enum                    5           (list1, list2)
+- enum_ws                 6           ('list 1', 'list 2')
 refs:
 - bank_id -> bank(id) on delete cascade
 
 table:   test_table6
 columns:
 - id
-- name                   50
+- name                    50
 
 table:   test_table7
 columns:
-- key1                   20
-- key2                   20
+- key1                    20
+- key2                    20
 pk: key1, key2

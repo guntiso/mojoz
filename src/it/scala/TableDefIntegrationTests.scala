@@ -27,7 +27,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .filterNot(_ startsWith "- idx_tt1_spec_col3_col5d")
         .filterNot(_ startsWith "- code, col2 desc")
         // do not compara extras-dependent lines
-        .filterNot(_ == "- code                 ! 16            :")
+        .filterNot(_ == "- code                  ! 16            :")
         .filterNot(_ contains "SWIFT")
         .filterNot(_ contains "extra-for-bank")
         // jdbc roundtrip fails on oracle:
@@ -69,7 +69,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
     def skipSome(s: String) = {
       s.split("\\r?\\n")
         // do not compara extras-dependent lines
-        .filterNot(_ == "- code                 ! 16            :")
+        .filterNot(_ == "- code                  ! 16            :")
         .filterNot(_ contains "SWIFT")
         .filterNot(_ contains "extra-for-bank")
         .mkString(nl)

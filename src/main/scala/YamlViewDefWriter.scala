@@ -53,14 +53,16 @@ class YamlViewDefWriter {
           Option(resolver).map(" = " + _).getOrElse("")
       else ""
     val defString = List(
-      (if (hasAlias) alias else name, 20),
-      (type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 1),
-      (Some(isCollection).filter(x => x).map(_ => "*") getOrElse " ", 1),
-      (typeString, 10),
+      (if (hasAlias) alias else name, 22),
+      (Seq(
+        type_.nullable map (b => if (b) "?" else "!") getOrElse "",
+        Some(isCollection).filter(x => x).map(_ => "*") getOrElse ""
+      ).mkString,  2),
+      (typeString, 12),
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (
-        List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2, " ").mkString,
-        r._2 + t._2 + 1))._1 +
+        List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2 - 1, " ").mkString,
+        r._2 + t._2))._1 +
       expr + saveExpr
 
     val hasComment = (comments != null && comments.trim != "")
@@ -86,7 +88,7 @@ class YamlViewDefWriter {
       (defString + slComment).trim
     else {
       val indent =
-        if (MaxLineLength < defString.length + 20) " " * 41
+        if (MaxLineLength < defString.length + 20) " " * 42
         else " " * (2 + defString.length + 3)
       wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
     }

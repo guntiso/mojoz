@@ -133,7 +133,7 @@ object TableDefTests {
       .filterNot(_.contains("- code, col2"))
       .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
       // do not compara extras-dependent lines
-      .filterNot(_ == "- code                 ! 16            :")
+      .filterNot(_ == "- code                  ! 16            :")
       .filterNot(_ contains "SWIFT")
       .filterNot(_ contains "extra-for-bank")
       .mkString(nl)

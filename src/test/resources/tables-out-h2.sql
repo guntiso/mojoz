@@ -81,10 +81,12 @@ create table test_table1(
   col2 varchar(1),
   col3 varchar(1),
   col4 varchar(1),
-  col5 varchar(1)
+  col5 varchar(1),
+  longer_comments_col varchar(1)
 );
 comment on table test_table1 is 'Test comment for table - to be escape''d';
 comment on column test_table1.col5 is 'Test comment - to be escape''d';
+comment on column test_table1.longer_comments_col is 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris rhoncus pharetra lorem, in pretium lacus interdum proin.';
 
 create table test_table2(
   id bigint,
