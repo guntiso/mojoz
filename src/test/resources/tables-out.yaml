@@ -1,18 +1,18 @@
-table:   account
-comment: Klienta norēķina konts
+table:    account
+comment:  Klienta norēķina konts
 columns:
 - id                                    : Ieraksta identifikators.
 - bank.id               !               : Bankas ID, sasaiste ar Bankas.
 - billing_account       ! 64            : Norēķinu konts.
 - last_modified         ! dateTime      : Pēdējo izmaiņu datums un laiks.
 
-table:   account_currency
-comment: Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu
+table:    account_currency
+comment:  Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu
 columns:
 - account.id            !               : Konta identifikators.
 - currency.code         !               : Valūtas kods.
 
-table:   bank
+table:    bank
 columns:
 - id                                    : Ieraksta identifikators.
 - code                  ! 16            :
@@ -24,8 +24,8 @@ columns:
 - name_rus                240           : Bankas pilnais nosaukums, transliterēts krieviski.
 extra-for-bank: extra for bank
 
-table:   country
-comment: Valstu klasifikators
+table:    country
+comment:  Valstu klasifikators
 columns:
 - code                    2           (LV, TO, LT) : ISO 3166-1 divu burtu valsts kods
 - code3                 ! 3             : ISO 3-burtu valsts kods
@@ -37,8 +37,8 @@ columns:
 - is_eu                 !               : Vai valsts ir Eiropas Savienības dalībvalsts
 pk: code
 
-table:   currency
-comment: Sistēmā uzturēto valūtu klasifikators.
+table:    currency
+comment:  Sistēmā uzturēto valūtu klasifikators.
 columns:
 - code                    3           (USD, EUR) : Starptautiski pieņemtais valūtas apzīmējums
                                                    (burti).
@@ -47,7 +47,7 @@ columns:
 - name_rus              ! 100           : Valūtas nosaukums krieviski.
 pk: code
 
-table:   person
+table:    person
 columns:
 - id
 - name                  ! 51
@@ -55,8 +55,8 @@ columns:
 - mother.id               person.id
 - father.id               person.id
 
-table:   test_table1
-comment: Test comment for table - to be escape'd
+table:    test_table1
+comment:  Test comment for table - to be escape'd
 columns:
 - id
 - code                    1
@@ -83,7 +83,7 @@ idx:
 - idx_tt1_spec_col3_col5a(col3, col5)
 - idx_tt1_spec_col3_col5d(col3, col5 desc)
 
-table:   test_table2
+table:    test_table2
 columns:
 - id
 - code                    1
@@ -94,7 +94,7 @@ refs:
 - code, name -> test_table1(code, col1) on delete cascade
 - fk_tt2_spec_code_name(code, name) -> test_table1(code, col2)
 
-table:   test_table3
+table:    test_table3
 columns:
 - int_col                 int
 - int6_col                int 6
@@ -109,7 +109,7 @@ columns:
 - boolean_col             boolean
 - bytes_col               bytes
 
-table:   test_table4
+table:    test_table4
 columns:
 - int_col                 int           = 6
 - int6_col7               int 6         = 7
@@ -121,7 +121,7 @@ columns:
 - boolean_col_f           boolean       = false
 - boolean_col_t           boolean       = true
 
-table:   test_table5
+table:    test_table5
 columns:
 - bank.id
 - enum_for_int            int         (-1, 0, 1)
@@ -134,12 +134,12 @@ columns:
 refs:
 - bank_id -> bank(id) on delete cascade
 
-table:   test_table6
+table:    test_table6
 columns:
 - id
 - name                    50
 
-table:   test_table7
+table:    test_table7
 columns:
 - key1                    20
 - key2                    20

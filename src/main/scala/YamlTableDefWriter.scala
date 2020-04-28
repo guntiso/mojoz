@@ -89,9 +89,9 @@ class YamlTableDefWriter {
       Option(ref.onUpdateAction).map("on update " + _))
       .flatMap(x => x).mkString(" ")
   def toYaml(tableDef: TableDef[ColumnDef[IoColumnType]]): String =
-    List(Some(tableDef.name).map("table:   " + _),
+    List(Some(tableDef.name).map("table:    " + _),
       Option(tableDef.comments).filter(_ != "").map(c =>
-        wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
+        wrapped(escapeYamlValue(c.trim), "comment: ", " " * 10)),
       Some("columns:"),
       Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")),
       tableDef.pk.map(pk => "pk: " + toYaml(pk)),

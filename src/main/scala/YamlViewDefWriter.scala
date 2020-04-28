@@ -99,13 +99,13 @@ class YamlViewDefWriter {
       .getOrElse(cols.mkString(", "))
   def toYaml(view: ViewDef[FieldDef[IoColumnType]]): String = {
     import view._
-    List(Some(name).map("name:    " + _),
+    List(Some(name).map("name:     " + _),
       Option(table)
-        .map("table:   " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
+        .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
       Option(comments).filter(_ != "").map(c =>
-        wrapped(escapeYamlValue(c.trim), "comment:", " " * 9)),
-      Option(extends_).map(escapeYamlValue).map("extends: " + _),
+        wrapped(escapeYamlValue(c.trim), "comment: ", " " * 10)),
+      Option(extends_).map(escapeYamlValue).map("extends:  " + _),
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)
         .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),

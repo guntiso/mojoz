@@ -1,18 +1,18 @@
-name:    account
+name:     account
 fields:
 - id                    ?
 - bank_id
 - billing_account
 - currency              * 3             =
 
-name:    account_details
-extends: account
+name:     account_details
+extends:  account
 fields:
 - bank.code
 - bank.name
 
-name:    bank_list_row
-table:   bank
+name:     bank_list_row
+table:    bank
 fields:
 - id
 - code
@@ -20,46 +20,46 @@ fields:
 - country.name
 - name                                  : <p>special xml 'chars' & "strings" test</p>
 
-name:    named_inline_view
+name:     named_inline_view
 table:
 fields:
 - child_id
 - child_name
 
-name:    named_inline_view2
+name:     named_inline_view2
 table:
 fields:
 - child_name
 
-name:    named_inline_view3
+name:     named_inline_view3
 table:
 fields:
 - child_name
 
-name:    no_fields
-table:   bank
+name:     no_fields
+table:    bank
 fields:
 
 
-name:    no_fields_b
-table:   bank
+name:     no_fields_b
+table:    bank
 fields:
 
 
-name:    no_fields_extended_b
-extends: no_fields_b
+name:     no_fields_extended_b
+extends:  no_fields_b
 fields:
 - id
 
-name:    no_fields_extended_with_fields
-extends: no_fields
+name:     no_fields_extended_with_fields
+extends:  no_fields
 fields:
 - id
 - code
 - name
 - country.name
 
-name:    no_table
+name:     no_table
 table:
 fields:
 - some_id
@@ -73,13 +73,13 @@ fields:
 - is_boolean_expr                       =
 - is_not_boolean          date          : should be date
 
-name:    one_fielder
+name:     one_fielder
 table:
 fields:
 - the_one
 extra: some extra
 
-name:    person
+name:     person
 fields:
 - name
 - surname
@@ -92,95 +92,95 @@ fields:
 - father.father.name
 - father.father.father.surname
 
-name:    resolver_test_1
-table:   person
+name:     resolver_test_1
+table:    person
 fields:
 - id
 - mother                                = mother.name || mother.surname -> mother_id
 - father                                = father.name || father.surname -> father_id = person[name || surname = _]{id}
 
-name:    resolver_test_2
-table:   account_currency
+name:     resolver_test_2
+table:    account_currency
 fields:
 - account                               = account.billing_account -> account_id
 - currency.name                         -> currency_code
 
-name:    resolver_test_3
-table:   account
+name:     resolver_test_3
+table:    account
 fields:
 - id
 - code                                  = -> bank_id
 
-name:    resolver_test_4
-table:   bank
+name:     resolver_test_4
+table:    bank
 fields:
 - id
 - name                                  -> = 'My bank'
 
-name:    resolver_test_5
-table:   bank
+name:     resolver_test_5
+table:    bank
 fields:
 - id
 - name                                  -> = _ || ' saved'
 
-name:    resolver_test_6
-table:   bank
+name:     resolver_test_6
+table:    bank
 fields:
 - id
 - name                                  = name || '.' ->
 
-name:    resolver_test_7
-table:   bank b
+name:     resolver_test_7
+table:    bank b
 fields:
 - id
 - name
 - country                               = country.name -> country_code
 
-name:    resolver_test_7b
-table:   bank b
+name:     resolver_test_7b
+table:    bank b
 fields:
 - id
 - country                               = country.name -> country_code = to_country_code(_)
 
-name:    resolver_test_8
-table:   account
+name:     resolver_test_8
+table:    account
 fields:
 - id
 - bank                                  = bank.name -> bank_id
 
-name:    resolver_test_8b
-table:   account a_
+name:     resolver_test_8b
+table:    account a_
 fields:
 - id
 - bank_id                               -> = 33
 
-name:    resolver_test_9
-table:   person
+name:     resolver_test_9
+table:    person
 fields:
 - id
 - mother                                = mother.name || mother.surname -> mother_id
 - father                                = father.name || ' ' || father.surname -> father_id
 
-name:    type_override_test
-table:   account
+name:     type_override_test
+table:    account
 fields:
 - bank                                  = bank_id
 - last_modified           date          : Last modified
 
-name:    with_anonymous_inline_view
+name:     with_anonymous_inline_view
 table:
 fields:
 - some_id
 - some_name
 - some_children         * with_anonymous_inline_view_some_children
 
-name:    with_anonymous_inline_view_some_children
+name:     with_anonymous_inline_view_some_children
 table:
 fields:
 - child_id
 - child_name
 
-name:    with_empty_child_save_to
+name:     with_empty_child_save_to
 table:
 save-to:
 - table1
@@ -188,30 +188,30 @@ save-to:
 fields:
 - single_child            with_empty_child_save_to_single_child
 
-name:    with_empty_child_save_to_single_child
+name:     with_empty_child_save_to_single_child
 table:
 save-to:
 fields:
 - child_name
 
-name:    with_named_inline_view
+name:     with_named_inline_view
 table:
 fields:
 - some_id
 - some_name
 - some_children         * named_inline_view
 
-name:    with_named_inline_view2
+name:     with_named_inline_view2
 table:
 fields:
 - some_children         * named_inline_view2
 
-name:    with_named_inline_view3
+name:     with_named_inline_view3
 table:
 fields:
 - single_child            named_inline_view3
 
-name:    with_scala_keywords
+name:     with_scala_keywords
 table:
 fields:
 - this                                  =
