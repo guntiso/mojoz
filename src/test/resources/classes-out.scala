@@ -130,6 +130,15 @@ class WithEmptyChildSaveTo extends Dto {
 class WithEmptyChildSaveToSingleChild extends Dto {
   var childName: String = null
 }
+class WithJoinToParent extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+  var parents: List[WithJoinToParentParents] = Nil
+}
+class WithJoinToParentParents extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
 class WithNamedInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null

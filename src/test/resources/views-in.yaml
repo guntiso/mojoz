@@ -92,6 +92,17 @@ fields:
 - final =
 - type  =
 
+name: with_join_to_parent
+table:  person c
+fields:
+- id
+- name
+- parents * [p.id in (c.mother_id, c.father_id)] :
+    table: person p
+    fields:
+    - id
+    - name
+
 name: with_anonymous_inline_view
 table:
 fields:

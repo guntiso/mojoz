@@ -130,6 +130,15 @@ case class WithEmptyChildSaveTo (
 case class WithEmptyChildSaveToSingleChild (
   childName: String = null
 )
+case class WithJoinToParent (
+  id: java.lang.Long = null,
+  name: String = null,
+  parents: List[WithJoinToParentParents] = Nil
+)
+case class WithJoinToParentParents (
+  id: java.lang.Long = null,
+  name: String = null
+)
 case class WithNamedInlineView (
   someId: java.lang.Long = null,
   someName: String = null,

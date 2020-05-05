@@ -92,6 +92,12 @@
     <jaxb:bindings node="//xs:complexType[@name='WithEmptyChildSaveToSingleChildType']">
       <jaxb:class name="WithEmptyChildSaveToSingleChild"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithJoinToParentType']">
+      <jaxb:class name="WithJoinToParent"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithJoinToParentParentsType']">
+      <jaxb:class name="WithJoinToParentParents"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineViewType']">
       <jaxb:class name="WithNamedInlineView"/>
     </jaxb:bindings>

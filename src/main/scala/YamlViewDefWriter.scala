@@ -20,9 +20,11 @@ class YamlViewDefWriter {
       (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
+
   def toYaml(field: FieldDef[IoColumnType]) = {
     import field._
     val t = type_.type_ getOrElse new Type(null, None, None, None, false)
+    val joinString = Option(joinToParent) getOrElse ""
     val typeString = List(
       Option(t.name),
       t.length,
@@ -58,6 +60,7 @@ class YamlViewDefWriter {
         type_.nullable map (b => if (b) "?" else "!") getOrElse "",
         Some(isCollection).filter(x => x).map(_ => "*") getOrElse ""
       ).mkString,  2),
+      (joinString,  0),
       (typeString, 12),
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (

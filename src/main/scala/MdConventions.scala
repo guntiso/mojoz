@@ -200,7 +200,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def toExternal(view: ViewDef[FieldDef[Type]], tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]]) = {
     def mapField(f: FieldDef[Type]) = {
       import f._
-      if (table == null)
+      if (table == null || type_.isComplexType)
         f.copy(type_ = new IoColumnType(
           Option(nullable).filter(!_),
           typeOpt(name, type_)))
