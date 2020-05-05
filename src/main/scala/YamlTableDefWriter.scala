@@ -10,11 +10,16 @@ class YamlTableDefWriter {
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
-  private val yamlChB = ",[]{}&*!|>'%@`\""
+  private val yamlChB = ",[]{}&*!|>'%@`\" "
+    .toCharArray.map(_.toString).toSet
+  private val yamlChC = " "
     .toCharArray.map(_.toString).toSet
   private def escapeYamlValue(s: String) =
     if (s != null &&
-      (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
+        (yamlChA.exists(s contains   _) ||
+         yamlChB.exists(s startsWith _) ||
+         yamlChC.exists(s endsWith   _) ||
+         s == ""                        ))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
   def toYaml(colDef: ColumnDef[IoColumnType]) = {
@@ -44,17 +49,17 @@ class YamlTableDefWriter {
         r._2 + t._2))._1 +
         default // TODO formatting?
 
-    val hasComment = (comments != null && comments.trim != "")
+    val hasComment = comments != null
     val hasExtras = extras != null && !extras.isEmpty
     val slComment =
-      if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
+      if (hasComment) s" : ${escapeYamlValue(comments)}" else ""
     if (!hasComment && !hasExtras) defString.trim
     else if (hasExtras) {
       // TODO handle various types of extras
       val prefix = "  -"
       val indent = "    "
       val w_comments =
-        if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
+        if (hasComment) wrapped(escapeYamlValue(comments), prefix, indent)
         else ""
       val lines = (defString + " :") :: w_comments :: extras.map(e =>
         s"$prefix ${escapeYamlValue(e._1)}" + (
@@ -69,7 +74,7 @@ class YamlTableDefWriter {
       val indent =
         if (MaxLineLength < defString.length + 20) " " * 42
         else " " * (2 + defString.length + 3)
-      wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
+      wrapped(escapeYamlValue(comments), defString + " :", indent)
     }
   }
   private def toYaml(name: String, cols: Seq[String]): String =
@@ -90,8 +95,8 @@ class YamlTableDefWriter {
       .flatMap(x => x).mkString(" ")
   def toYaml(tableDef: TableDef[ColumnDef[IoColumnType]]): String =
     List(Some(tableDef.name).map("table:    " + _),
-      Option(tableDef.comments).filter(_ != "").map(c =>
-        wrapped(escapeYamlValue(c.trim), "comments:", " " * 10)),
+      Option(tableDef.comments).map(c =>
+        wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Some("columns:"),
       Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")),
       tableDef.pk.map(pk => "pk: " + toYaml(pk)),

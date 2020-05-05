@@ -13,11 +13,16 @@ class YamlViewDefWriter {
   val MaxLineLength = 100
   private val yamlChA = ":#"
     .toCharArray.map(_.toString).toSet
-  private val yamlChB = ",[]{}&*!|>'%@`\""
+  private val yamlChB = ",[]{}&*!|>'%@`\" "
+    .toCharArray.map(_.toString).toSet
+  private val yamlChC = " "
     .toCharArray.map(_.toString).toSet
   private def escapeYamlValue(s: String) =
     if (s != null &&
-      (yamlChA.exists(s contains _) || yamlChB.exists(s startsWith _)))
+        (yamlChA.exists(s contains   _) ||
+         yamlChB.exists(s startsWith _) ||
+         yamlChC.exists(s endsWith   _) ||
+         s == ""                        ))
       "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
     else s
 
@@ -68,17 +73,17 @@ class YamlViewDefWriter {
         r._2 + t._2))._1 +
       expr + saveExpr
 
-    val hasComment = (comments != null && comments.trim != "")
+    val hasComment = comments != null
     val hasExtras = extras != null && !extras.isEmpty
     val slComment =
-      if (hasComment) " : " + escapeYamlValue(comments.trim) else ""
+      if (hasComment) s" : ${escapeYamlValue(comments)}" else ""
     if (!hasComment && !hasExtras) defString.trim
     else if (hasExtras && !extras.contains("fields")) { // XXX not is view TODO inline child views!
       // TODO handle various types of extras
       val prefix = "  -"
       val indent = "    "
       val w_comments =
-        if (hasComment) wrapped(escapeYamlValue(comments.trim), prefix, indent)
+        if (hasComment) wrapped(escapeYamlValue(comments), prefix, indent)
         else ""
       val lines = (defString + " :") :: w_comments :: extras.map(e =>
         s"$prefix ${escapeYamlValue(e._1)}" + (
@@ -93,7 +98,7 @@ class YamlViewDefWriter {
       val indent =
         if (MaxLineLength < defString.length + 20) " " * 42
         else " " * (2 + defString.length + 3)
-      wrapped(escapeYamlValue(comments.trim), defString + " :", indent)
+      wrapped(escapeYamlValue(comments), defString + " :", indent)
     }
   }
   private def toYaml(name: String, cols: Seq[String]): String =
@@ -106,8 +111,8 @@ class YamlViewDefWriter {
       Option(table)
         .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
-      Option(comments).filter(_ != "").map(c =>
-        wrapped(escapeYamlValue(c.trim), "comments:", " " * 10)),
+      Option(comments).map(c =>
+        wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Option(extends_).map(escapeYamlValue).map("extends:  " + _),
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)

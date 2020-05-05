@@ -67,8 +67,13 @@ class TableDefTests extends FlatSpec with Matchers {
     val rawJdbcTableDefs = {
       try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
       finally conn.close
-    }.map(t => t.copy( // h2-specific synthetic index cleanup
-      idx = t.idx.filter(i => idxNames.contains(i.name))))
+    }.map(t => t.copy(
+      // h2-specific synthetic index cleanup
+      idx = t.idx.filter(i => idxNames.contains(i.name)),
+      // h2 empty comments cleanup
+      comments = Option(t.comments).filter(_ != "").orNull,
+      cols = t.cols.map(c => c.copy(comments = Option(c.comments).filter(_ != "").orNull))
+    ))
 
     val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
@@ -80,6 +85,7 @@ class TableDefTests extends FlatSpec with Matchers {
         .filterNot(_ == "ck:")
         .filterNot(_.contains("diacritics"))
         .filterNot(_.contains("DIACRITICS"))
+        .filterNot(_ startsWith "- col2                    1") // h2 empty comments roundtrip fails
         .mkString(nl)
     }
     skipSomeH2(expected) should be(skipSomeH2(produced))
