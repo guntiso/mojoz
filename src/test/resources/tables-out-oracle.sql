@@ -158,6 +158,7 @@ alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code
 alter table test_table1 add constraint uk_test_table1_code unique(code);
 alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
 create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
+alter table test_table1 add constraint uk_test_table1_col1_col2_col3 unique(col1, col2, col3);
 alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
 alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
 create index idx_test_table1_id on test_table1(id);

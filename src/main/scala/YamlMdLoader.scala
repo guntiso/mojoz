@@ -209,17 +209,20 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val ThisFail = "Failed to load index definition"
     def dbIndex(name: String, cols: String) = DbIndex(name,
       Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil)
-    src match {
+    def extractIndex(src: Any): DbIndex = src match {
       case idx: java.lang.String => idx match {
         case NamedIdxDef(name, _, cols, _, _, _) => dbIndex(name, cols)
         case ColsIdxDef(cols, _, _, _) => dbIndex(null, cols)
         case _ => throw new RuntimeException(ThisFail +
           " - unexpected format: " + idx.trim)
       }
+      case arr: java.util.ArrayList[_] =>
+        extractIndex(arr.asScala.mkString(", "))
       case x => throw new RuntimeException(ThisFail +
         " - unexpected index definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
+    extractIndex(src)
   }
   private def loadYamlRefDef(src: Any) = {
     val ThisFail = "Failed to load ref definition"

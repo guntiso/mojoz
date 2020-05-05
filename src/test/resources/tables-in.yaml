@@ -70,6 +70,7 @@ uk:
 - code
 - code, col1
 - code, col2 desc
+- [col1, col2, col3]
 - uk_tt1_spec_col2(col2)
 - uk_tt2_spec_code_col2(code, col2)
 idx:
