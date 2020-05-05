@@ -147,28 +147,27 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     md.get(tableName) getOrElse
       sys.error("table not found: " + tableName)
 
-  def tableDefOption(typeDef: ViewDefBase[_]) =
-    md.get(typeDef.table)
+  def tableDefOption(viewDef: ViewDefBase[_]) =
+    md.get(viewDef.table)
 
-  def tableDef(typeDef: ViewDefBase[_]) =
-    // TODO get line, file info from xsd type def
-    md.get(typeDef.table) getOrElse
-      sys.error("table not found: " + typeDef.table +
-        ", type def: " + typeDef.name)
+  def tableDef(viewDef: ViewDefBase[_]) =
+    // TODO get line, file info
+    md.get(viewDef.table) getOrElse
+      sys.error("table not found: " + viewDef.table +
+        ", view: " + viewDef.name)
 
   def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
-    val typeDef = viewDef
     val f = fieldDef
     val colName = dbName(f.name)
     try colNameToCol((f.table, colName)) catch {
       case ex: Exception =>
         // TODO print filename, lineNr, colNr, too!
         throw new RuntimeException(
-          "Problem finding column (typeDef: " + typeDef.name
+          "Problem finding column (view: " + viewDef.name
             + ", column: " + f.table + "." + colName +
             (if (f.tableAlias == null) ""
             else " (table alias " + f.tableAlias + ")") + ")"
-            + ", joins: " + typeDef.joins, ex)
+            + ", joins: " + viewDef.joins, ex)
     }
   }
 

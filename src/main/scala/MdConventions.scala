@@ -27,10 +27,10 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       pk = pk
     )
   }
-  def fromExternalPk(typeDef: TableDef[ColumnDef[_]]) = {
+  def fromExternalPk(tableDef: TableDef[ColumnDef[_]]) = {
     import scala.language.existentials
-    val cols = typeDef.cols.map(_.name)
-    if (typeDef.pk.isDefined) typeDef.pk
+    val cols = tableDef.cols.map(_.name)
+    if (tableDef.pk.isDefined) tableDef.pk
     else if (cols.filter(isIdName).size == 1)
       Some(DbIndex(null, cols.filter(isIdName)))
     else if (cols.filter(isCodeName).size == 1)
@@ -91,29 +91,29 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     case idx if idx.name == defaultName => idx.copy(name = null)
     case idx => idx
   }
-  def toExternalPk(typeDef: TableDef[ColumnDef[Type]]) = {
-    val cols = typeDef.cols.map(_.name)
+  def toExternalPk(tableDef: TableDef[ColumnDef[Type]]) = {
+    val cols = tableDef.cols.map(_.name)
     // TODO pk: <missing>!
     // TODO overridable isDefaultPkName(name), use ConstraintNamingRules!
     def isDefaultPkName(name: String) =
-      name == null || name.equalsIgnoreCase("pk_" + typeDef.name)
-    if (!typeDef.pk.isDefined) None
+      name == null || name.equalsIgnoreCase("pk_" + tableDef.name)
+    if (!tableDef.pk.isDefined) None
     else if (cols.filter(isIdName).size == 1)
-      typeDef.pk match {
+      tableDef.pk match {
         case Some(DbIndex(name, List(id))) if isIdName(id) &&
           isDefaultPkName(name) => None
         case pk => pk
       }
     else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
-      typeDef.pk match {
+      tableDef.pk match {
         case Some(DbIndex(name,
           List(col1, col2))) if (col1.toLowerCase, col2.toLowerCase) ==
           (cols(0).toLowerCase, cols(1).toLowerCase) &&
           isDefaultPkName(name) => None
         case pk => pk
       }
-    else typeDef.pk
-  }.map(toExternalIdx(naming.pkName(typeDef.name)))
+    else tableDef.pk
+  }.map(toExternalIdx(naming.pkName(tableDef.name)))
 
   def toExternalUk(table: TableDef[ColumnDef[Type]]) = {
     if (table.pk.isDefined) {

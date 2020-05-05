@@ -260,9 +260,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       })
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
-  private def loadYamlTableDef(typeDef: String) = {
+  private def loadYamlTableDef(tableDefString: String) = {
     val tdMap =
-      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
+      (new Yaml).load(tableDefString).asInstanceOf[java.util.Map[String, _]].asScala.toMap
     val table = tdMap.get("table").map(_.toString)
       .getOrElse(sys.error("Missing table name"))
     val comments = tdMap.get("comments").map(_.toString) getOrElse null

@@ -156,9 +156,9 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     SqlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
-  private def loadYamlTypeDef(typeDef: String) = {
+  private def loadYamlTypeDef(typeDefString: String) = {
     val tdMap =
-      (new Yaml).load(typeDef).asInstanceOf[java.util.Map[String, _]].asScala.toMap
+      (new Yaml).load(typeDefString).asInstanceOf[java.util.Map[String, _]].asScala.toMap
     val typeName = tdMap.get("type").map(_.toString)
       .getOrElse(sys.error("Missing type name"))
     val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++

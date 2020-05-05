@@ -48,36 +48,36 @@ class ScalaClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs)
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process field: $fieldName", ex)
     }
-  def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) =
-    Option(typeDef.extends_).filter(_ != "").map(scalaClassName)
-  def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
+  def scalaClassExtends(viewDef: ViewDef[FieldDef[Type]]) =
+    Option(viewDef.extends_).filter(_ != "").map(scalaClassName)
+  def scalaClassTraits(viewDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) =
-    typeDef.fields.map(f => scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
-  def scalaFieldsStringsWithHandler(typeDef: ViewDef[FieldDef[Type]]) =
+  def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) =
+    viewDef.fields.map(f => scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
+  def scalaFieldsStringsWithHandler(viewDef: ViewDef[FieldDef[Type]]) =
     try
-      scalaFieldsStrings(typeDef)
+      scalaFieldsStrings(viewDef)
     catch {
       case ex: Exception =>
-        throw new RuntimeException(s"Failed to process view: ${typeDef.name}", ex)
+        throw new RuntimeException(s"Failed to process view: ${viewDef.name}", ex)
     }
-  def scalaFieldsString(typeDef: ViewDef[FieldDef[Type]]) =
-    scalaFieldsStringsWithHandler(typeDef)
+  def scalaFieldsString(viewDef: ViewDef[FieldDef[Type]]) =
+    scalaFieldsStringsWithHandler(viewDef)
       .map(scalaFieldsIndent + _ + nl).mkString
-  def scalaBody(typeDef: ViewDef[FieldDef[Type]]) =
-    scalaFieldsString(typeDef) + Option(scalaBodyExtra(typeDef)).getOrElse("")
-  def scalaBodyExtra(typeDef: ViewDef[FieldDef[Type]]) = ""
-  def scalaExtendsString(typeDef: ViewDef[FieldDef[Type]]) =
-    Option(scalaClassTraits(typeDef))
-      .map(scalaClassExtends(typeDef).toList ::: _.toList)
+  def scalaBody(viewDef: ViewDef[FieldDef[Type]]) =
+    scalaFieldsString(viewDef) + Option(scalaBodyExtra(viewDef)).getOrElse("")
+  def scalaBodyExtra(viewDef: ViewDef[FieldDef[Type]]) = ""
+  def scalaExtendsString(viewDef: ViewDef[FieldDef[Type]]) =
+    Option(scalaClassTraits(viewDef))
+      .map(scalaClassExtends(viewDef).toList ::: _.toList)
       .map(t => t.filter(_ != null).filter(_.trim != ""))
       .filter(_.size > 0)
       .map(_ map scalaNameString)
       .map(_.mkString(" extends ", " with ", ""))
       .getOrElse("")
-  def scalaPrefix(typeDef: ViewDef[FieldDef[Type]]) = "class"
-  def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
-    s"${scalaPrefix(typeDef)} ${scalaNameString(scalaClassName(typeDef.name))}${scalaExtendsString(typeDef)} {$nl${scalaBody(typeDef)}}"
+  def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "class"
+  def createScalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef)}}"
   }
   def createScalaClassesString(
     headers: Seq[String], typedefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
@@ -89,17 +89,17 @@ class ScalaClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs)
 class ScalaCaseClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaClassWriter(typeDefs) {
   override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
     s"${scalaNameString(scalaFieldName(fieldName))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  override def scalaFieldsStrings(typeDef: ViewDef[FieldDef[Type]]) = {
-    val fieldsStrings = super.scalaFieldsStrings(typeDef)
+  override def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) = {
+    val fieldsStrings = super.scalaFieldsStrings(viewDef)
     if (fieldsStrings.size < 2) fieldsStrings
     else (fieldsStrings.reverse.head :: fieldsStrings.reverse.tail.map(_ + ",").toList).reverse
   }
   // FIXME extends for case classes?
-  override def scalaPrefix(typeDef: ViewDef[FieldDef[Type]]) = "case class"
-  override def scalaClassExtends(typeDef: ViewDef[FieldDef[Type]]) = None
-  override def createScalaClassString(typeDef: ViewDef[FieldDef[Type]]) = {
-    s"${scalaPrefix(typeDef)} ${scalaNameString(scalaClassName(typeDef.name))}${scalaExtendsString(typeDef)} ($nl${scalaFieldsString(typeDef)})" +
-      Option(scalaBodyExtra(typeDef)).filter(_.trim != "").map(txt => " {" + nl + txt + "}").getOrElse("")
+  override def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "case class"
+  override def scalaClassExtends(viewDef: ViewDef[FieldDef[Type]]) = None
+  override def createScalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef)})" +
+      Option(scalaBodyExtra(viewDef)).filter(_.trim != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }
 }
 

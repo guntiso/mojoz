@@ -65,8 +65,8 @@ class ViewDefTests extends FlatSpec with Matchers {
     object ScalaBuilder extends ScalaClassWriter {
       override def scalaClassName(name: String) = Naming.camelize(name)
       override def scalaFieldName(name: String) = Naming.camelizeLower(name)
-      override def scalaClassTraits(typeDef: ViewDef[FieldDef[Type]]) =
-        if (typeDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
+      override def scalaClassTraits(viewDef: ViewDef[FieldDef[Type]]) =
+        if (viewDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
           List("DtoWithId")
         else List("Dto")
     }

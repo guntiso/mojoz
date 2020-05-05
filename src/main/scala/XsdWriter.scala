@@ -110,13 +110,13 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
         """)
     }
   }
-  def complexType(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) = {
+  def complexType(viewDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) = {
     def createFields(level: Int) = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
       indent(level, s"""
       <xs:sequence>
-        ${typeDef.fields.map(f =>
+        ${viewDef.fields.map(f =>
           createElement(xsdName(Option(f.alias) getOrElse f.name), f, 4))
           .map(_.trim).mkString("\n" + indentString * 4)
         }
@@ -124,13 +124,13 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       """)
     }
     indent(indentLevel, s"""
-    <xs:complexType name="${ xsdComplexTypeName(typeDef.name) }">
+    <xs:complexType name="${ xsdComplexTypeName(viewDef.name) }">
       ${List(
-      annotation(typeDef.comments, 3),
-      if (typeDef.extends_ == null) createFields(3)
+      annotation(viewDef.comments, 3),
+      if (viewDef.extends_ == null) createFields(3)
       else indent(3, s"""
         <xs:complexContent>
-          <xs:extension base="${ "tns:" + xsdComplexTypeName(typeDef.extends_) }">
+          <xs:extension base="${ "tns:" + xsdComplexTypeName(viewDef.extends_) }">
             ${ createFields(6).trim }
           </xs:extension>
         </xs:complexContent>
@@ -151,15 +151,15 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       </xs:sequence>
     </xs:complexType>
     """)
-  def listWrapper(typeDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) =
+  def listWrapper(viewDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) =
     indent(indentLevel, s"""
-    <xs:complexType name="${ xsdComplexTypeName(listWrapperName(typeDef.name)) }">
+    <xs:complexType name="${ xsdComplexTypeName(listWrapperName(viewDef.name)) }">
       <xs:complexContent>
         <xs:extension base="${ "tns:" + listWrapperXsdTypeName }">
           <xs:sequence>
             <xs:element ${attribs("maxOccurs minOccurs nillable type name",
-              "unbounded", "0", "true", "tns:" + xsdComplexTypeName(typeDef.name),
-              xsdName(typeDef.table))}/>
+              "unbounded", "0", "true", "tns:" + xsdComplexTypeName(viewDef.name),
+              xsdName(viewDef.table))}/>
           </xs:sequence>
         </xs:extension>
       </xs:complexContent>
