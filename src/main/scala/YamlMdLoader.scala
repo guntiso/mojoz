@@ -254,24 +254,32 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
   private def toList(src: Option[Any]): List[Any] =
     src
-      .filter(_ != null)
       .map(_ match {
+        case null => Nil
         case s: String =>
           List(s)
-        case x =>
-          x.asInstanceOf[java.util.ArrayList[_]].asScala.toList
+        case a: java.util.ArrayList[_] =>
+          a.asScala.toList
+        case x => List(x)
       })
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
   private def loadYamlTableDef(tableDefString: String) = {
     val tdMap =
-      (new Yaml).load(tableDefString).asInstanceOf[java.util.Map[String, _]].asScala.toMap
+      (new Yaml).load(tableDefString) match {
+        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+        case x => throw new RuntimeException(
+          "Unexpected class: " + Option(x).map(_.getClass).orNull)
+      }
     val table = tdMap.get("table").map(_.toString)
       .getOrElse(sys.error("Missing table name"))
     val comments = tdMap.get("comments").map(_.toString) getOrElse null
     val colSrc = tdMap.get("columns")
-      .filter(_ != null)
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
+      .map {
+        case null => Nil
+        case a: java.util.ArrayList[_] => a.asScala.toList
+        case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+      }
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
     val pk_list = toList(tdMap.get("pk"))
@@ -396,23 +404,20 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     src match {
       case nameEtc: java.lang.String =>
         colDef(nameEtc.toString, null, null)
-      case x: java.util.Map[_, _] =>
-        val m = x.asInstanceOf[java.util.Map[_, _]]
+      case m: java.util.Map[_, _] =>
         if (m.size == 1) {
           val entry = m.entrySet.asScala.toList(0)
           val nameEtc = entry.getKey
           val (comments, child) = entry.getValue match {
             case s: String => (s, null)
-            case m: java.util.Map[_, _] =>
-              (null, m.asInstanceOf[java.util.Map[String, _]].asScala.toMap)
+            case m: java.util.Map[String @unchecked, _] =>
+              (null, m.asScala.toMap)
             case a: java.util.ArrayList[_] =>
               val l = a.asScala.toList
               val strings =
-                l.filter(_.isInstanceOf[java.lang.String])
-                  .map(_.asInstanceOf[java.lang.String])
+                l.collect { case s: java.lang.String => s }
               val child =
-                l.filter(_.isInstanceOf[java.util.Map[_, _]])
-                  .map(_.asInstanceOf[java.util.Map[String, Any]].asScala)
+                l.collect { case m: java.util.Map[String @unchecked, _] => m.asScala }
                   .foldLeft(Map[String, Any]())(_ ++ _)
               val comments = strings.headOption.getOrElse(child.get("comments").orNull)
               // TODO handle (raise error for?) other cases

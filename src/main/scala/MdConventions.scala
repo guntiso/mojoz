@@ -192,8 +192,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         case (name, "date", _) if isDateName(name) => None
         case (name, "dateTime", _) if isDateTimeName(name) => None
         case (name, "string", None) if !isTypedName(name) => None
-        case (name, "string", Some(len)) if !isTypedName(name) =>
-          Some(new Type(null.asInstanceOf[String], len))
+        case (name, "string", Some(len)) if !isTypedName(name) => Some(new Type(null: String, len))
         case _ => Option(type_)
       }
   }

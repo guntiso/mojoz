@@ -122,7 +122,7 @@ case class FieldDef[+T](
     joinToParent = that.joinToParent,
     orderBy = that.orderBy,
     comments = that.comments,
-    extras = if (that.isInstanceOf[FieldDef[_]]) that.asInstanceOf[FieldDef[_]].extras else null
+    extras = that match { case f: FieldDef[_] => f.extras case _ => null }
   )
 }
 
@@ -198,8 +198,11 @@ class YamlViewDefLoader(
     .map(t => (t.name, t)).toMap
   def loadRawViewDefs(defs: String): List[ViewDef[FieldDef[Type]]] = {
     Option((new Yaml).load(defs))
-      .map(v => v.asInstanceOf[java.util.Map[String, _]].asScala)
-      .map(_.toMap)
+      .map {
+        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+        case x => throw new RuntimeException(
+          "Unexpected class: " + Option(x).map(_.getClass).orNull)
+      }
       .map(loadRawViewDefs)
       .getOrElse(Nil)
   }

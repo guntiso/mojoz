@@ -158,7 +158,11 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   }
   private def loadYamlTypeDef(typeDefString: String) = {
     val tdMap =
-      (new Yaml).load(typeDefString).asInstanceOf[java.util.Map[String, _]].asScala.toMap
+      (new Yaml).load(typeDefString) match {
+        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+        case x => throw new RuntimeException(
+          "Unexpected class: " + Option(x).map(_.getClass).orNull)
+      }
     val typeName = tdMap.get("type").map(_.toString)
       .getOrElse(sys.error("Missing type name"))
     val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++
@@ -169,16 +173,21 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       tdMap.filterKeys(_ endsWith "jdbc").map {
         case (k, v) =>
         val jdbcLoadInfoSeq =
-          Option(v)
-            .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-            .getOrElse(Nil)
+          (v match {
+            case null => Nil
+            case a: java.util.ArrayList[_] => a.asScala.toList
+            case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+          })
             .map(toString(_, s"Failed to load jdbc load definition for $k"))
             .map(toJdbcLoadInfo)
         (k, jdbcLoadInfoSeq)
       }
     val yamlLoad = tdMap.get("yaml")
-      .filter(_ != null)
-      .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
+      .map {
+        case null => Nil
+        case a: java.util.ArrayList[_] => a.asScala.toList
+        case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+      }
       .getOrElse(Nil)
       .map(toString(_, "Failed to load yaml load definition"))
       .map(toYamlLoadInfo)
@@ -186,9 +195,11 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       tdMap.filterKeys(_ endsWith "sql").map {
         case (k, v) =>
         val sqlWriteInfoSeq =
-          Option(v)
-            .map(m => m.asInstanceOf[java.util.ArrayList[_]].asScala.toList)
-            .getOrElse(Nil)
+          (v match {
+            case null => Nil
+            case a: java.util.ArrayList[_] => a.asScala.toList
+            case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+          })
             .map(toString(_, s"Failed to load sql write definition for $k"))
             .map(toSqlWriteInfo)
         (k, sqlWriteInfoSeq)
