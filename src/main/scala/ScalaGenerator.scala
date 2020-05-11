@@ -8,8 +8,8 @@ import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 import scala.collection.immutable.Set
 
-// TODO ScalaWriter, ScalaTraitWriter, Scala[Companion]ObjectWriter
-class ScalaClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
+// TODO ScalaTraitGenerator
+class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   val scalaKeywords: Set[String] = Set(
     "abstract", "case", "catch", "class", "def", "do", "else", "extends",
     "false", "final", "finally", "for", "forSome", "if", "implicit", "import", "lazy",
@@ -70,23 +70,27 @@ class ScalaClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs)
   def scalaExtendsString(viewDef: ViewDef[FieldDef[Type]]) =
     Option(scalaClassTraits(viewDef))
       .map(scalaClassExtends(viewDef).toList ::: _.toList)
-      .map(t => t.filter(_ != null).filter(_.trim != ""))
+      .map(t => t.filter(_ != null).filter(_ != ""))
       .filter(_.size > 0)
       .map(_ map scalaNameString)
       .map(_.mkString(" extends ", " with ", ""))
       .getOrElse("")
   def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "class"
-  def createScalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+  def scalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef)}}"
   }
-  def createScalaClassesString(
-    headers: Seq[String], typedefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
-    List(headers, typedefs map createScalaClassString, footers)
+  def scalaObjectString(viewDef: ViewDef[FieldDef[Type]]): String = ""
+  def scalaClassAndObjectString(viewDef: ViewDef[FieldDef[Type]]): String =
+    Seq(scalaClassString(viewDef), scalaObjectString(viewDef))
+      .filter(_ != null).filter(_ != "").mkString(nl)
+  def generateScalaSource(
+    headers: Seq[String], viewDefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
+    List(headers, viewDefs map scalaClassAndObjectString, footers)
       .flatMap(x => x)
       .mkString("", nl, nl)
 }
 
-class ScalaCaseClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaClassWriter(typeDefs) {
+class ScalaCaseClassGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaGenerator(typeDefs) {
   override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
     s"${scalaNameString(scalaFieldName(fieldName))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   override def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) = {
@@ -97,11 +101,11 @@ class ScalaCaseClassWriter(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeD
   // FIXME extends for case classes?
   override def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "case class"
   override def scalaClassExtends(viewDef: ViewDef[FieldDef[Type]]) = None
-  override def createScalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+  override def scalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef)})" +
-      Option(scalaBodyExtra(viewDef)).filter(_.trim != "").map(txt => " {" + nl + txt + "}").getOrElse("")
+      Option(scalaBodyExtra(viewDef)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }
 }
 
-object ScalaClassWriter extends ScalaClassWriter(TypeMetadata.customizedTypeDefs)
-object ScalaCaseClassWriter extends ScalaCaseClassWriter(TypeMetadata.customizedTypeDefs)
+object ScalaGenerator extends ScalaGenerator(TypeMetadata.customizedTypeDefs)
+object ScalaCaseClassGenerator extends ScalaCaseClassGenerator(TypeMetadata.customizedTypeDefs)

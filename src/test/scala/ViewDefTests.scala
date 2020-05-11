@@ -62,7 +62,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
     // TODO api sucks
-    object ScalaBuilder extends ScalaClassWriter {
+    object ScalaBuilder extends ScalaGenerator {
       override def scalaClassName(name: String) = Naming.camelize(name)
       override def scalaFieldName(name: String) = Naming.camelizeLower(name)
       override def scalaClassTraits(viewDef: ViewDef[FieldDef[Type]]) =
@@ -71,7 +71,7 @@ class ViewDefTests extends FlatSpec with Matchers {
         else List("Dto")
     }
     // TODO api sucks
-    val produced = ScalaBuilder.createScalaClassesString(
+    val produced = ScalaBuilder.generateScalaSource(
       List("package some.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
     if (expected != produced)
@@ -81,12 +81,12 @@ class ViewDefTests extends FlatSpec with Matchers {
   "generated scala case class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "case-classes-out.scala")
     // TODO api sucks
-    object ScalaBuilder extends ScalaCaseClassWriter {
+    object ScalaBuilder extends ScalaCaseClassGenerator {
       override def scalaClassName(name: String) = Naming.camelize(name)
       override def scalaFieldName(name: String) = Naming.camelizeLower(name)
     }
     // TODO api sucks
-    val produced = ScalaBuilder.createScalaClassesString(
+    val produced = ScalaBuilder.generateScalaSource(
       List("package some.caseclass.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
     if (expected != produced)

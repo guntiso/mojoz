@@ -116,7 +116,7 @@ Types can be customized and additional types can be added by including **mojoz-c
 Key names are:
 * **type** - [mojoz] type name
 * **_[some]_ name** - type name for specific purpose:
-  * **scala name** - used by [ScalaClassWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/ScalaClassWriter.html)
+  * **scala name** - used by [ScalaGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/ScalaGenerator.html)
   * **xsd name** - used by [XsdWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/XsdWriter.html)
   * any other (custom) name will also be loaded into
     `targetNames` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/TypeDef.html)
