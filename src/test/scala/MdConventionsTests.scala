@@ -1,5 +1,5 @@
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
+import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Seq
 
 import mojoz.metadata.ColumnDef

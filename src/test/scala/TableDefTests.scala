@@ -3,8 +3,8 @@ import java.sql.DriverManager
 
 import scala.io.Source
 
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
+import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
+import org.scalatest.matchers.should.Matchers
 
 import mojoz.metadata.in.JdbcTableDefLoader
 import mojoz.metadata.in.YamlMd
