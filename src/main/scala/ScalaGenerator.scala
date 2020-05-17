@@ -22,12 +22,14 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
   def scalaFieldTypeName(field: FieldDef[Type]) = {
-    val itemTypeName =
-      if (field.type_.isComplexType) scalaComplexTypeName(field.type_)
-      else scalaSimpleTypeName(field.type_)
+    val itemTypeName = scalaTypeName(field.type_)
     if (field.isCollection) scalaCollectionTypeName(itemTypeName)
     else itemTypeName
   }
+  def scalaTypeName(type_ : Type): String =
+    if  (type_.isComplexType)
+         scalaComplexTypeName(type_)
+    else scalaSimpleTypeName(type_)
   def scalaCollectionTypeName(itemTypeName: String) = s"List[$itemTypeName]"
   lazy val typeNameToScalaTypeName =
     typeDefs
