@@ -10,6 +10,8 @@ import scala.collection.immutable.Set
 
 // TODO ScalaTraitGenerator
 class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
+  private val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
+  private val SimpleIdentR = ("^" + ident + "$").r
   val scalaKeywords: Set[String] = Set(
     "abstract", "case", "catch", "class", "def", "do", "else", "extends",
     "false", "final", "finally", "for", "forSome", "if", "implicit", "import", "lazy",
@@ -18,7 +20,8 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     "val", "var", "while", "with", "yield")
   def nl = System.getProperty("line.separator")
   def scalaNameString(name: String) =
-    if (scalaKeywords contains name) s"`$name`" else name
+    if (SimpleIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
+    else s"`$name`"
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
   def scalaFieldTypeName(field: FieldDef[Type]) = {
