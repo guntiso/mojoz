@@ -12,7 +12,7 @@ jdk:
   - openjdk11
   - openjdk8
 addons:
-  postgresql: 9.5
+  postgresql: 9.6
 before_script:
   - psql -f src/it/mojoz-postgresql-setup.sql -U postgres
   - cp src/it/resources/application.conf.travis src/it/resources/application.conf
