@@ -517,7 +517,7 @@ class YamlViewDefLoader(
           val joinOpt = tableOrAliasToJoin.get(tableOrAlias)
           val joinColOpt =
             // TODO make use of join col type info?
-            joinOpt.map(_.columns).getOrElse(Nil).filter(_.name == f.name).headOption
+            joinOpt.map(_.columns).getOrElse(Nil).find(_.name == f.name)
           val nullable =
             if (f.extras != null && f.extras.get(MojozExplicitNullability) == Some(true)) f.nullable
             else joinColOpt.map(_.nullable).getOrElse(col.nullable)
