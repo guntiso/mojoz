@@ -5,6 +5,7 @@ bin
 lib_managed
 .cache
 .classpath
+.idea
 .project
 .settings
 *.blame
