@@ -4,6 +4,19 @@ import mojoz.metadata.in._
 import mojoz.metadata.ColumnDef.ColumnDefBase
 import scala.collection.immutable._
 
+case class Type(name: String, length: Option[Int],
+  totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
+  def this(name: String) = this(name, None, None, None, false)
+  def this(name: String, isComplexType: Boolean) =
+    this(name, None, None, None, isComplexType)
+  def this(name: String, length: Int) =
+    this(name, Some(length), None, None, false)
+  def this(name: String, totalDigits: Int, fractionDigits: Int) =
+    this(name, None, Some(totalDigits), Some(fractionDigits), false)
+
+  def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
+}
+
 case class JdbcLoadInfo(
   jdbcTypeNameOrCode:   String,
   jdbcTypeCode:         Int,

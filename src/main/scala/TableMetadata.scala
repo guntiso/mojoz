@@ -9,18 +9,6 @@ import ColumnDef._
 import ViewDef._
 import FieldDef._
 
-case class Type(name: String, length: Option[Int],
-  totalDigits: Option[Int], fractionDigits: Option[Int], isComplexType: Boolean) {
-  def this(name: String) = this(name, None, None, None, false)
-  def this(name: String, isComplexType: Boolean) =
-    this(name, None, None, None, isComplexType)
-  def this(name: String, length: Int) =
-    this(name, Some(length), None, None, false)
-  def this(name: String, totalDigits: Int, fractionDigits: Int) =
-    this(name, None, Some(totalDigits), Some(fractionDigits), false)
-
-  def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
-}
 object TableDef {
   private def validCols(cols: Seq[String]) =
     cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == "")
