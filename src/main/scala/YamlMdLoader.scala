@@ -273,7 +273,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       }
     val table = tdMap.get("table").map(_.toString)
       .getOrElse(sys.error("Missing table name"))
-    val comments = tdMap.get("comments").map(_.toString) getOrElse null
+    val comments = toList(tdMap.get("comments")) match {
+      case Nil => null
+      case x => x.map(_.toString).mkString("\n")
+    }
     val colSrc = tdMap.get("columns")
       .map {
         case null => Nil

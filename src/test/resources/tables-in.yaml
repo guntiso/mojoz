@@ -13,6 +13,7 @@ columns:
 - currency.code        !               : Valūtas kods.
 
 table:    bank
+comments:
 columns:
 - id                                   : Ieraksta identifikators.
 - code                 ! 16            :
