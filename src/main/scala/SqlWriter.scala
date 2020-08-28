@@ -1,12 +1,12 @@
-package mojoz.metadata.out
+package org.mojoz.metadata.out
 
 import scala.annotation.tailrec
 import scala.math.max
-import mojoz.metadata._
-import mojoz.metadata.io._
-import mojoz.metadata.TableDef._
-import mojoz.metadata.TableDef.{ TableDefBase => TableDef }
-import mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
+import org.mojoz.metadata._
+import org.mojoz.metadata.io._
+import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.TableDef.{ TableDefBase => TableDef }
+import org.mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
 import scala.collection.immutable.{ Map, Seq }
 import SqlWriter._
 

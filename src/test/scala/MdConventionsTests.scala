@@ -2,11 +2,11 @@ import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
 import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Seq
 
-import mojoz.metadata.ColumnDef
-import mojoz.metadata.TableDef
-import mojoz.metadata.TableDef.Ref
-import mojoz.metadata.Type
-import mojoz.metadata.io.MdConventions
+import org.mojoz.metadata.ColumnDef
+import org.mojoz.metadata.TableDef
+import org.mojoz.metadata.TableDef.Ref
+import org.mojoz.metadata.Type
+import org.mojoz.metadata.io.MdConventions
 
 class MdConventionsTests extends FlatSpec with Matchers {
   def ref(col: String, refTable: String, refCol: String) =

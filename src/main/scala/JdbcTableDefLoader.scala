@@ -1,4 +1,4 @@
-package mojoz.metadata.in
+package org.mojoz.metadata.in
 
 import java.lang.Integer
 import java.sql.Connection
@@ -10,13 +10,13 @@ import java.sql.Types
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.Seq
 
-import mojoz.metadata.ColumnDef
-import mojoz.metadata.JdbcLoadInfo
-import mojoz.metadata.TableDef
-import mojoz.metadata.TableDef._
-import mojoz.metadata.Type
-import mojoz.metadata.TypeDef
-import mojoz.metadata.TypeMetadata
+import org.mojoz.metadata.ColumnDef
+import org.mojoz.metadata.JdbcLoadInfo
+import org.mojoz.metadata.TableDef
+import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.Type
+import org.mojoz.metadata.TypeDef
+import org.mojoz.metadata.TypeMetadata
 
 abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   import JdbcTableDefLoader._

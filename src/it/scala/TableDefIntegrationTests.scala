@@ -1,9 +1,9 @@
 import scala.io.Source
 import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
 import org.scalatest.matchers.should.Matchers
-import mojoz.metadata.in._
-import mojoz.metadata.io._
-import mojoz.metadata.out._
+import org.mojoz.metadata.in._
+import org.mojoz.metadata.io._
+import org.mojoz.metadata.out._
 import java.io.PrintWriter
 import java.sql.DriverManager
 import com.typesafe.config.ConfigFactory

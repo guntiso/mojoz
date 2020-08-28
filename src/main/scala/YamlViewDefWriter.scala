@@ -1,10 +1,10 @@
-package mojoz.metadata.out
+package org.mojoz.metadata.out
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 
-import mojoz.metadata._
-import mojoz.metadata.io._
+import org.mojoz.metadata._
+import org.mojoz.metadata.io._
 
 class YamlViewDefWriter {
   // TODO duplicate code (copied from YamlTableDefWriter)

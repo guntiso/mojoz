@@ -1,10 +1,10 @@
-package mojoz.metadata.out
+package org.mojoz.metadata.out
 
-import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
-import mojoz.metadata.Type
-import mojoz.metadata.TypeDef
-import mojoz.metadata.TypeMetadata
-import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import org.mojoz.metadata.Type
+import org.mojoz.metadata.TypeDef
+import org.mojoz.metadata.TypeMetadata
+import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 import scala.collection.immutable.Set
 

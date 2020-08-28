@@ -1,13 +1,13 @@
 import scala.io.Source
 import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
 import org.scalatest.matchers.should.Matchers
-import mojoz.metadata._
-import mojoz.metadata.in._
-import mojoz.metadata.io._
-import mojoz.metadata.out._
+import org.mojoz.metadata._
+import org.mojoz.metadata.in._
+import org.mojoz.metadata.io._
+import org.mojoz.metadata.out._
 import java.io.PrintWriter
-import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
-import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 
 // TODO these tests to text-based parse results (json/yaml/...)?
 class ResolverParsingTests extends FlatSpec with Matchers {

@@ -1,17 +1,17 @@
-package mojoz.metadata.in
+package org.mojoz.metadata.in
 
 import java.io.File
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 import scala.collection.JavaConverters._
 import scala.io.Source
-import mojoz.metadata.TypeDef
-import mojoz.metadata.TypeMetadata
-import mojoz.metadata.io._
-import mojoz.metadata.ColumnDef
-import mojoz.metadata.TableDef
-import mojoz.metadata.TableDef._
-import mojoz.metadata.Type
+import org.mojoz.metadata.TypeDef
+import org.mojoz.metadata.TypeMetadata
+import org.mojoz.metadata.io._
+import org.mojoz.metadata.ColumnDef
+import org.mojoz.metadata.TableDef
+import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.Type
 import org.yaml.snakeyaml.Yaml
 
 // TODO remove yaml table def

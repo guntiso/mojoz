@@ -6,11 +6,11 @@ import scala.io.Source
 import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
 import org.scalatest.matchers.should.Matchers
 
-import mojoz.metadata.in.JdbcTableDefLoader
-import mojoz.metadata.in.YamlMd
-import mojoz.metadata.in.YamlTableDefLoader
-import mojoz.metadata.out.SqlWriter
-import mojoz.metadata.out.YamlTableDefWriter
+import org.mojoz.metadata.in.JdbcTableDefLoader
+import org.mojoz.metadata.in.YamlMd
+import org.mojoz.metadata.in.YamlTableDefLoader
+import org.mojoz.metadata.out.SqlWriter
+import org.mojoz.metadata.out.YamlTableDefWriter
 
 class TableDefTests extends FlatSpec with Matchers {
   import TableDefTests._

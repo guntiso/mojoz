@@ -1,7 +1,7 @@
-package mojoz.metadata
+package org.mojoz.metadata
 package in
 
-import mojoz.metadata.ColumnDef.ColumnDefBase
+import org.mojoz.metadata.ColumnDef.ColumnDefBase
 import org.yaml.snakeyaml.Yaml
 import scala.collection.immutable._
 import scala.collection.JavaConverters._

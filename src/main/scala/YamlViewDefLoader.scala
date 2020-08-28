@@ -1,4 +1,4 @@
-package mojoz.metadata
+package org.mojoz.metadata
 package in
 
 import java.io.File
@@ -13,8 +13,8 @@ import scala.util.control.NonFatal
 
 import org.yaml.snakeyaml.Yaml
 
-import mojoz.metadata.in._
-import mojoz.metadata.io._
+import org.mojoz.metadata.in._
+import org.mojoz.metadata.io._
 import ViewDef._
 import FieldDef._
 

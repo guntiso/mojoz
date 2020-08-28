@@ -1,7 +1,7 @@
-package mojoz.metadata
+package org.mojoz.metadata
 
-import mojoz.metadata.in._
-import mojoz.metadata.ColumnDef.ColumnDefBase
+import org.mojoz.metadata.in._
+import org.mojoz.metadata.ColumnDef.ColumnDefBase
 import scala.collection.immutable._
 
 case class Type(name: String, length: Option[Int],

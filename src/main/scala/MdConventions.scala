@@ -1,8 +1,8 @@
-package mojoz.metadata.io
+package org.mojoz.metadata.io
 
-import mojoz.metadata._
-import mojoz.metadata.TableDef._
-import mojoz.metadata.out.SqlWriter
+import org.mojoz.metadata._
+import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.out.SqlWriter
 import scala.collection.immutable.Seq
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])

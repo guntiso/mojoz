@@ -1,8 +1,8 @@
-package mojoz.metadata.out
+package org.mojoz.metadata.out
 
-import mojoz.metadata._
-import mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
-import mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
+import org.mojoz.metadata._
+import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
+import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 
 class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],

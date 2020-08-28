@@ -1,9 +1,9 @@
-package mojoz.metadata
+package org.mojoz.metadata
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 
-import mojoz.metadata.in.YamlTableDefLoader
+import org.mojoz.metadata.in.YamlTableDefLoader
 import TableDef._
 import ColumnDef._
 import ViewDef._

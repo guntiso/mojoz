@@ -1,4 +1,4 @@
-package mojoz.metadata
+package org.mojoz.metadata
 
 import scala.collection.immutable.Seq
 
