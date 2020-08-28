@@ -30,7 +30,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     path = path, filter = _.getName endsWith "-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
-  val viewDefs = YamlViewDefLoader(tableMd, mdDefs).viewDefs
+  val viewDefs = YamlViewDefLoader(tableMd, mdDefs).plainViewDefs
   val xsdWriter = new XsdWriter(
     viewDefs,
     Naming.camelize _,
