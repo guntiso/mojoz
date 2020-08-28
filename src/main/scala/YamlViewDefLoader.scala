@@ -61,8 +61,8 @@ class YamlViewDefLoader(
       .getOrElse(sys.error("Base table not found, type: " + t.name)),
       nameToViewDef, t.name :: visited)
   val viewDefs = buildViewDefs(rawViewDefs).sortBy(_.name)
-  private[in] val nameToViewDef = viewDefs.map(t => (t.name, t)).toMap
-  val extendedViewDefs = viewDefs.map(t =>
+  private[in] val nameToPlainViewDef = viewDefs.map(t => (t.name, t)).toMap
+  val nameToViewDef: Map[String, ViewDef[FieldDef[Type]]] = viewDefs.map(t =>
     if (t.extends_ == null) t else {
       def maybeAssignTable(tableName: String)(f: FieldDef[Type]) = {
         if (tableName == null ||
@@ -80,7 +80,7 @@ class YamlViewDefLoader(
         if (v.extends_ == null) (v.fields.map(maybeAssignTable(tableName)) ++ fields)
         else
           baseFields(
-            nameToViewDef(v.extends_),
+            nameToPlainViewDef(v.extends_),
             (v.fields.map(maybeAssignTable(tableName)) ++ fields),
             v.table
           )
