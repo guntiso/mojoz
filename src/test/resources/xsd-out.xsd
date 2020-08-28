@@ -678,6 +678,8 @@
       </xs:element>
       <xs:element name="Type" nillable="true" minOccurs="0" type="xs:string">
       </xs:element>
+      <xs:element name="Type_" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="ListWrapperType">

@@ -160,5 +160,6 @@ class WithScalaKeywords extends Dto {
   var `case`: String = null
   var `final`: String = null
   var `type`: String = null
+  var type_ : String = null
 }
 // end

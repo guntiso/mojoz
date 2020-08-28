@@ -17,7 +17,7 @@ class ViewDefTests extends FlatSpec with Matchers {
       parts.toList
         .map(_.toLowerCase)
         .map(_.capitalize)
-        .mkString
+        .mkString + (if (name endsWith "_") "_" else "")
     }
     def camelizeLower(name: String) = camelize(name) match {
       case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>

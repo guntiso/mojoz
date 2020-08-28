@@ -159,6 +159,7 @@ case class WithScalaKeywords (
   `null`: String = null,
   `case`: String = null,
   `final`: String = null,
-  `type`: String = null
+  `type`: String = null,
+  type_ : String = null
 )
 // end

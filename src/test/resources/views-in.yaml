@@ -91,6 +91,7 @@ fields:
 - case  =
 - final =
 - type  =
+- type_ =
 
 name: with_join_to_parent
 table:  person c

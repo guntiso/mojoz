@@ -19,6 +19,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     "return", "sealed", "super", "this", "throw", "trait", "true", "try", "type",
     "val", "var", "while", "with", "yield")
   def nl = System.getProperty("line.separator")
+  def nonStickName(name: String) = if (name endsWith "_") s"$name " else name
   def scalaNameString(name: String) =
     if (SimpleIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
     else s"`$name`"
@@ -45,7 +46,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def initialValueString(col: FieldDef[Type]) =
     if (col.isCollection) "Nil" else "null"
   def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
-    s"var ${scalaNameString(scalaFieldName(fieldName))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+    s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   def scalaFieldStringWithHandler(fieldName: String, col: FieldDef[Type]) =
     try
       scalaFieldString(fieldName, col)
@@ -97,7 +98,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
 
 class ScalaCaseClassGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaGenerator(typeDefs) {
   override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
-    s"${scalaNameString(scalaFieldName(fieldName))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+    s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   override def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) = {
     val fieldsStrings = super.scalaFieldsStrings(viewDef)
     if (fieldsStrings.size < 2) fieldsStrings
