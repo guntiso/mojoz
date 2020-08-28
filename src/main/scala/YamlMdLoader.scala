@@ -271,7 +271,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
-    val table = tdMap.get("table").map(_.toString)
+    val table = tdMap.get("table").filter(_ != null).map(_.toString).filter(_ != "")
       .getOrElse(sys.error("Missing table name"))
     val comments = toList(tdMap.get("comments")) match {
       case Nil => null
