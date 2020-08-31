@@ -95,6 +95,7 @@ create table test_table2(
   name varchar2(1 char),
   description clob
 );
+comment on table test_table2 is '';
 
 create table test_table3(
   int_col numeric(9),
@@ -110,6 +111,7 @@ create table test_table3(
   boolean_col char check (boolean_col in ('N','Y')),
   bytes_col blob
 );
+comment on table test_table3 is ' ';
 
 create table test_table4(
   int_col numeric(9) default 6,

@@ -95,6 +95,7 @@ create table test_table2(
   name varchar(1),
   description varchar
 );
+comment on table test_table2 is '';
 
 create table test_table3(
   int_col integer,
@@ -110,6 +111,7 @@ create table test_table3(
   boolean_col bool,
   bytes_col bytea
 );
+comment on table test_table3 is ' ';
 
 create table test_table4(
   int_col integer default 6,

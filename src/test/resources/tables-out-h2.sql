@@ -97,6 +97,7 @@ create table test_table2(
   name varchar(1) not null,
   description clob
 );
+comment on table test_table2 is '';
 
 create table test_table3(
   int_col integer,
@@ -112,6 +113,7 @@ create table test_table3(
   boolean_col boolean,
   bytes_col blob
 );
+comment on table test_table3 is ' ';
 
 create table test_table4(
   int_col integer default 6,

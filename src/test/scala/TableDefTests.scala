@@ -86,6 +86,7 @@ class TableDefTests extends FlatSpec with Matchers {
         .filterNot(_.contains("diacritics"))
         .filterNot(_.contains("DIACRITICS"))
         .filterNot(_ startsWith "- col2                    1") // h2 empty comments roundtrip fails
+        .filterNot(_ ==   "comments: \"\"")                    // h2 empty comments roundtrip fails
         .mkString(nl)
     }
     skipSomeH2(expected) should be(skipSomeH2(produced))
