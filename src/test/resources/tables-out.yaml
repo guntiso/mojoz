@@ -35,7 +35,6 @@ columns:
 - name_rus                64            : Valsts nosaukums krieviski.
 - is_active             !
 - is_eu                 !               : Vai valsts ir Eiropas Savienības dalībvalsts
-pk: code
 
 table:    currency
 comments: Sistēmā uzturēto valūtu klasifikators.
@@ -45,7 +44,6 @@ columns:
 - name                  ! 100           : Valūtas nosaukums.
 - name_eng              ! 100           : Valūtas nosaukums angliski.
 - name_rus              ! 100           : Valūtas nosaukums krieviski.
-pk: code
 
 table:    person
 columns:

@@ -94,26 +94,14 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def toExternalPk(tableDef: TableDef[ColumnDef[Type]]) = {
     val cols = tableDef.cols.map(_.name)
     // TODO pk: <missing>!
-    // TODO overridable isDefaultPkName(name), use ConstraintNamingRules!
-    def isDefaultPkName(name: String) =
-      name == null || name.equalsIgnoreCase("pk_" + tableDef.name)
-    if (!tableDef.pk.isDefined) None
-    else if (cols.filter(isIdName).size == 1)
-      tableDef.pk match {
-        case Some(DbIndex(name, List(id))) if isIdName(id) &&
-          isDefaultPkName(name) => None
-        case pk => pk
-      }
-    else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
-      tableDef.pk match {
-        case Some(DbIndex(name,
-          List(col1, col2))) if (col1.toLowerCase, col2.toLowerCase) ==
-          (cols(0).toLowerCase, cols(1).toLowerCase) &&
-          isDefaultPkName(name) => None
-        case pk => pk
-      }
-    else tableDef.pk
-  }.map(toExternalIdx(naming.pkName(tableDef.name)))
+    val defaultPkName = naming.pkName(tableDef.name)
+    def pkNormalize(pk: Option[DbIndex]) = pk.map { pk =>
+      if (pk.name == defaultPkName) pk.copy(name = null) else pk
+    }
+    val defaultPk = fromExternalPk(tableDef.copy(pk = None))
+    (if (pkNormalize(tableDef.pk) != pkNormalize(defaultPk)) tableDef.pk else None)
+      .map(toExternalIdx(defaultPkName))
+  }
 
   def toExternalUk(table: TableDef[ColumnDef[Type]]) = {
     if (table.pk.isDefined) {
