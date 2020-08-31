@@ -356,7 +356,7 @@
   </xs:complexType>
   <xs:complexType name="ResolverTest2Type">
     <xs:annotation>
-      <xs:documentation>Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu</xs:documentation>
+      <xs:documentation></xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name="Account">
@@ -387,7 +387,7 @@
   </xs:complexType>
   <xs:complexType name="ResolverTest3Type">
     <xs:annotation>
-      <xs:documentation>Klienta norēķina konts</xs:documentation>
+      <xs:documentation> </xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name="Id" type="xs:long">

@@ -174,12 +174,14 @@ fields:
 - father = father.name || father.surname -> father_id = person[name || surname = _]{id}
 
 name: resolver_test_2
+comments: ""
 table: account_currency
 fields:
 - account = account.billing_account -> account_id
 - currency.name -> currency_code
 
 name: resolver_test_3
+comments: " "
 table: account
 fields:
 - id

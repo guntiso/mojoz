@@ -101,12 +101,14 @@ fields:
 
 name:     resolver_test_2
 table:    account_currency
+comments: ""
 fields:
 - account                               = account.billing_account -> account_id
 - currency.name                         -> currency_code
 
 name:     resolver_test_3
 table:    account
+comments: " "
 fields:
 - id
 - code                                  = -> bank_id
