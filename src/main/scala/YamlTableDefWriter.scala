@@ -99,7 +99,7 @@ class YamlTableDefWriter {
         wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Some("columns:"),
       Option(tableDef.cols.map(f => "- " + toYaml(f)).mkString("\n")),
-      tableDef.pk.map(pk => "pk: " + toYaml(pk)),
+      tableDef.pk.map { pk => if (pk == null) "pk:" else s"pk: ${toYaml(pk)}" },
       Option(tableDef.uk).filter(_.size > 0).map(x => "uk:"),
       Option(tableDef.uk).filter(_.size > 0)
         .map(_.map(i => "- " + toYaml(i)).mkString("\n")),

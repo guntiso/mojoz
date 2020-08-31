@@ -146,6 +146,11 @@ create table test_table7(
   key2 varchar(20)
 );
 
+create table test_table8(
+  id bigint,
+  name varchar(50)
+);
+
 alter table account add constraint pk_account primary key (id);
 
 alter table bank add constraint pk_bank primary key (id);

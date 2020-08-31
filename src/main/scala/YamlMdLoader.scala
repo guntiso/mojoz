@@ -285,8 +285,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       }
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
-    val pk_list = toList(tdMap.get("pk"))
-      .map(loadYamlIndexDef)
+    val pk_list = tdMap.get("pk") match {
+      case Some(null) => List(null)
+      case x => toList(x).map(loadYamlIndexDef)
+    }
     if (pk_list.size > 1)
       throw new RuntimeException(
         "Multiple primary keys are not allowed, composite key columns should be comma-separated")

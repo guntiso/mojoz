@@ -146,6 +146,11 @@ create table test_table7(
   key2 varchar2(20 char)
 );
 
+create table test_table8(
+  id numeric(18),
+  name varchar2(50 char)
+);
+
 alter table account add constraint pk_account primary key (id);
 
 alter table bank add constraint pk_bank primary key (id);

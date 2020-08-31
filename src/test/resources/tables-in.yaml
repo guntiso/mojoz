@@ -148,3 +148,9 @@ columns:
 - key2                   20
 pk:
 - key1, key2
+
+table:    test_table8
+columns:
+- id
+- name                   50
+pk:

@@ -30,7 +30,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def fromExternalPk(tableDef: TableDef[ColumnDef[_]]) = {
     import scala.language.existentials
     val cols = tableDef.cols.map(_.name)
-    if (tableDef.pk.isDefined) tableDef.pk
+    if (tableDef.pk.isDefined) tableDef.pk.filter(_ != null)
     else if (cols.filter(isIdName).size == 1)
       Some(DbIndex(null, cols.filter(isIdName)))
     else if (cols.filter(isCodeName).size == 1)
@@ -93,14 +93,13 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   }
   def toExternalPk(tableDef: TableDef[ColumnDef[Type]]) = {
     val cols = tableDef.cols.map(_.name)
-    // TODO pk: <missing>!
     val defaultPkName = naming.pkName(tableDef.name)
     def pkNormalize(pk: Option[DbIndex]) = pk.map { pk =>
       if (pk.name == defaultPkName) pk.copy(name = null) else pk
     }
     val defaultPk = fromExternalPk(tableDef.copy(pk = None))
-    (if (pkNormalize(tableDef.pk) != pkNormalize(defaultPk)) tableDef.pk else None)
-      .map(toExternalIdx(defaultPkName))
+    (if (pkNormalize(tableDef.pk) != pkNormalize(defaultPk))
+      (if (tableDef.pk.isDefined) tableDef.pk.map(toExternalIdx(defaultPkName)) else Some(null)) else None)
   }
 
   def toExternalUk(table: TableDef[ColumnDef[Type]]) = {
