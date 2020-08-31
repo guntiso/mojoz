@@ -61,10 +61,14 @@ class YamlViewDefWriter {
       else ""
     val defString = List(
       (if (hasAlias) alias else name, 22),
-      (Seq(
-        type_.nullable map (b => if (b) "?" else "!") getOrElse "",
-        Some(isCollection).filter(x => x).map(_ => "*") getOrElse ""
-      ).mkString,  2),
+      ((type_.nullable, isCollection) match {
+        case (Some(true),  false) => "?"
+        case (Some(true),  true)  => "*"
+        case (Some(false), false) => "!"
+        case (Some(false), true)  => "+"
+        case (None,        false) => ""
+        case (None,        true)  => "*"
+      },  2),
       (joinString,  0),
       (typeString, 12),
       (enumString, 2))

@@ -636,6 +636,38 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithJoinToParentPlusType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Name">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="51"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Parents" minOccurs="1" maxOccurs="unbounded" type="tns:WithJoinToParentPlusParentsType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithJoinToParentPlusParentsType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Name">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="51"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithNamedInlineViewType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">

@@ -207,6 +207,19 @@ fields:
 - id
 - name
 
+name:     with_join_to_parent_plus
+table:    person c
+fields:
+- id
+- name
+- parents               + [p.id in (c.mother_id, c.father_id)] with_join_to_parent_plus_parents
+
+name:     with_join_to_parent_plus_parents
+table:    person p
+fields:
+- id
+- name
+
 name:     with_named_inline_view
 table:
 fields:

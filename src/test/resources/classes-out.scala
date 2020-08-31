@@ -139,6 +139,15 @@ class WithJoinToParentParents extends DtoWithId {
   var id: java.lang.Long = null
   var name: String = null
 }
+class WithJoinToParentPlus extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+  var parents: List[WithJoinToParentPlusParents] = Nil
+}
+class WithJoinToParentPlusParents extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
 class WithNamedInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null
