@@ -67,7 +67,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
   private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
     val required = !col.nullable
     val maxOccurs = getMaxOccurs(col)
-    val minOccurs = if (required) (if (col.isCollection) "1" else null) else "0"
+    val minOccurs = if (required) null else "0" // minOccurs and maxOccurs default to 1
     val nillable = if (required || col.isCollection) null else "true"
     val typeName =
       if (col.type_.isComplexType) "tns:" + xsdComplexTypeName(col.type_.name)

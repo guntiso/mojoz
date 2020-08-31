@@ -649,7 +649,7 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="Parents" minOccurs="1" maxOccurs="unbounded" type="tns:WithJoinToParentPlusParentsType">
+      <xs:element name="Parents" maxOccurs="unbounded" type="tns:WithJoinToParentPlusParentsType">
       </xs:element>
     </xs:sequence>
   </xs:complexType>
