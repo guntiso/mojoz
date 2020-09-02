@@ -11,7 +11,7 @@ class YamlViewDefWriter {
   // TODO extract yaml processing
   // TODO inline views
   val MaxLineLength = 100
-  private val yamlChA = ":#"
+  private val yamlChA = ":#\t\r\n" // TODO more escapes
     .toCharArray.map(_.toString).toSet
   private val yamlChB = ",[]{}&*!|>'%@`\" "
     .toCharArray.map(_.toString).toSet
@@ -23,7 +23,13 @@ class YamlViewDefWriter {
          yamlChB.exists(s startsWith _) ||
          yamlChC.exists(s endsWith   _) ||
          s == ""                        ))
-      "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+      "\"" +
+       s.replace("\\", "\\\\")
+        .replace("\t", "\\t")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+        .replace("\"", "\\\"") +
+      "\""
     else s
 
   def toYaml(field: FieldDef[IoColumnType]) = {

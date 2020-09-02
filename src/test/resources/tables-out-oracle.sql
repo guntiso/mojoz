@@ -124,6 +124,10 @@ create table test_table4(
   boolean_col_f char default 'N' check (boolean_col_f in ('N','Y')),
   boolean_col_t char default 'Y' check (boolean_col_t in ('N','Y'))
 );
+comment on table test_table4 is 'Multiline comments with
+line 2
+and line 3
+';
 
 create table test_table5(
   bank_id numeric(18),

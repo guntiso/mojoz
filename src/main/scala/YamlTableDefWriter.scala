@@ -8,7 +8,7 @@ import org.mojoz.metadata.io._
 
 class YamlTableDefWriter {
   val MaxLineLength = 100
-  private val yamlChA = ":#"
+  private val yamlChA = ":#\t\r\n" // TODO more escapes
     .toCharArray.map(_.toString).toSet
   private val yamlChB = ",[]{}&*!|>'%@`\" "
     .toCharArray.map(_.toString).toSet
@@ -20,7 +20,13 @@ class YamlTableDefWriter {
          yamlChB.exists(s startsWith _) ||
          yamlChC.exists(s endsWith   _) ||
          s == ""                        ))
-      "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+      "\"" +
+       s.replace("\\", "\\\\")
+        .replace("\t", "\\t")
+        .replace("\r", "\\r")
+        .replace("\n", "\\n")
+        .replace("\"", "\\\"") +
+      "\""
     else s
   def toYaml(colDef: ColumnDef[IoColumnType]) = {
     import colDef._

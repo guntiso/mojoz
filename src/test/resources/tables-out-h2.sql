@@ -126,6 +126,10 @@ create table test_table4(
   boolean_col_f boolean default false,
   boolean_col_t boolean default true
 );
+comment on table test_table4 is 'Multiline comments with
+line 2
+and line 3
+';
 
 create table test_table5(
   bank_id bigint,

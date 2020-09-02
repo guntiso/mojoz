@@ -111,6 +111,7 @@ columns:
 - bytes_col               bytes
 
 table:    test_table4
+comments: "Multiline comments with\nline 2\nand line 3\n"
 columns:
 - int_col                 int           = 6
 - int6_col7               int 6         = 7
