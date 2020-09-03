@@ -148,6 +148,8 @@ create table test_table5(
   check (enum in ('list1', 'list2')),
   check (enum_ws in ('list 1', 'list 2'))
 );
+comment on table test_table5 is 'Alternative multiline comments
+with line 2';
 
 create table test_table6(
   id bigint not null,

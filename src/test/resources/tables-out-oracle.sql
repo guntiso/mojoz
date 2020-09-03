@@ -139,6 +139,8 @@ create table test_table5(
   enum varchar2(5 char) check (enum in ('list1', 'list2')),
   enum_ws varchar2(6 char) check (enum_ws in ('list 1', 'list 2'))
 );
+comment on table test_table5 is 'Alternative multiline comments
+with line 2';
 
 create table test_table6(
   id numeric(18),

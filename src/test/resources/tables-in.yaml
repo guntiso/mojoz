@@ -127,6 +127,9 @@ columns:
 - boolean_col_t          boolean       = true
 
 table:    test_table5
+comments:
+- Alternative multiline comments
+- with line 2
 columns:
 - bank.id
 - enum_for_int           int  (-1, 0, 1)
