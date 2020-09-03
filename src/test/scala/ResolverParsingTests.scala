@@ -178,6 +178,6 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t9, "father").saveTo should be("father_id")
     field(t9, "father").resolver should be(null)
   }
-  def field(v: ViewDef[FieldDef[Type]], n: String) =
+  def field(v: MojozViewDef, n: String) =
     v.fields.filter(f => Option(f.alias).getOrElse(f.name) == n).head
 }

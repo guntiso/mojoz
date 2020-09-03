@@ -1,13 +1,14 @@
-package org.mojoz.metadata
+package org.mojoz
 
-import scala.collection.immutable.Seq
+import org.mojoz.metadata.io.IoColumnType
 
-package object in {
-  case class Join(alias: String, table: String, columns: Seq[ColumnDef[Type]])
-  /** basetable and joins to parsed joins */
-  type JoinsParser = (String, Seq[String]) => Seq[Join]
-}
+package object metadata {
+  type MojozFieldDef = FieldDef[Type]
+  type MojozViewDef = ViewDef[MojozFieldDef]
 
-package object io {
-  type SimplePatternMdConventions = MdConventions.SimplePatternMdConventions
+  type MojozColumnDef = ColumnDef[Type]
+  type MojozTableDef = TableDef[MojozColumnDef]
+
+  type IoColumnDef = ColumnDef[IoColumnType]
+  type IoTableDef = TableDef[IoColumnDef]
 }

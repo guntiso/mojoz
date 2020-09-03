@@ -28,7 +28,7 @@ class YamlTableDefWriter {
         .replace("\"", "\\\"") +
       "\""
     else s
-  def toYaml(colDef: ColumnDef[IoColumnType]) = {
+  def toYaml(colDef: IoColumnDef) = {
     import colDef._
     val t = colDef.type_.type_ getOrElse new Type(null, None, None, None, false)
     val typeString = List(
@@ -99,7 +99,7 @@ class YamlTableDefWriter {
       Option(ref.onDeleteAction).map("on delete " + _),
       Option(ref.onUpdateAction).map("on update " + _))
       .flatMap(x => x).mkString(" ")
-  def toYaml(tableDef: TableDef[ColumnDef[IoColumnType]]): String =
+  def toYaml(tableDef: IoTableDef): String =
     List(Some(tableDef.name).map("table:    " + _),
       Option(tableDef.comments).map(c =>
         wrapped(escapeYamlValue(c), "comments:", " " * 10)),
@@ -121,7 +121,7 @@ class YamlTableDefWriter {
       Option(tableDef.extras).filter(!_.isEmpty) // TODO map extras - all types
         .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")))
       .flatMap(x => x).mkString("\n")
-  def toYaml(tableDefs: Seq[TableDef[ColumnDef[IoColumnType]]]): String =
+  def toYaml(tableDefs: Seq[IoTableDef]): String =
     tableDefs.map(toYaml).mkString("\n\n") +
       (if (tableDefs.size > 0) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
@@ -140,7 +140,7 @@ class YamlTableDefWriter {
 }
 
 object YamlTableDefWriter {
-  def toYaml(tableDefs: Seq[TableDef[ColumnDef[Type]]],
-    conventions: (TableDef[ColumnDef[Type]]) => TableDef[ColumnDef[IoColumnType]] = MdConventions.toExternal) =
+  def toYaml(tableDefs: Seq[MojozTableDef],
+    conventions: (MojozTableDef) => IoTableDef = MdConventions.toExternal) =
     (new YamlTableDefWriter).toYaml(tableDefs.map(conventions))
 }

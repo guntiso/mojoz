@@ -1,4 +1,5 @@
-package org.mojoz.metadata.in
+package org.mojoz.metadata
+package in
 
 import java.lang.Integer
 import java.sql.Connection
@@ -312,7 +313,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def toMojozTypeTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): TableDef[ColumnDef[Type]] =
+  def toMojozTypeTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
 

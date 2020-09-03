@@ -45,9 +45,9 @@ class YamlViewDefLoader(
         "Duplicate view definitions: " + duplicateNames.mkString(", "))
     rawViewDefs.map(t => (t.name, t)).toMap
   }
-  private def isSimpleType(f: FieldDef[Type]) =
+  private def isSimpleType(f: MojozFieldDef) =
     f.type_ == null || !f.type_.isComplexType
-  private def isComplexType(f: FieldDef[Type]) =
+  private def isComplexType(f: MojozFieldDef) =
     f.type_ != null && f.type_.isComplexType
   @tailrec
   private def baseTable(t: ViewDef[_],
@@ -60,11 +60,11 @@ class YamlViewDefLoader(
     else baseTable(nameToViewDef.get(t.extends_)
       .getOrElse(sys.error("Base table not found, type: " + t.name)),
       nameToViewDef, t.name :: visited)
-  val plainViewDefs = buildViewDefs(rawViewDefs).sortBy(_.name)
+  val plainViewDefs: List[MojozViewDef] = buildViewDefs(rawViewDefs).sortBy(_.name)
   private[in] val nameToPlainViewDef = plainViewDefs.map(t => (t.name, t)).toMap
-  val nameToViewDef: Map[String, ViewDef[FieldDef[Type]]] = plainViewDefs.map(t =>
+  val nameToViewDef: Map[String, MojozViewDef] = plainViewDefs.map(t =>
     if (t.extends_ == null) t else {
-      def maybeAssignTable(tableName: String)(f: FieldDef[Type]) = {
+      def maybeAssignTable(tableName: String)(f: MojozFieldDef) = {
         if (tableName == null ||
             f.table != null || f.saveTo != null || f.isExpression || f.isCollection ||
             f.type_ != null && f.type_.isComplexType)
@@ -74,9 +74,9 @@ class YamlViewDefLoader(
       }
       @tailrec
       def baseFields(
-          v: ViewDef[FieldDef[Type]],
-          fields: Seq[FieldDef[Type]],
-          tableName: String): Seq[FieldDef[Type]] =
+          v: MojozViewDef,
+          fields: Seq[MojozFieldDef],
+          tableName: String): Seq[MojozFieldDef] =
         if (v.extends_ == null) (v.fields.map(maybeAssignTable(tableName)) ++ fields)
         else
           baseFields(
@@ -87,7 +87,7 @@ class YamlViewDefLoader(
       t.copy(fields = baseFields(t, Nil, null))
     })
     .map(t => (t.name, t)).toMap
-  def loadRawViewDefs(defs: String): List[ViewDef[FieldDef[Type]]] = {
+  def loadRawViewDefs(defs: String): List[MojozViewDef] = {
     Option((new Yaml).load(defs))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
@@ -97,7 +97,7 @@ class YamlViewDefLoader(
       .map(loadRawViewDefs)
       .getOrElse(Nil)
   }
-  def loadRawViewDefs(tdMap: Map[String, Any]): List[ViewDef[FieldDef[Type]]] = {
+  def loadRawViewDefs(tdMap: Map[String, Any]): List[MojozViewDef] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
       case null => null
       case Nil => ""
@@ -236,7 +236,7 @@ class YamlViewDefLoader(
   }
   /** can be overriden to send cardinality to extras - for maxOccurs custom processing */
   protected def transformRawFieldDef(
-    yfd: YamlFieldDef, mojozFieldDef: FieldDef[Type]): FieldDef[Type] = mojozFieldDef
+    yfd: YamlFieldDef, mojozFieldDef: MojozFieldDef): MojozFieldDef = mojozFieldDef
   private def checkViewDefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
@@ -263,7 +263,7 @@ class YamlViewDefLoader(
     td foreach checkRepeatingFieldNames
     // check field names not repeating on extends? or overwrite instead?
   }
-  private def checkTypedefMapping(td: Seq[ViewDef[FieldDef[Type]]]) = {
+  private def checkTypedefMapping(td: Seq[MojozViewDef]) = {
     val m = td.map(t => (t.name, t)).toMap
     td foreach { t =>
       t.fields.foreach { f =>
@@ -275,8 +275,8 @@ class YamlViewDefLoader(
       }
     }
   }
-  private def buildViewDefs(rawViewDefs: Seq[ViewDef[FieldDef[Type]]]) = {
-    val rawTypesMap: Map[String, ViewDef[FieldDef[Type]]] = rawViewDefs.map(t => (t.name, t)).toMap
+  private def buildViewDefs(rawViewDefs: Seq[MojozViewDef]) = {
+    val rawTypesMap: Map[String, MojozViewDef] = rawViewDefs.map(t => (t.name, t)).toMap
 
     def inheritTable[T](t: ViewDef[T]) =
       if (t.table != null) t
@@ -298,7 +298,7 @@ class YamlViewDefLoader(
       case (seq1, seq2) => seq1 ++ seq2
     }
 
-    def mergeSeqs(t: ViewDef[FieldDef[Type]], base: ViewDef[FieldDef[Type]]) =
+    def mergeSeqs(t: MojozViewDef, base: MojozViewDef) =
       t.copy(
         joins = mergeStringSeqs(base.joins, t.joins),
         filter = mergeStringSeqs(base.filter, t.filter),
@@ -307,7 +307,7 @@ class YamlViewDefLoader(
         orderBy = mergeStringSeqs(base.orderBy, t.orderBy),
         extras = base.extras -- uninheritableExtras ++ t.extras)
 
-    def inheritSeqs(t: ViewDef[FieldDef[Type]]): ViewDef[FieldDef[Type]] =
+    def inheritSeqs(t: MojozViewDef): MojozViewDef =
       if (t.extends_ == null) t
       else mergeSeqs(t, inheritSeqs(rawTypesMap(t.extends_)))
 
@@ -323,13 +323,13 @@ class YamlViewDefLoader(
       t.copy(table = table, tableAlias = tableAlias)
     }
 
-    def resolveFieldNamesAndTypes(t: ViewDef[FieldDef[Type]]) =
+    def resolveFieldNamesAndTypes(t: MojozViewDef) =
       try resolveFieldNamesAndTypes_(t) catch {
         case NonFatal(ex) =>
           throw new RuntimeException("Failed to resolve field names and types for " + t.name, ex)
       }
 
-    def resolveFieldNamesAndTypes_(t: ViewDef[FieldDef[Type]]) = {
+    def resolveFieldNamesAndTypes_(t: MojozViewDef) = {
       lazy val joins = parseJoins(
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
@@ -395,7 +395,7 @@ class YamlViewDefLoader(
         overwrite.totalDigits orElse base.totalDigits,
         overwrite.fractionDigits orElse base.fractionDigits,
         false)
-      def resolveTypeFromDbMetadata(f: FieldDef[Type]) = {
+      def resolveTypeFromDbMetadata(f: MojozFieldDef) = {
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.typeFromExternal(f.name, Option(f.type_)))
@@ -420,7 +420,7 @@ class YamlViewDefLoader(
             comments = Option(f.comments) getOrElse col.comments)
         }
       }
-      def cleanExtras(f: FieldDef[Type]) =
+      def cleanExtras(f: MojozFieldDef) =
         if  (f.extras != null && f.extras.contains(MojozExplicitNullability))
              f.copy(extras = Option(f.extras).map(_ - MojozExplicitNullability).filterNot(_.isEmpty).orNull)
         else f

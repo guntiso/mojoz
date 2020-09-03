@@ -1,9 +1,9 @@
-package org.mojoz.metadata.out
+package org.mojoz.metadata
+package out
 
 import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 
-import org.mojoz.metadata._
 import org.mojoz.metadata.io._
 
 class YamlViewDefWriter {

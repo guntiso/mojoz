@@ -1,4 +1,5 @@
-package org.mojoz.metadata.out
+package org.mojoz.metadata
+package out
 
 import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import org.mojoz.metadata.Type
@@ -25,7 +26,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     else s"`$name`"
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
-  def scalaFieldTypeName(field: FieldDef[Type]) = {
+  def scalaFieldTypeName(field: MojozFieldDef) = {
     val itemTypeName = scalaTypeName(field.type_)
     if (field.isCollection) scalaCollectionTypeName(itemTypeName)
     else itemTypeName
@@ -43,37 +44,37 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaSimpleTypeName(t: Type) =
     typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
-  def initialValueString(col: FieldDef[Type]) =
+  def initialValueString(col: MojozFieldDef) =
     if (col.isCollection) "Nil" else "null"
-  def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
+  def scalaFieldString(fieldName: String, col: MojozFieldDef) =
     s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  def scalaFieldStringWithHandler(fieldName: String, col: FieldDef[Type]) =
+  def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDef) =
     try
       scalaFieldString(fieldName, col)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process field: $fieldName", ex)
     }
-  def scalaClassExtends(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaClassExtends(viewDef: MojozViewDef) =
     Option(viewDef.extends_).filter(_ != "").map(scalaClassName)
-  def scalaClassTraits(viewDef: ViewDef[FieldDef[Type]]): Seq[String] = Seq()
+  def scalaClassTraits(viewDef: MojozViewDef): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaFieldsStrings(viewDef: MojozViewDef) =
     viewDef.fields.map(f => scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
-  def scalaFieldsStringsWithHandler(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaFieldsStringsWithHandler(viewDef: MojozViewDef) =
     try
       scalaFieldsStrings(viewDef)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process view: ${viewDef.name}", ex)
     }
-  def scalaFieldsString(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaFieldsString(viewDef: MojozViewDef) =
     scalaFieldsStringsWithHandler(viewDef)
       .map(scalaFieldsIndent + _ + nl).mkString
-  def scalaBody(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaBody(viewDef: MojozViewDef) =
     scalaFieldsString(viewDef) + Option(scalaBodyExtra(viewDef)).getOrElse("")
-  def scalaBodyExtra(viewDef: ViewDef[FieldDef[Type]]) = ""
-  def scalaExtendsString(viewDef: ViewDef[FieldDef[Type]]) =
+  def scalaBodyExtra(viewDef: MojozViewDef) = ""
+  def scalaExtendsString(viewDef: MojozViewDef) =
     Option(scalaClassTraits(viewDef))
       .map(scalaClassExtends(viewDef).toList ::: _.toList)
       .map(t => t.filter(_ != null).filter(_ != ""))
@@ -81,33 +82,33 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
       .map(_ map scalaNameString)
       .map(_.mkString(" extends ", " with ", ""))
       .getOrElse("")
-  def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "class"
-  def scalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+  def scalaPrefix(viewDef: MojozViewDef) = "class"
+  def scalaClassString(viewDef: MojozViewDef) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef)}}"
   }
-  def scalaObjectString(viewDef: ViewDef[FieldDef[Type]]): String = ""
-  def scalaClassAndObjectString(viewDef: ViewDef[FieldDef[Type]]): String =
+  def scalaObjectString(viewDef: MojozViewDef): String = ""
+  def scalaClassAndObjectString(viewDef: MojozViewDef): String =
     Seq(scalaClassString(viewDef), scalaObjectString(viewDef))
       .filter(_ != null).filter(_ != "").mkString(nl)
   def generateScalaSource(
-    headers: Seq[String], viewDefs: Seq[ViewDef[FieldDef[Type]]], footers: Seq[String]) =
+    headers: Seq[String], viewDefs: Seq[MojozViewDef], footers: Seq[String]) =
     List(headers, viewDefs map scalaClassAndObjectString, footers)
       .flatMap(x => x)
       .mkString("", nl, nl)
 }
 
 class ScalaCaseClassGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaGenerator(typeDefs) {
-  override def scalaFieldString(fieldName: String, col: FieldDef[Type]) =
+  override def scalaFieldString(fieldName: String, col: MojozFieldDef) =
     s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  override def scalaFieldsStrings(viewDef: ViewDef[FieldDef[Type]]) = {
+  override def scalaFieldsStrings(viewDef: MojozViewDef) = {
     val fieldsStrings = super.scalaFieldsStrings(viewDef)
     if (fieldsStrings.size < 2) fieldsStrings
     else (fieldsStrings.reverse.head :: fieldsStrings.reverse.tail.map(_ + ",").toList).reverse
   }
   // FIXME extends for case classes?
-  override def scalaPrefix(viewDef: ViewDef[FieldDef[Type]]) = "case class"
-  override def scalaClassExtends(viewDef: ViewDef[FieldDef[Type]]) = None
-  override def scalaClassString(viewDef: ViewDef[FieldDef[Type]]) = {
+  override def scalaPrefix(viewDef: MojozViewDef) = "case class"
+  override def scalaClassExtends(viewDef: MojozViewDef) = None
+  override def scalaClassString(viewDef: MojozViewDef) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef)})" +
       Option(scalaBodyExtra(viewDef)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }

@@ -20,7 +20,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
     isIdName(name) || isIdRefName(name)
-  def fromExternal(table: TableDef[ColumnDef[IoColumnType]]): TableDef[ColumnDef[Type]] = {
+  def fromExternal(table: IoTableDef): MojozTableDef = {
     val pk = fromExternalPk(table)
     table.copy(
       cols = table.cols.map(col => fromExternal(col, pk)),
@@ -39,7 +39,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       Some(DbIndex(null, cols))
     else None
   }
-  def fromExternal(col: ColumnDef[IoColumnType], pk: Option[DbIndex]): ColumnDef[Type] = {
+  def fromExternal(col: IoColumnDef, pk: Option[DbIndex]): MojozColumnDef = {
     val typ = typeFromExternal(col.name, col.type_.type_)
     val nullable = nullableFromExternal(col.name, col.type_.nullable, pk)
     val dbDefault = (typ.name, col.dbDefault) match {
@@ -75,7 +75,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   }
   def nullableFromExternal(name: String, nullable: Option[Boolean], pk: Option[DbIndex]): Boolean =
     nullable getOrElse !pk.exists(_.cols contains name)
-  def toExternal(table: TableDef[ColumnDef[Type]]): TableDef[ColumnDef[IoColumnType]] =
+  def toExternal(table: MojozTableDef): IoTableDef =
     table.copy(
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table),
@@ -91,7 +91,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     case idx if idx.name == defaultName => idx.copy(name = null)
     case idx => idx
   }
-  def toExternalPk(tableDef: TableDef[ColumnDef[Type]]) = {
+  def toExternalPk(tableDef: MojozTableDef) = {
     val cols = tableDef.cols.map(_.name)
     val defaultPkName = naming.pkName(tableDef.name)
     def pkNormalize(pk: Option[DbIndex]) = pk.map { pk =>
@@ -102,29 +102,29 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
       (if (tableDef.pk.isDefined) tableDef.pk.map(toExternalIdx(defaultPkName)) else Some(null)) else None)
   }
 
-  def toExternalUk(table: TableDef[ColumnDef[Type]]) = {
+  def toExternalUk(table: MojozTableDef) = {
     if (table.pk.isDefined) {
       val pkCols = toExternalIdx("")(table.pk.get).cols
       table.uk.filter(toExternalIdx("")(_).cols != pkCols)
     } else table.uk
   }.map(uk => toExternalIdx(naming.ukName(table.name, uk))(uk))
 
-  def toExternalIdx(table: TableDef[ColumnDef[Type]]): Seq[DbIndex] =
+  def toExternalIdx(table: MojozTableDef): Seq[DbIndex] =
     table.idx.map(idx => toExternalIdx(naming.idxName(table.name, idx))(idx))
 
-  def toExternalRefs(table: TableDef[ColumnDef[Type]]) = table.refs
+  def toExternalRefs(table: MojozTableDef) = table.refs
     .map(r => if (r.onDeleteAction == "no action") r.copy(onDeleteAction = null) else r)
     .map(r => if (r.onUpdateAction == "no action") r.copy(onUpdateAction = null) else r)
     .map(r => if (r.name == naming.fkName(table.name, r)) r.copy(name = null) else r)
     .filter(r => r.cols.size > 1 ||
       r.onDeleteAction != null || r.onUpdateAction != null || r.name != null)
 
-  def nullableOpt(name: String, nullable: Boolean, table: TableDef[ColumnDef[Type]]) = (name, nullable) match {
+  def nullableOpt(name: String, nullable: Boolean, table: MojozTableDef) = (name, nullable) match {
       case (name, false) if table.pk.exists(_.cols contains name) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
   }
-  def toExternal(table: TableDef[ColumnDef[Type]], col: ColumnDef[Type]): ColumnDef[IoColumnType] = {
+  def toExternal(table: MojozTableDef, col: MojozColumnDef): IoColumnDef = {
     val nullOpt = nullableOpt(col.name, col.nullable, table)
     val dbDefault = (col.type_.name, col.dbDefault) match {
       case (_, null) => null
@@ -183,8 +183,8 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
         case _ => Option(type_)
       }
   }
-  def toExternal(view: ViewDef[FieldDef[Type]], tableMetadata: TableMetadata[TableDef[ColumnDef[Type]]]) = {
-    def mapField(f: FieldDef[Type]) = {
+  def toExternal(view: MojozViewDef, tableMetadata: TableMetadata[MojozTableDef]) = {
+    def mapField(f: MojozFieldDef) = {
       import f._
       if (table == null || type_.isComplexType)
         f.copy(type_ = new IoColumnType(

@@ -1,4 +1,5 @@
-package org.mojoz.metadata.in
+package org.mojoz.metadata
+package in
 
 import java.io.File
 import scala.annotation.tailrec
@@ -151,7 +152,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       overwrite.totalDigits orElse base.totalDigits,
       overwrite.fractionDigits orElse base.fractionDigits,
       false)
-    def baseRefChain(col: ColumnDef[Type], visited: List[String]): List[String] = {
+    def baseRefChain(col: MojozColumnDef, visited: List[String]): List[String] = {
       def chain(ref: String) =
         if (visited contains ref)
           sys.error("Cyclic column refs: " +
@@ -163,8 +164,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       else if (col.name contains ".") chain(col.name)
       else visited
     }
-    val tableDefs = rawTableDefs map { r =>
-      val resolvedColsAndRefs: Seq[(ColumnDef[Type], Seq[Ref])] = r.cols.map { c =>
+    val tableDefs: Seq[MojozTableDef] = rawTableDefs map { r =>
+      val resolvedColsAndRefs: Seq[(MojozColumnDef, Seq[Ref])] = r.cols.map { c =>
         val refChain = baseRefChain(c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {

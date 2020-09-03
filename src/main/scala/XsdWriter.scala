@@ -5,10 +5,10 @@ import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 
-class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
+class XsdWriter(viewDefs: Seq[MojozViewDef],
     xsdName: String => String = identity,
     xsdComplexTypeName: String => String = identity,
-    createListWrapper: ViewDef[FieldDef[Type]] => Boolean = _.name endsWith "_list_row",
+    createListWrapper: MojozViewDef => Boolean = _.name endsWith "_list_row",
     listWrapperBaseName: String = "list_wrapper",
     listWrapperName: String => String =
       Option(_).map(_.replace("_list_row", "_list_wrapper")).orNull,
@@ -53,7 +53,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       .toMap
   def xsdSimpleTypeName(t: Type) =
     simpleTypeNameToXsdSimpleTypeName.get(t.name).getOrElse(sys.error("Unexpected type for xsd writer: " + t))
-  protected def getMaxOccurs(col: FieldDef[Type]): String = {
+  protected def getMaxOccurs(col: MojozFieldDef): String = {
     if (col.isCollection) "unbounded" else null
     /*
     val maxOccurs = Option(col.maxOccurs) getOrElse {
@@ -64,7 +64,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
     }
     */
   }
-  private def createElement(elName: String, col: FieldDef[Type], level: Int = 0) = {
+  private def createElement(elName: String, col: MojozFieldDef, level: Int = 0) = {
     val required = !col.nullable
     val maxOccurs = getMaxOccurs(col)
     val minOccurs = if (required) null else "0" // minOccurs and maxOccurs default to 1
@@ -110,7 +110,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
         """)
     }
   }
-  def complexType(viewDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) = {
+  def complexType(viewDef: MojozViewDef, indentLevel: Int = 1) = {
     def createFields(level: Int) = {
       // TODO nillable="true" minOccurs="0" maxOccurs="unbounded">
       // TODO when no restriction:  type="xs:string"
@@ -151,7 +151,7 @@ class XsdWriter(viewDefs: Seq[ViewDef[FieldDef[Type]]],
       </xs:sequence>
     </xs:complexType>
     """)
-  def listWrapper(viewDef: ViewDef[FieldDef[Type]], indentLevel: Int = 1) =
+  def listWrapper(viewDef: MojozViewDef, indentLevel: Int = 1) =
     indent(indentLevel, s"""
     <xs:complexType name="${ xsdComplexTypeName(listWrapperName(viewDef.name)) }">
       <xs:complexContent>
