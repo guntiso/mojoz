@@ -313,7 +313,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def toMojozTypeTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef =
+  def toMojozTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
 
@@ -397,7 +397,7 @@ object JdbcTableDefLoader {
     types: String*) = {
     val loader = jdbcTableDefLoader(conn)
     loader.jdbcTableDefs(conn, catalog, schemaPattern, tableNamePattern, types: _*)
-      .map(loader.toMojozTypeTableDef)
+      .map(loader.toMojozTableDef)
   }
   private[in] val jdbcTypeNameToCode: Map[String, Int] = Map(
     "ARRAY" -> Types.ARRAY,
