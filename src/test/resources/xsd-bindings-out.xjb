@@ -80,6 +80,9 @@
     <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTestType']">
       <jaxb:class name="TypeOverrideTest"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTest2Type']">
+      <jaxb:class name="TypeOverrideTest2"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewType']">
       <jaxb:class name="WithAnonymousInlineView"/>
     </jaxb:bindings>

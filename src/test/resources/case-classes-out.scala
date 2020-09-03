@@ -115,6 +115,9 @@ case class TypeOverrideTest (
   bank: java.lang.Long = null,
   lastModified: java.sql.Date = null
 )
+case class TypeOverrideTest2 (
+  intColAsString: String = null
+)
 case class WithAnonymousInlineView (
   someId: java.lang.Long = null,
   someName: String = null,

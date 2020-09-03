@@ -574,6 +574,20 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="TypeOverrideTest2Type">
+    <xs:annotation>
+      <xs:documentation></xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="IntColAsString" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="10"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithAnonymousInlineViewType">
     <xs:sequence>
       <xs:element name="SomeId" nillable="true" minOccurs="0" type="xs:long">

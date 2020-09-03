@@ -17,6 +17,12 @@ fields:
 - bank                   = bank_id
 - last_modified            date          : Last modified
 
+name:    type_override_test_2
+table:   test_table4
+comments:
+fields:
+- int_col_as_string string 10 = int_col
+
 name: bank_list_row
 table: bank
 fields:

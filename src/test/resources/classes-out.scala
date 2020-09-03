@@ -115,6 +115,9 @@ class TypeOverrideTest extends Dto {
   var bank: java.lang.Long = null
   var lastModified: java.sql.Date = null
 }
+class TypeOverrideTest2 extends Dto {
+  var intColAsString: String = null
+}
 class WithAnonymousInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null

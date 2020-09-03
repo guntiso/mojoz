@@ -29,6 +29,7 @@ class YamlViewDefLoader(
   import YamlViewDefLoader._
   import tableMetadata.dbName
   private val MojozExplicitNullability = "mojoz.explicit.nullability"
+  private val MojozExplicitType        = "mojoz.explicit.type"
   private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawViewDefs = sources.map { md: YamlMd =>
@@ -185,13 +186,18 @@ class YamlViewDefLoader(
       val nullable = Option(cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = cardinality != null
+      val isForcedType = yfd.typeName != null || yfd.length.isDefined || yfd.fraction.isDefined
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
       val orderBy = yfd.orderBy
       val comments = yfd.comments
       val extras =
-        if  (isForcedCardinality)
-             Option(yfd.extras).getOrElse(Map.empty) + (MojozExplicitNullability -> true)
+        if  (isForcedType || isForcedCardinality)
+             Option(yfd.extras).getOrElse(Map.empty) ++
+              Map(
+                MojozExplicitType        -> isForcedType,
+                MojozExplicitNullability -> isForcedCardinality
+              ).filter(_._2)
         else yfd.extras
       val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
       if (isViewDef(yfd.extras))
@@ -414,15 +420,17 @@ class YamlViewDefLoader(
             else joinColOpt.map(_.nullable).getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
-              if (f.type_ != null && f.alias == null) overwriteSimpleType(col.type_, f.type_)
+              if (f.type_ != null &&
+                  (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
+                   overwriteSimpleType(col.type_, f.type_)
               else col.type_,
             enum = Option(f.enum) getOrElse col.enum,
             comments = Option(f.comments) getOrElse col.comments)
         }
       }
       def cleanExtras(f: MojozFieldDef) =
-        if  (f.extras != null && f.extras.contains(MojozExplicitNullability))
-             f.copy(extras = Option(f.extras).map(_ - MojozExplicitNullability).filterNot(_.isEmpty).orNull)
+        if  (f.extras != null && (f.extras.contains(MojozExplicitNullability) || f.extras.contains(MojozExplicitType)))
+             f.copy(extras = Option(f.extras).map(_ - MojozExplicitType - MojozExplicitNullability).filterNot(_.isEmpty).orNull)
         else f
       t.copy(fields = t.fields
         .map(reduceExpression)
