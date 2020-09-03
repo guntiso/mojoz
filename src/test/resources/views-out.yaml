@@ -228,6 +228,30 @@ fields:
 - id
 - name
 
+name:     with_many_known_keys
+table:    bank b
+comments: some comments
+joins:
+- b/account a
+- b/country c
+save-to:
+- bank
+- account
+fields:
+- id
+- code
+- name
+group:
+- name
+having:
+- count(*) = 1
+order:
+- name
+- 1
+filter:
+- name
+- code
+
 name:     with_named_inline_view
 table:
 fields:

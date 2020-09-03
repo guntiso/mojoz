@@ -107,6 +107,9 @@
     <jaxb:bindings node="//xs:complexType[@name='WithJoinToParentPlusParentsType']">
       <jaxb:class name="WithJoinToParentPlusParents"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithManyKnownKeysType']">
+      <jaxb:class name="WithManyKnownKeys"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineViewType']">
       <jaxb:class name="WithNamedInlineView"/>
     </jaxb:bindings>

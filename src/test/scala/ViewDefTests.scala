@@ -36,6 +36,9 @@ class ViewDefTests extends FlatSpec with Matchers {
     Naming.camelize _,
     Naming.camelize(_) + "Type")
   val nl = System.getProperty("line.separator")
+  "known keys view" should "have no extras" in {
+    viewDefs.find(_.name == "with_many_known_keys").head.extras should be(Map.empty)
+  }
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "views-out.yaml")
     val ioViews = viewDefs.map(MdConventions.toExternal(_, tableMd))

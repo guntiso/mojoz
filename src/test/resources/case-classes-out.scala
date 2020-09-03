@@ -151,6 +151,11 @@ case class WithJoinToParentPlusParents (
   id: java.lang.Long = null,
   name: String = null
 )
+case class WithManyKnownKeys (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+)
 case class WithNamedInlineView (
   someId: java.lang.Long = null,
   someName: String = null,

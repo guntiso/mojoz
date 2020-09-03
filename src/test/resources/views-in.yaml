@@ -99,6 +99,31 @@ fields:
 - type  =
 - type_ =
 
+name:   with_many_known_keys
+table:  bank b
+save-to:
+- bank
+- account
+comments:
+- some comments
+joins:
+- b/account a
+- b/country c
+fields:
+- id
+- code
+- name
+filter:
+- name
+- code
+group:
+- name
+having:
+- count(*) = 1
+order:
+- name
+- 1
+
 name: with_join_to_parent
 table:  person c
 fields:
