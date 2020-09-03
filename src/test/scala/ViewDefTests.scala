@@ -54,6 +54,7 @@ class ViewDefTests extends FlatSpec with Matchers {
     if (expected != produced)
       toFile(path + "/" + "views-out-roundtrip-produced.yaml", produced)
     expected should be(produced)
+    viewDefs.zip(viewDefsFromOut).filter{ case (a, b) => a != b }.map(_._1.name) should be(List("resolver_test_7")) // TODO Nil
   }
   "generated xsd file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-out.xsd")
