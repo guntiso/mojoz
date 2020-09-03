@@ -44,6 +44,17 @@ class ViewDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "views-out-produced.yaml", produced)
     expected should be(produced)
   }
+  "generated yaml roundtrip file" should "equal sample file" in {
+    val mdDefsFromOut = YamlMd.fromFiles(
+      path = path, filter = _.getName == "views-out.yaml")
+    val viewDefsFromOut = YamlViewDefLoader(tableMd, mdDefsFromOut).plainViewDefs
+    val expected = fileToString(path + "/" + "views-out.yaml")
+    val ioViews = viewDefsFromOut.map(MdConventions.toExternal(_, tableMd))
+    val produced = (new YamlViewDefWriter).toYaml(ioViews)
+    if (expected != produced)
+      toFile(path + "/" + "views-out-roundtrip-produced.yaml", produced)
+    expected should be(produced)
+  }
   "generated xsd file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "xsd-out.xsd")
     val produced = xsdWriter.schema("kps.ldz.lv")
