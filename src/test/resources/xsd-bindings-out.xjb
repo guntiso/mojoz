@@ -14,6 +14,9 @@
     <jaxb:bindings node="//xs:complexType[@name='BankListRowType']">
       <jaxb:class name="BankListRow"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='CardinalityOverideTestType']">
+      <jaxb:class name="CardinalityOverideTest"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NamedInlineViewType']">
       <jaxb:class name="NamedInlineView"/>
     </jaxb:bindings>

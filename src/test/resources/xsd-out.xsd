@@ -128,6 +128,26 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="CardinalityOverideTestType">
+    <xs:sequence>
+      <xs:element name="Name" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="51"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Surname">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="52"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="NamedInlineViewType">
     <xs:sequence>
       <xs:element name="ChildId" nillable="true" minOccurs="0" type="xs:long">

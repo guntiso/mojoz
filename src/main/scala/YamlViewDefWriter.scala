@@ -78,12 +78,11 @@ class YamlViewDefWriter {
       (if (hasAlias) alias else name, 22),
       (optionsString,  0),
       ((type_.nullable, isCollection) match {
-        case (Some(true),  false) => "?"
-        case (Some(true),  true)  => "*"
         case (Some(false), false) => "!"
         case (Some(false), true)  => "+"
+        case (Some(true),  false) => "?"
+        case (_,           true)  => "*"
         case (None,        false) => ""
-        case (None,        true)  => "*"
       },  2),
       (joinString,  0),
       (typeString, 12),

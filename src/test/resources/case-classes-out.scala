@@ -17,6 +17,10 @@ case class BankListRow (
   countryName: String = null,
   name: String = null
 )
+case class CardinalityOverideTest (
+  name: String = null,
+  surname: String = null
+)
 case class NamedInlineView (
   childId: java.lang.Long = null,
   childName: String = null

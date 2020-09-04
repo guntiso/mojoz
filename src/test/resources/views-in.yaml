@@ -24,6 +24,12 @@ fields:
 - int_col_as_string string 10 = int_col
 - decimal266_col_mod      8 2 = decimal266_col8
 
+name:     cardinality_overide_test
+table:    person
+fields:
+- name    ?
+- surname !
+
 name: bank_list_row
 table: bank
 fields:

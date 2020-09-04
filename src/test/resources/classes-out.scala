@@ -17,6 +17,10 @@ class BankListRow extends DtoWithId {
   var countryName: String = null
   var name: String = null
 }
+class CardinalityOverideTest extends Dto {
+  var name: String = null
+  var surname: String = null
+}
 class NamedInlineView extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null
