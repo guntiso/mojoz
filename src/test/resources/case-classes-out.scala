@@ -116,7 +116,8 @@ case class TypeOverrideTest (
   lastModified: java.sql.Date = null
 )
 case class TypeOverrideTest2 (
-  intColAsString: String = null
+  intColAsString: String = null,
+  decimal266ColMod: BigDecimal = null
 )
 case class WithAnonymousInlineView (
   someId: java.lang.Long = null,

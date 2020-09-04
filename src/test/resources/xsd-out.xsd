@@ -586,6 +586,15 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
+      <xs:element name="Decimal266ColMod" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:decimal">
+            <xs:totalDigits value="8"/>
+            <xs:maxExclusive value="1000000"/>
+            <xs:fractionDigits value="2"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="WithAnonymousInlineViewType">

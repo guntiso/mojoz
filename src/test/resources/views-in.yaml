@@ -22,6 +22,7 @@ table:   test_table4
 comments:
 fields:
 - int_col_as_string string 10 = int_col
+- decimal266_col_mod      8 2 = decimal266_col8
 
 name: bank_list_row
 table: bank
