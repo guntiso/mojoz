@@ -65,8 +65,10 @@ class YamlViewDefWriter {
           Option(explicitSaveTo).map(" " + _).getOrElse("") +
           Option(resolver).map(" = " + _).getOrElse("")
       else ""
+    val optionsString = Option(options) getOrElse ""
     val defString = List(
       (if (hasAlias) alias else name, 22),
+      (optionsString,  0),
       ((type_.nullable, isCollection) match {
         case (Some(true),  false) => "?"
         case (Some(true),  true)  => "*"

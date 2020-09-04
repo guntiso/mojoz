@@ -127,6 +127,16 @@ case class WithAnonymousInlineViewSomeChildren (
   childId: java.lang.Long = null,
   childName: String = null
 )
+case class WithChildSaveOptions (
+  code: String = null,
+  name: String = null,
+  bank: List[WithChildSaveOptionsBank] = Nil
+)
+case class WithChildSaveOptionsBank (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+)
 case class WithEmptyChildSaveTo (
   singleChild: WithEmptyChildSaveToSingleChild = null
 )

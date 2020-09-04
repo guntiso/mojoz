@@ -188,6 +188,20 @@ fields:
 - child_id
 - child_name
 
+name:     with_child_save_options
+table:    country
+fields:
+- code                                (LV, TO, LT)
+- name
+- bank                  [+-=] * with_child_save_options_bank
+
+name:     with_child_save_options_bank
+table:    bank
+fields:
+- id
+- code
+- name
+
 name:     with_empty_child_save_to
 table:
 save-to:

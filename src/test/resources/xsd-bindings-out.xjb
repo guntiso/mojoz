@@ -89,6 +89,12 @@
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewSomeChildrenType']">
       <jaxb:class name="WithAnonymousInlineViewSomeChildren"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildSaveOptionsType']">
+      <jaxb:class name="WithChildSaveOptions"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildSaveOptionsBankType']">
+      <jaxb:class name="WithChildSaveOptionsBank"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithEmptyChildSaveToType']">
       <jaxb:class name="WithEmptyChildSaveTo"/>
     </jaxb:bindings>

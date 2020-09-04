@@ -146,6 +146,18 @@ fields:
     - id
     - name
 
+name: with_child_save_options
+table:  country
+fields:
+- code
+- name
+- bank [+-=] * :
+    table: bank
+    fields:
+    - id
+    - code
+    - name
+
 name: with_anonymous_inline_view
 table:
 fields:
