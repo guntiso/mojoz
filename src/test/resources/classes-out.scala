@@ -127,6 +127,13 @@ class WithAnonymousInlineViewSomeChildren extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null
 }
+class WithChildOrderByAsc extends Dto {
+  var code: String = null
+  var bank: List[WithChildOrderByAscBank] = Nil
+}
+class WithChildOrderByAscBank extends Dto {
+  var name: String = null
+}
 class WithChildOrderByDesc extends Dto {
   var code: String = null
   var bank: List[WithChildOrderByDescBank] = Nil

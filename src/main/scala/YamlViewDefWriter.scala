@@ -11,12 +11,19 @@ class YamlViewDefWriter {
   // TODO extract yaml processing
   // TODO inline views
   val MaxLineLength = 100
-  private val yamlChA = ":#\t\r\n" // TODO more escapes
+  private val yamlChA = ":#\t\r\n" // FIXME more escapes for yaml key / value
     .toCharArray.map(_.toString).toSet
   private val yamlChB = ",[]{}&*!|>'%@`\" "
     .toCharArray.map(_.toString).toSet
   private val yamlChC = " "
     .toCharArray.map(_.toString).toSet
+  private def escapeYamlKey(s: String) =
+    // FIXME more escapes for yaml key!
+    if (s != null && s.contains(" #"))
+      "\"" +
+       s +
+      "\""
+    else s
   private def escapeYamlValue(s: String) =
     if (s != null &&
         (yamlChA.exists(s contains   _) ||
@@ -67,7 +74,7 @@ class YamlViewDefWriter {
           Option(resolver).map(" = " + _).getOrElse("")
       else ""
     val optionsString = Option(options) getOrElse ""
-    val defString = List(
+    val defString = escapeYamlKey(List(
       (if (hasAlias) alias else name, 22),
       (optionsString,  0),
       ((type_.nullable, isCollection) match {
@@ -86,6 +93,7 @@ class YamlViewDefWriter {
         List(r._1, t._1).mkString(" ").trim.padTo(r._2 + t._2 - 1, " ").mkString,
         r._2 + t._2))._1 +
       expr + saveExpr
+    )
 
     val hasComment = comments != null
     val hasExtras = extras != null && !extras.isEmpty

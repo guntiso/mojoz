@@ -188,6 +188,17 @@ fields:
 - child_id
 - child_name
 
+name:     with_child_order_by_asc
+table:    country
+fields:
+- code                                (LV, TO, LT)
+- "bank                  * with_child_order_by_asc_bank #(name)"
+
+name:     with_child_order_by_asc_bank
+table:    bank
+fields:
+- name
+
 name:     with_child_order_by_desc
 table:    country
 fields:
