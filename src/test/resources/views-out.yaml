@@ -188,6 +188,17 @@ fields:
 - child_id
 - child_name
 
+name:     with_child_order_by_desc
+table:    country
+fields:
+- code                                (LV, TO, LT)
+- bank                  * with_child_order_by_desc_bank ~#(name)
+
+name:     with_child_order_by_desc_bank
+table:    bank
+fields:
+- name
+
 name:     with_child_save_options
 table:    country
 fields:

@@ -89,6 +89,12 @@
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewSomeChildrenType']">
       <jaxb:class name="WithAnonymousInlineViewSomeChildren"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildOrderByDescType']">
+      <jaxb:class name="WithChildOrderByDesc"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildOrderByDescBankType']">
+      <jaxb:class name="WithChildOrderByDescBank"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithChildSaveOptionsType']">
       <jaxb:class name="WithChildSaveOptions"/>
     </jaxb:bindings>

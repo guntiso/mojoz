@@ -127,6 +127,13 @@ case class WithAnonymousInlineViewSomeChildren (
   childId: java.lang.Long = null,
   childName: String = null
 )
+case class WithChildOrderByDesc (
+  code: String = null,
+  bank: List[WithChildOrderByDescBank] = Nil
+)
+case class WithChildOrderByDescBank (
+  name: String = null
+)
 case class WithChildSaveOptions (
   code: String = null,
   name: String = null,

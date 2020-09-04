@@ -606,6 +606,46 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithChildOrderByDescType">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Code">
+        <xs:annotation>
+          <xs:documentation>ISO 3166-1 divu burtu valsts kods</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="2"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="TO"/>
+            <xs:enumeration value="LT"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Bank" minOccurs="0" maxOccurs="unbounded" type="tns:WithChildOrderByDescBankType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithChildOrderByDescBankType">
+    <xs:sequence>
+      <xs:element name="Name">
+        <xs:annotation>
+          <xs:documentation>Bankas pilnais nosaukums.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="240"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithChildSaveOptionsType">
     <xs:annotation>
       <xs:documentation>Valstu klasifikators</xs:documentation>
