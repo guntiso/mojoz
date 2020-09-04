@@ -32,12 +32,12 @@ class YamlViewDefLoader(
   private val MojozExplicitType        = "mojoz.explicit.type"
   private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
-  private val rawViewDefs = sources.map { md: YamlMd =>
+  private val rawViewDefs = transformRawViewDefs(sources.map { md: YamlMd =>
     try loadRawViewDefs(md.body) catch {
       case e: Exception => throw new RuntimeException(
         "Failed to load viewdef from " + md.filename, e) // TODO line number
     }
-  }.flatten
+  }.flatten)
   private val nameToRawViewDef = {
     val duplicateNames =
       rawViewDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
@@ -88,7 +88,7 @@ class YamlViewDefLoader(
       t.copy(fields = baseFields(t, Nil, null))
     })
     .map(t => (t.name, t)).toMap
-  def loadRawViewDefs(defs: String): List[MojozViewDef] = {
+  protected def loadRawViewDefs(defs: String): List[MojozViewDef] = {
     Option((new Yaml).load(defs))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
@@ -98,7 +98,7 @@ class YamlViewDefLoader(
       .map(loadRawViewDefs)
       .getOrElse(Nil)
   }
-  def loadRawViewDefs(tdMap: Map[String, Any]): List[MojozViewDef] = {
+  protected def loadRawViewDefs(tdMap: Map[String, Any]): List[MojozViewDef] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
       case null => null
       case Nil => ""
@@ -243,6 +243,8 @@ class YamlViewDefLoader(
   /** can be overriden to send cardinality to extras - for maxOccurs custom processing */
   protected def transformRawFieldDef(
     yfd: YamlFieldDef, mojozFieldDef: MojozFieldDef): MojozFieldDef = mojozFieldDef
+  /** called once, can be overriden to transform raw viewdefs */
+  protected def transformRawViewDefs(raw: Seq[MojozViewDef]): Seq[MojozViewDef] = raw
   private def checkViewDefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
