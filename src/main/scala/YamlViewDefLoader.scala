@@ -133,13 +133,11 @@ class YamlViewDefLoader(
     val fieldsSrc = Option(getSeq(k.fields)).getOrElse(Nil).toList
     val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
-    val extendsOrModifies =
-      xtnds
-    val (name, table) = (rawName, rawTable, extendsOrModifies) match {
-      case (null, table, xtnds) => throw new RuntimeException("Missing view name" +
+    val (name, table) = (rawName, rawTable) match {
+      case (null, table) => throw new RuntimeException("Missing view name" +
         List(table, xtnds).filter(_ != null).filter(_ != "").mkString(" (view is based on ", ", ", ")"))
-      case (name, null, _) => (name, null)
-      case (name, table, _) => (name, dbName(table))
+      case (name, null) => (name, null)
+      case (name, table) => (name, dbName(table))
     }
     val YamlMdLoader = new YamlMdLoader(typeDefs)
     val yamlFieldDefs = fieldsSrc map YamlMdLoader.loadYamlFieldDef
