@@ -1,4 +1,5 @@
 name:     account
+table:    account
 fields:
 - id                    ?
 - bank_id
@@ -86,6 +87,7 @@ fields:
 extra: some extra
 
 name:     person
+table:    person
 fields:
 - name
 - surname

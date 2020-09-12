@@ -217,8 +217,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
     view.copy(
       table =
         if (table == null) ""
-        else if (name == table ||
-          extends_ != null) null
+        else if (extends_ != null) null
         else table,
       comments = Option(comments)
         .filter(tableDef == null || _ != tableDef.comments).orNull,

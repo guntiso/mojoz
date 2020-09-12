@@ -1,4 +1,5 @@
 name: account
+table:  account
 fields:
 - id ?
 - bank_id
@@ -40,6 +41,7 @@ fields:
 - name         : <p>special xml 'chars' & "strings" test</p>
 
 name: person
+table: person
 fields:
 - name
 - surname
