@@ -136,9 +136,10 @@ class YamlViewDefLoader(
     val extendsOrModifies =
       xtnds
     val (name, table) = (rawName, rawTable, extendsOrModifies) match {
-      case (name, null, null) => (name, dbName(name)) // FIXME matches null null null => nullpointer
+      case (null, table, xtnds) => throw new RuntimeException("Missing view name" +
+        List(table, xtnds).filter(_ != null).filter(_ != "").mkString(" (view is based on ", ", ", ")"))
+      case (name, null, null) => (name, dbName(name))
       case (name, null, _) => (name, null)
-      case (null, table, null) => (table, dbName(table))
       case (name, table, _) => (name, dbName(table))
     }
     val YamlMdLoader = new YamlMdLoader(typeDefs)
