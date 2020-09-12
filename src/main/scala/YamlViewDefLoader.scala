@@ -59,7 +59,7 @@ class YamlViewDefLoader(
         (t.name :: visited).reverse.mkString(" -> "))
     else if (t.table != null) t.table
     else baseTable(nameToViewDef.get(t.extends_)
-      .getOrElse(sys.error("Base table not found, type: " + t.name)),
+      .getOrElse(sys.error("Base table not found, view: " + t.name)),
       nameToViewDef, t.name :: visited)
   val plainViewDefs: List[MojozViewDef] = buildViewDefs(rawViewDefs).sortBy(_.name)
   private[in] val nameToPlainViewDef = plainViewDefs.map(t => (t.name, t)).toMap
