@@ -12,13 +12,10 @@ import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 
 class ViewDefTests extends FlatSpec with Matchers {
   object Naming {
-    def camelize(name: String) = {
-      val parts = name.split("[_\\-\\.]+")
-      parts.toList
-        .map(_.toLowerCase)
-        .map(_.capitalize)
+    def camelize(name: String) =
+      name.split("[_\\-\\.]+").toList
+        .map(_.toLowerCase.capitalize)
         .mkString + (if (name endsWith "_") "_" else "")
-    }
     def camelizeLower(name: String) = camelize(name) match {
       case x if x.length == 1 || (x.length > 1 && (x(1).isLower || x(1).isDigit)) =>
         s"${x(0).toLower}${x.substring(1)}"
