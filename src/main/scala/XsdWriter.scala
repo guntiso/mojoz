@@ -116,7 +116,7 @@ class XsdWriter(viewDefs: Seq[MojozViewDef],
       // TODO when no restriction:  type="xs:string"
       indent(level, s"""
       <xs:sequence>
-        ${viewDef.fields.map(f =>
+        ${viewDef.fields.filterNot(_.isOverride).map(f =>
           createElement(xsdName(Option(f.alias) getOrElse f.name), f, 4))
           .map(_.trim).mkString("\n" + indentString * 4)
         }

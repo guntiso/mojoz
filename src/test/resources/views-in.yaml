@@ -11,6 +11,7 @@ extends: account
 fields:
 - bank.code
 - bank.name
+- billing_account 64 = 'Account = ' || billing_account
 
 name:    type_override_test
 table:   account

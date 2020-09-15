@@ -11,6 +11,7 @@ extends:  account
 fields:
 - bank.code
 - bank.name
+- billing_account         64            = 'Account = ' || billing_account
 
 name:     bank_list_row
 table:    bank

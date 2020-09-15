@@ -44,6 +44,7 @@ object FieldDef {
     val name: String
     val alias: String
     val options: String // persistence options
+    val isOverride: Boolean
     val isCollection: Boolean
     val isExpression: Boolean
     val expression: String
@@ -63,6 +64,7 @@ case class FieldDef[+T](
   name: String,
   alias: String,
   options: String, // persistence options
+  isOverride: Boolean,
   isCollection: Boolean,
   isExpression: Boolean,
   expression: String,
@@ -81,6 +83,7 @@ case class FieldDef[+T](
     name = name,
     alias = null,
     options = null, // persistence options
+    isOverride = false,
     isCollection = false,
     isExpression = false,
     expression = null,
@@ -100,6 +103,7 @@ case class FieldDef[+T](
     name = that.name,
     alias = that.alias,
     options = that.options, // persistence options
+    isOverride = that.isOverride,
     isCollection = that.isCollection,
     isExpression = that.isExpression,
     expression = that.expression,

@@ -9,6 +9,7 @@ class Account extends DtoWithId {
 class AccountDetails extends Account with Dto {
   var bankCode: String = null
   var bankName: String = null
+  // override var billingAccount: String = null
 }
 class BankListRow extends DtoWithId {
   var id: java.lang.Long = null

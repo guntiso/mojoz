@@ -47,6 +47,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def initialValueString(col: MojozFieldDef) =
     if (col.isCollection) "Nil" else "null"
   def scalaFieldString(fieldName: String, col: MojozFieldDef) =
+    (if (col.isOverride) "// override " else "") +
     s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDef) =
     try

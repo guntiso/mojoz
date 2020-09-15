@@ -8,7 +8,8 @@ case class Account (
 )
 case class AccountDetails (
   bankCode: String = null,
-  bankName: String = null
+  bankName: String = null,
+  billingAccount: String = null
 )
 case class BankListRow (
   id: java.lang.Long = null,
