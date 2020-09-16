@@ -1,11 +1,6 @@
 package org.mojoz.metadata
 package out
 
-import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
-import org.mojoz.metadata.Type
-import org.mojoz.metadata.TypeDef
-import org.mojoz.metadata.TypeMetadata
-import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
 import scala.collection.immutable.Seq
 import scala.collection.immutable.Set
 
@@ -26,7 +21,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     else s"`$name`"
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
-  def scalaFieldTypeName(field: MojozFieldDef) = {
+  def scalaFieldTypeName(field: MojozFieldDefBase) = {
     val itemTypeName = scalaTypeName(field.type_)
     if (field.isCollection) scalaCollectionTypeName(itemTypeName)
     else itemTypeName
@@ -44,38 +39,38 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaSimpleTypeName(t: Type) =
     typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
-  def initialValueString(col: MojozFieldDef) =
+  def initialValueString(col: MojozFieldDefBase) =
     if (col.isCollection) "Nil" else "null"
-  def scalaFieldString(fieldName: String, col: MojozFieldDef) =
+  def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
     (if (col.isOverride) "// override " else "") +
     s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDef) =
+  def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDefBase) =
     try
       scalaFieldString(fieldName, col)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process field: $fieldName", ex)
     }
-  def scalaClassExtends(viewDef: MojozViewDef) =
+  def scalaClassExtends(viewDef: MojozViewDefBase) =
     Option(viewDef.extends_).filter(_ != "").map(scalaClassName)
-  def scalaClassTraits(viewDef: MojozViewDef): Seq[String] = Seq()
+  def scalaClassTraits(viewDef: MojozViewDefBase): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(viewDef: MojozViewDef) =
+  def scalaFieldsStrings(viewDef: MojozViewDefBase) =
     viewDef.fields.map(f => scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
-  def scalaFieldsStringsWithHandler(viewDef: MojozViewDef) =
+  def scalaFieldsStringsWithHandler(viewDef: MojozViewDefBase) =
     try
       scalaFieldsStrings(viewDef)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process view: ${viewDef.name}", ex)
     }
-  def scalaFieldsString(viewDef: MojozViewDef) =
+  def scalaFieldsString(viewDef: MojozViewDefBase) =
     scalaFieldsStringsWithHandler(viewDef)
       .map(scalaFieldsIndent + _ + nl).mkString
-  def scalaBody(viewDef: MojozViewDef) =
+  def scalaBody(viewDef: MojozViewDefBase) =
     scalaFieldsString(viewDef) + Option(scalaBodyExtra(viewDef)).getOrElse("")
-  def scalaBodyExtra(viewDef: MojozViewDef) = ""
-  def scalaExtendsString(viewDef: MojozViewDef) =
+  def scalaBodyExtra(viewDef: MojozViewDefBase) = ""
+  def scalaExtendsString(viewDef: MojozViewDefBase) =
     Option(scalaClassTraits(viewDef))
       .map(scalaClassExtends(viewDef).toList ::: _.toList)
       .map(t => t.filter(_ != null).filter(_ != ""))
@@ -83,33 +78,33 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
       .map(_ map scalaNameString)
       .map(_.mkString(" extends ", " with ", ""))
       .getOrElse("")
-  def scalaPrefix(viewDef: MojozViewDef) = "class"
-  def scalaClassString(viewDef: MojozViewDef) = {
+  def scalaPrefix(viewDef: MojozViewDefBase) = "class"
+  def scalaClassString(viewDef: MojozViewDefBase) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef)}}"
   }
-  def scalaObjectString(viewDef: MojozViewDef): String = ""
-  def scalaClassAndObjectString(viewDef: MojozViewDef): String =
+  def scalaObjectString(viewDef: MojozViewDefBase): String = ""
+  def scalaClassAndObjectString(viewDef: MojozViewDefBase): String =
     Seq(scalaClassString(viewDef), scalaObjectString(viewDef))
       .filter(_ != null).filter(_ != "").mkString(nl)
   def generateScalaSource(
-    headers: Seq[String], viewDefs: Seq[MojozViewDef], footers: Seq[String]) =
+    headers: Seq[String], viewDefs: Seq[MojozViewDefBase], footers: Seq[String]) =
     List(headers, viewDefs map scalaClassAndObjectString, footers)
       .flatMap(x => x)
       .mkString("", nl, nl)
 }
 
 class ScalaCaseClassGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaGenerator(typeDefs) {
-  override def scalaFieldString(fieldName: String, col: MojozFieldDef) =
+  override def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
     s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  override def scalaFieldsStrings(viewDef: MojozViewDef) = {
+  override def scalaFieldsStrings(viewDef: MojozViewDefBase) = {
     val fieldsStrings = super.scalaFieldsStrings(viewDef)
     if (fieldsStrings.size < 2) fieldsStrings
     else (fieldsStrings.reverse.head :: fieldsStrings.reverse.tail.map(_ + ",").toList).reverse
   }
   // FIXME extends for case classes?
-  override def scalaPrefix(viewDef: MojozViewDef) = "case class"
-  override def scalaClassExtends(viewDef: MojozViewDef) = None
-  override def scalaClassString(viewDef: MojozViewDef) = {
+  override def scalaPrefix(viewDef: MojozViewDefBase) = "case class"
+  override def scalaClassExtends(viewDef: MojozViewDefBase) = None
+  override def scalaClassString(viewDef: MojozViewDefBase) = {
     s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef)})" +
       Option(scalaBodyExtra(viewDef)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }

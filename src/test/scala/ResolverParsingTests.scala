@@ -6,8 +6,6 @@ import org.mojoz.metadata.in._
 import org.mojoz.metadata.io._
 import org.mojoz.metadata.out._
 import java.io.PrintWriter
-import org.mojoz.metadata.ViewDef.{ ViewDefBase => ViewDef }
-import org.mojoz.metadata.FieldDef.{ FieldDefBase => FieldDef }
 
 // TODO these tests to text-based parse results (json/yaml/...)?
 class ResolverParsingTests extends FlatSpec with Matchers {
@@ -178,6 +176,6 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t9, "father").saveTo should be("father_id")
     field(t9, "father").resolver should be(null)
   }
-  def field(v: MojozViewDef, n: String) =
+  def field(v: MojozViewDefBase, n: String) =
     v.fields.filter(f => Option(f.alias).getOrElse(f.name) == n).head
 }
