@@ -7,9 +7,9 @@ import org.mojoz.metadata.io._
 import org.mojoz.metadata.TableDef._
 import org.mojoz.metadata.ColumnDef._
 import scala.collection.immutable.{ Map, Seq }
-import SqlWriter._
+import SqlGenerator._
 
-object SqlWriter {
+object SqlGenerator {
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String
@@ -95,24 +95,24 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 }
 
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
   new StandardSqlWriter(constraintNamingRules, typeDefs)
 def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
   new H2SqlWriter(constraintNamingRules, typeDefs)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
   new HsqldbSqlWriter(constraintNamingRules, typeDefs)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
   new OracleSqlWriter(constraintNamingRules, typeDefs)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlWriter =
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
   new PostgreSqlWriter(constraintNamingRules, typeDefs)
 
 }
 
-abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =>
+abstract class SqlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =>
   private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   /** Returns full sql schema string (tables, comments, keys, indices, refs)
@@ -274,7 +274,7 @@ private[out] class OracleSqlWriter(
 
 private[out] class StandardSqlWriter(
     constraintNamingRules: ConstraintNamingRules,
-    typeDefs: Seq[TypeDef]) extends SqlWriter(typeDefs) with ConstraintNamingRules {
+    typeDefs: Seq[TypeDef]) extends SqlGenerator(typeDefs) with ConstraintNamingRules {
   override def pkName(tableName: String) =
     constraintNamingRules.pkName(tableName)
   override def ukName(tableName: String, uk: DbIndex) =

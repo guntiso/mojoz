@@ -38,7 +38,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .mkString(nl)
     }
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlWriter.oracle().schema(tableDefs)
+    val statements = SqlGenerator.oracle().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     val cfg = getCfg("mojoz.oracle.")
     executeStatements(cfg, statements: _*)
@@ -54,7 +54,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
 
     // accept short constraint names as default
     val oraConventions =
-      new MdConventions(new SqlWriter.OracleConstraintNamingRules)
+      new MdConventions(new SqlGenerator.OracleConstraintNamingRules)
     // ignore on update: no sql to set it & default is cascade unlike other dbs
     val producedXXX = YamlTableDefWriter.toYaml(jdbcTableDefs.map(t =>
       t.copy(refs = t.refs.map(_.copy(onUpdateAction = null)))),
@@ -77,7 +77,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .mkString(nl)
     }
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlWriter.postgresql().schema(tableDefs)
+    val statements = SqlGenerator.postgresql().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(cfg, statements: _*)
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)

@@ -40,7 +40,7 @@ columns:
 - mother.id              person.id
 - father.id              person.id
 ```
-corresponds to the following sql (as converted by [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter$.html)):
+corresponds to the following sql (as converted by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator$.html)):
 ```sql
 create table person(
   id bigint,
@@ -78,8 +78,8 @@ where
 
 ![Indices syntax diagram](docs/diagrams/png/indices.png)
 
-If index name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter.html) uses
-[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
+If index name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
 to create automatic index name.
 
 Examples:
@@ -97,8 +97,8 @@ idx:
 Refs are implied from column definitions where column name or type is _table_name.column_name_. Refs can be defined explicitly for: name customization, multi-column ref creation or _on delete_ / _on update_ settings.
 ![Refs syntax diagram](docs/diagrams/png/refs.png)
 
-If ref name is not provided [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter.html) uses
-[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter$$ConstraintNamingRules.html)
+If ref name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
 to create automatic ref name.
 
 Examples:
@@ -128,7 +128,7 @@ Key names are:
 * **yaml** - type mappings for table and view metadata loading from mojoz yaml files,
   used by [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/in/YamlTableDefLoader.html)
   and [YamlViewDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/in/YamlViewDefLoader.html)
-* **sql** - type info used by [SqlWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlWriter$.html),
+* **sql** - type info used by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/SqlGenerator$.html),
   can be overiden for specific database, for example:
   * **oracle sql** - type name specific to Oracle
   * **postgresql** - type name specific to PostgreSQL

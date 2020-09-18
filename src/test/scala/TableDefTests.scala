@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import org.mojoz.metadata.in.JdbcTableDefLoader
 import org.mojoz.metadata.in.YamlMd
 import org.mojoz.metadata.in.YamlTableDefLoader
-import org.mojoz.metadata.out.SqlWriter
+import org.mojoz.metadata.out.SqlGenerator
 import org.mojoz.metadata.out.YamlTableDefWriter
 
 class TableDefTests extends FlatSpec with Matchers {
@@ -27,28 +27,28 @@ class TableDefTests extends FlatSpec with Matchers {
   }
   "generated oracle sql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-oracle.sql")
-    val produced = SqlWriter.oracle().schema(tableDefs)
+    val produced = SqlGenerator.oracle().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
   }
   "generated postgresql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-postgresql.sql")
-    val produced = SqlWriter.postgresql().schema(tableDefs)
+    val produced = SqlGenerator.postgresql().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
     expected should be(produced)
   }
   "generated h2 file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-h2.sql")
-    val produced = SqlWriter.h2().schema(tableDefs)
+    val produced = SqlGenerator.h2().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-produced.sql", produced)
     expected should be(produced)
   }
   "generated hsqldb file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-hsqldb.sql")
-    val produced = SqlWriter.hsqldb().schema(tableDefs)
+    val produced = SqlGenerator.hsqldb().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-produced.sql", produced)
     expected should be(produced)
@@ -58,7 +58,7 @@ class TableDefTests extends FlatSpec with Matchers {
     implicit val ci = h2Ci
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements =
-      SqlWriter.h2().schema(tableDefs)
+      SqlGenerator.h2().schema(tableDefs)
         .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(statements: _*)
     val conn = getConn
@@ -94,7 +94,7 @@ class TableDefTests extends FlatSpec with Matchers {
   "generated hsqldb roundtrip file" should "almost equal sample file" in {
     implicit val ci = hsqldbCi
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlWriter.hsqldb().schema(tableDefs)
+    val statements = SqlGenerator.hsqldb().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(statements: _*)
     val conn = getConn

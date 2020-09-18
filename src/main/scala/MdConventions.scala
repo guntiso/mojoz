@@ -2,12 +2,12 @@ package org.mojoz.metadata.io
 
 import org.mojoz.metadata._
 import org.mojoz.metadata.TableDef._
-import org.mojoz.metadata.out.SqlWriter
+import org.mojoz.metadata.out.SqlGenerator
 import scala.collection.immutable.Seq
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
 
-class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.SimpleConstraintNamingRules) {
+class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerator.SimpleConstraintNamingRules) {
   def idTypeName = "long"
   def isIdName(name: String) = name.toLowerCase == "id"
   def isCodeName(name: String) = name.toLowerCase == "code"
@@ -225,7 +225,7 @@ class MdConventions(naming: SqlWriter.ConstraintNamingRules = new SqlWriter.Simp
   }
 }
 
-object MdConventions extends MdConventions(new SqlWriter.SimpleConstraintNamingRules) {
+object MdConventions extends MdConventions(new SqlGenerator.SimpleConstraintNamingRules) {
 
   private def splitNamePatternString(patternString: String): Seq[String] =
     patternString.trim.split("[,\\s]+").toList.map(_.trim)
