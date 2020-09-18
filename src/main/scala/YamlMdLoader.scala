@@ -146,11 +146,11 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)
           .map(c => (tc._1, c)))
         .getOrElse(sys.error("Bad ref: " + ref))
-    def overwriteMojozType(base: Type, overwrite: Type) = Type(
-      Option(base.name) getOrElse overwrite.name,
-      overwrite.length orElse base.length,
-      overwrite.totalDigits orElse base.totalDigits,
-      overwrite.fractionDigits orElse base.fractionDigits,
+    def overrideMojozType(base: Type, override_ : Type) = Type(
+      Option(base.name) getOrElse override_.name,
+      override_.length orElse base.length,
+      override_.totalDigits orElse base.totalDigits,
+      override_.fractionDigits orElse base.fractionDigits,
       false)
     def baseRefChain(col: MojozColumnDef, visited: List[String]): List[String] = {
       def chain(ref: String) =
@@ -175,9 +175,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
           val colName = c.name.replace('.', '_')
           val (refTable, refCol) =
             refToCol(Option(c.type_.name) getOrElse c.name)
-          val mojozType = overwriteMojozType(
+          val mojozType = overrideMojozType(
             refChain.foldLeft(new Type(null))((t, ref) =>
-              overwriteMojozType(t, refToCol(ref)._2.type_)),
+              overrideMojozType(t, refToCol(ref)._2.type_)),
             c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
             null, defaultRefTableAlias, null, null)

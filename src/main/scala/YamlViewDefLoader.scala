@@ -458,11 +458,11 @@ class YamlViewDefLoader(
           f.copy(table = table, tableAlias = tableAlias,
             name = name, alias = alias, expression = expression)
         }
-      def overwriteSimpleType(base: Type, overwrite: Type) = Type(
-        Option(overwrite.name) getOrElse base.name,
-        overwrite.length orElse base.length,
-        overwrite.totalDigits orElse base.totalDigits,
-        overwrite.fractionDigits orElse base.fractionDigits,
+      def overrideSimpleType(base: Type, override_ : Type) = Type(
+        Option(override_.name) getOrElse base.name,
+        override_.length orElse base.length,
+        override_.totalDigits orElse base.totalDigits,
+        override_.fractionDigits orElse base.fractionDigits,
         false)
       def resolveTypeFromDbMetadata(f: MojozFieldDef) = {
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
@@ -485,7 +485,7 @@ class YamlViewDefLoader(
             type_ =
               if (f.type_ != null &&
                   (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
-                   overwriteSimpleType(col.type_, f.type_)
+                   overrideSimpleType(col.type_, f.type_)
               else col.type_,
             enum = Option(f.enum) getOrElse col.enum,
             comments = Option(f.comments) getOrElse col.comments)
