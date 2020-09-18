@@ -5,8 +5,7 @@ import scala.math.max
 import org.mojoz.metadata._
 import org.mojoz.metadata.io._
 import org.mojoz.metadata.TableDef._
-import org.mojoz.metadata.TableDef.{ TableDefBase => TableDef }
-import org.mojoz.metadata.ColumnDef.{ ColumnDefBase => ColumnDef }
+import org.mojoz.metadata.ColumnDef._
 import scala.collection.immutable.{ Map, Seq }
 import SqlWriter._
 
@@ -118,66 +117,66 @@ abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   /** Returns full sql schema string (tables, comments, keys, indices, refs)
     */
-  def schema(tables: Seq[MojozTableDef]) = List(
+  def schema(tables: Seq[MojozTableDefBase]) = List(
     tablesAndComments(tables),
     keysAndIndexes(tables),
     foreignKeys(tables)).filter(_ != "").mkString("\n\n") +
     (if (tables.size > 0) "\n" else "")
-  def tableAndComments(t: MojozTableDef): String =
+  def tableAndComments(t: MojozTableDefBase): String =
     List[Iterable[String]](
       Some(table(t)), tableComment(t), columnComments(t))
       .flatten.mkString("\n")
-  def tablesAndComments(tables: Seq[MojozTableDef]): String =
+  def tablesAndComments(tables: Seq[MojozTableDefBase]): String =
     tables.map(tableAndComments).mkString("\n\n")
-  def keysAndIndexes(t: MojozTableDef): String =
+  def keysAndIndexes(t: MojozTableDefBase): String =
     List[Iterable[String]](
       primaryKey(t), uniqueIndexes(t), indexes(t))
       .flatten.mkString("\n")
-  def keysAndIndexes(tables: Seq[MojozTableDef]): String =
+  def keysAndIndexes(tables: Seq[MojozTableDefBase]): String =
     tables.map(keysAndIndexes).filter(_ != "").mkString("\n\n")
-  def tableAndCommentsAndIndexes(t: MojozTableDef): String =
+  def tableAndCommentsAndIndexes(t: MojozTableDefBase): String =
     (tableAndComments(t) + keysAndIndexes(t)).trim
-  def table(t: MojozTableDef) =
+  def table(t: MojozTableDefBase) =
     // pk separated from table definition to fit large data imports etc.
     (t.cols.map(column(t)) ++ tableChecks(t)) // ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
-  def primaryKey(t: TableDef[_]) = t.pk map { pk =>
+  def primaryKey(t: TableDefBase[_]) = t.pk map { pk =>
     "alter table " + t.name + " add " +
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + idxCols(pk.cols).mkString(", ") + ");"
   }
-  def uniqueIndex(t: TableDef[_])(uk: DbIndex) =
+  def uniqueIndex(t: TableDefBase[_])(uk: DbIndex) =
     s"create unique index ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
     } on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
-  def uniqueKey(t: TableDef[_])(uk: DbIndex) =
+  def uniqueKey(t: TableDefBase[_])(uk: DbIndex) =
     s"alter table ${t.name} add constraint ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
     } unique(${idxCols(uk.cols).mkString(", ")});"
-  def uniqueIndexes(t: TableDef[_]) = t.uk map { uk =>
+  def uniqueIndexes(t: TableDefBase[_]) = t.uk map { uk =>
     if (uk.cols.exists(_.toLowerCase endsWith " desc")) uniqueIndex(t)(uk)
     // on some dbs, unique constraint (not index) is required to add fk
     else uniqueKey(t)(uk)
   }
-  def indexes(t: TableDef[_]) = t.idx map { idx =>
+  def indexes(t: TableDefBase[_]) = t.idx map { idx =>
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
   }
-  def dbDefault(c: MojozColumnDef) = c.dbDefault
-  private def column(t: TableDef[_])(c: MojozColumnDef) = {
+  def dbDefault(c: MojozColumnDefBase) = c.dbDefault
+  private def column(t: TableDefBase[_])(c: MojozColumnDefBase) = {
     c.name + " " + dbType(c) +
       (dbDefault(c) match { case null => "" case d => s" default $d" }) +
       (if (explicitNotNullForColumn(t, c)) " not null" else "") +
       colCheck(c)
   }
-  private[out] def explicitNotNullForColumn(t: TableDef[_], c: MojozColumnDef) =
+  private[out] def explicitNotNullForColumn(t: TableDefBase[_], c: MojozColumnDefBase) =
     !c.nullable && !t.pk.exists(_.cols.contains(c.name))
-  def tableComment(t: TableDef[_]) = Option(t.comments).map(c =>
+  def tableComment(t: TableDefBase[_]) = Option(t.comments).map(c =>
     s"comment on table ${t.name} is '${c.replace("'", "''")}';")
-  def columnComments(t: TableDef[ColumnDef[_]]) =
+  def columnComments(t: TableDefBase[ColumnDefBase[_]]) =
     t.cols.filter(_.comments != null).map(c =>
       s"comment on column ${t.name}.${c.name} is '${c.comments.replace("'", "''")}';")
-  def foreignKeys(tables: Seq[TableDef[_]]) = tables.map { t =>
+  def foreignKeys(tables: Seq[TableDefBase[_]]) = tables.map { t =>
     t.refs map foreignKey(t.name)
   }.flatten.mkString("\n")
   def foreignKey(tableName: String)(r: TableDef.Ref) =
@@ -195,7 +194,7 @@ abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =
       td.name ->
         td.sqlWrite.get(sqlWriteInfoKey).orElse(td.sqlWrite.get("sql")).getOrElse(Nil)
     ).toMap
-  def dbType(c: MojozColumnDef): String = {
+  def dbType(c: MojozColumnDefBase): String = {
     val t = c.type_
     typeNameToSqlWriteInfoSeq.get(t.name).getOrElse(Nil).find { info =>
       sizeOptionMatch(info.minSize, info.maxSize, t.length.orElse(t.totalDigits)) &&
@@ -211,8 +210,8 @@ abstract class SqlWriter(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =
       sys.error(s"Missing sql info (key '$sqlWriteInfoKey' or 'sql') for type $t in ${c.name}")
     }
   }
-  def colCheck(c: MojozColumnDef): String
-  def tableChecks(t: MojozTableDef): Seq[String] =
+  def colCheck(c: MojozColumnDefBase): String
+  def tableChecks(t: MojozTableDefBase): Seq[String] =
     t.ck.map(ck =>
       if (ck.name != null) s"constraint ${ck.name} check (${ck.expression})"
       else s"check (${ck.expression})")
@@ -238,12 +237,12 @@ private[out] class H2SqlWriter(
   extends HsqldbSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "h2 sql"
   // for index name jdbc roundtrip
-  override def uniqueIndexes(t: TableDef[_]) = t.uk.map(uniqueIndex(t))
+  override def uniqueIndexes(t: TableDefBase[_]) = t.uk.map(uniqueIndex(t))
   // how to retrieve column check constraint for h2? add to table instead 
-  override def colCheck(c: MojozColumnDef): String = ""
-  override def explicitNotNullForColumn(t: TableDef[_], c: MojozColumnDef) =
+  override def colCheck(c: MojozColumnDefBase): String = ""
+  override def explicitNotNullForColumn(t: TableDefBase[_], c: MojozColumnDefBase) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
-  override def tableChecks(t: MojozTableDef): Seq[String] = t.cols.map { c =>
+  override def tableChecks(t: MojozTableDefBase): Seq[String] = t.cols.map { c =>
     super.colCheck(c).trim
   }.filter(_ != "") ++ super.tableChecks(t)
 }
@@ -253,13 +252,13 @@ private[out] class OracleSqlWriter(
     typeDefs: Seq[TypeDef])
   extends StandardSqlWriter(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "oracle sql"
-  override def dbDefault(c: MojozColumnDef) = (c.type_.name, c.dbDefault) match {
+  override def dbDefault(c: MojozColumnDefBase) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
     case ("boolean", f) if "false" equalsIgnoreCase f => "'N'"
     case ("boolean", t) if "true" equalsIgnoreCase t => "'Y'"
     case _ => super.dbDefault(c)
   }
-  override def colCheck(c: MojozColumnDef) = {
+  override def colCheck(c: MojozColumnDefBase) = {
     c.type_.name match {
       case "boolean" => " check (" + c.name + " in ('N','Y'))"
       // TODO do not add enum to col, or you will get uninformative msg from ora,
@@ -284,7 +283,7 @@ private[out] class StandardSqlWriter(
     constraintNamingRules.idxName(tableName, idx)
   override def fkName(tableName: String, ref: Ref) =
     constraintNamingRules.fkName(tableName, ref)
-  override def colCheck(c: MojozColumnDef) = {
+  override def colCheck(c: MojozColumnDefBase) = {
     val xt = c.type_
     xt.name match {
       case "string" if c.enum != null =>

@@ -9,6 +9,9 @@ package object metadata {
   type MojozFieldDefBase = FieldDef.FieldDefBase[Type]
   type MojozViewDefBase = ViewDef.ViewDefBase[MojozFieldDefBase]
 
+  type MojozColumnDefBase = ColumnDef.ColumnDefBase[Type]
+  type MojozTableDefBase = TableDef.TableDefBase[MojozColumnDefBase]
+
   type MojozColumnDef = ColumnDef[Type]
   type MojozTableDef = TableDef[MojozColumnDef]
 
