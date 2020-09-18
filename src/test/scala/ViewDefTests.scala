@@ -26,7 +26,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
   val viewDefs = YamlViewDefLoader(tableMd, mdDefs).plainViewDefs
-  val xsdWriter = new XsdWriter(
+  val xsdWriter = new XsdGenerator(
     viewDefs,
     Naming.camelize _,
     Naming.camelize(_) + "Type")

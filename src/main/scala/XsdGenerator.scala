@@ -3,7 +3,7 @@ package out
 
 import scala.collection.immutable.Seq
 
-class XsdWriter(viewDefs: Seq[MojozViewDefBase],
+class XsdGenerator(viewDefs: Seq[MojozViewDefBase],
     xsdName: String => String = identity,
     xsdComplexTypeName: String => String = identity,
     createListWrapper: MojozViewDefBase => Boolean = _.name endsWith "_list_row",

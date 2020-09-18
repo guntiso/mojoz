@@ -117,7 +117,7 @@ Key names are:
 * **type** - [mojoz] type name
 * **_[some]_ name** - type name for specific purpose:
   * **scala name** - used by [ScalaGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/ScalaGenerator.html)
-  * **xsd name** - used by [XsdWriter](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/XsdWriter.html)
+  * **xsd name** - used by [XsdGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/out/XsdGenerator.html)
   * any other (custom) name will also be loaded into
     `targetNames` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/TypeDef.html)
     by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/1.2.1/mojoz/metadata/in/YamlTypeDefLoader.html)
