@@ -158,7 +158,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   }
   private def loadYamlTypeDef(typeDefString: String) = {
     val tdMap =
-      (new Yaml).load(typeDefString) match {
+      (new Yaml).loadAs(typeDefString, classOf[java.util.Map[String, _]]) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)

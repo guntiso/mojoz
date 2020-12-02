@@ -267,7 +267,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
   private def loadYamlTableDef(tableDefString: String) = {
     val tdMap =
-      (new Yaml).load(tableDefString) match {
+      (new Yaml).loadAs(tableDefString, classOf[java.util.Map[String, _]]) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
