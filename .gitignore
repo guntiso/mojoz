@@ -3,6 +3,7 @@ target
 lib
 bin
 lib_managed
+.bsp
 .cache
 .classpath
 .idea
