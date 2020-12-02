@@ -25,6 +25,8 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= dependencies,
 )
 
+ThisBuild / sbt.Keys.versionScheme := Some("semver-spec")
+
 lazy val mojoz = (project in file("."))
   .configs(IntegrationTest)
   .settings(commonSettings: _*)
