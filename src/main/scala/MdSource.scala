@@ -54,7 +54,7 @@ private[in] class ResourcesMdSource(
   private def typedefResources =
     Option(getClass.getResourceAsStream(indexPath))
       .map(Source.fromInputStream(_)(Codec("UTF-8"))
-        .getLines.toList).getOrElse(Nil)
+        .getLines().toList).getOrElse(Nil)
       .filter(nameFilter).map(nameMap).toSet.toList
   override def defSets = typedefResources.map(r => YamlMd(r, 0,
     Option(getClass.getResourceAsStream(r))

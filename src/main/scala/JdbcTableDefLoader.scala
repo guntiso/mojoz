@@ -69,12 +69,13 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
 
     // work around oracle bugs
     if (conn.getClass.getName.startsWith("oracle")) {
+      def oraFix1(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       if (!tableDefs.exists(_.comments != null)) {
         val st = conn.prepareStatement(
           "select comments from all_tab_comments" +
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        tableDefs transform { td =>
+        tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
           val comments = if (rs.next) rs.getString(1) else null
@@ -82,13 +83,15 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           st.clearParameters()
           if (comments == null) td else td.copy(comments = comments)
         }
-      }
+      } else tableDefs
+
+      def oraFix2(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
         val st = conn.prepareStatement(
           "select column_name, comments from all_col_comments" +
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        tableDefs transform { td =>
+        tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
           var cList: List[(String, String)] = Nil
@@ -101,14 +104,17 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           else td.copy(cols = td.cols.map(c =>
             c.copy(comments = cMap.get(c.name).orNull)))
         }
-      }
+      } else tableDefs
+
       // XXX booleans emulated on oracle
       val emulatedBooleanEnums = Set(
         List("N", "Y"), List("Y", "N"))
       def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
         c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
           emulatedBooleanEnums.contains(c.enum.toList)
-      tableDefs transform { td =>
+
+      def oraFix3(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+      tableDefs map { td =>
         if (td.cols.exists(isEmulatedBoolean))
           td.copy(cols = td.cols.map { c =>
             if (isEmulatedBoolean(c)) c.copy(
@@ -123,8 +129,9 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           })
         else td
       }
-    }
-    tableDefs.toList
+      oraFix3(oraFix2(oraFix1(tableDefs))).toList
+    } else
+      tableDefs.toList
   }
   def checkConstraints(conn: Connection, catalog: String,
     schemaPattern: String, tableNamePattern: String): Seq[CheckConstraint]

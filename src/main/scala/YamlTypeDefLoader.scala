@@ -4,7 +4,7 @@ package in
 import org.mojoz.metadata.ColumnDef.ColumnDefBase
 import org.yaml.snakeyaml.Yaml
 import scala.collection.immutable._
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
@@ -166,11 +166,11 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val typeName = tdMap.get("type").map(_.toString)
       .getOrElse(sys.error("Missing type name"))
     val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++
-      tdMap.filterKeys(_ endsWith " name").map {
+      tdMap.filter(_._1 endsWith " name").map {
         case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
       }
     val jdbcLoad: Map[String, Seq[JdbcLoadInfo]] = TreeMap()(math.Ordering.String) ++
-      tdMap.filterKeys(_ endsWith "jdbc").map {
+      tdMap.filter(_._1 endsWith "jdbc").map {
         case (k, v) =>
         val jdbcLoadInfoSeq =
           (v match {
@@ -192,7 +192,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       .map(toString(_, "Failed to load yaml load definition"))
       .map(toYamlLoadInfo)
     val sqlWrite: Map[String, Seq[SqlWriteInfo]] = TreeMap()(math.Ordering.String) ++
-      tdMap.filterKeys(_ endsWith "sql").map {
+      tdMap.filter(_._1 endsWith "sql").map {
         case (k, v) =>
         val sqlWriteInfoSeq =
           (v match {

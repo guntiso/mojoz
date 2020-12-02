@@ -5,7 +5,7 @@ import java.io.File
 import java.util.ArrayList
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.io.Source

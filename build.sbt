@@ -31,6 +31,16 @@ lazy val mojoz = (project in file("."))
   .configs(IntegrationTest)
   .settings(commonSettings: _*)
   .settings(Defaults.itSettings: _*)
+  .settings(
+    Compile / unmanagedSourceDirectories ++= {
+      val sharedSourceDir = (ThisBuild / baseDirectory).value / "compat"
+      if (scalaVersion.value.startsWith("2.12.") ||
+          scalaVersion.value.startsWith("2.11.") ||
+          scalaVersion.value.startsWith("2.10."))
+        Seq(sharedSourceDir / "scala-2.12")
+      else Nil
+    },
+  )
 
 autoAPIMappings := true
 
