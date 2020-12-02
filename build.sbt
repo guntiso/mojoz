@@ -11,10 +11,10 @@ lazy val dependencies = Seq(
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.13.2",
+  scalaVersion := "2.13.4",
   crossScalaVersions := Seq(
-    "2.13.2",
-    "2.12.11",
+    "2.13.4",
+    "2.12.12",
     "2.11.12",
     "2.10.7"
   ),
