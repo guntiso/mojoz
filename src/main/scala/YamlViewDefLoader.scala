@@ -377,7 +377,7 @@ class YamlViewDefLoader(
         extras = base.extras -- uninheritableExtras ++ t.extras)
 
     def inheritSeqs(t: MojozViewDef): MojozViewDef =
-      if (t.extends_ == null) t
+      if (t.extends_ == null || t.extends_ == t.name) t
       else mergeSeqs(t, inheritSeqs(rawTypesMap(t.extends_)))
 
     def resolveBaseTableAlias[T](t: ViewDef[T]) = {
