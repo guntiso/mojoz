@@ -14,7 +14,6 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     path = path, filter = _.getName endsWith "-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
-  val viewDefs = YamlViewDefLoader(tableMd, mdDefs).plainViewDefs
   val xViewDefs = YamlViewDefLoader(tableMd, mdDefs).nameToViewDef
 
   "parsing for save-to and resolver" should "work properly" in {
