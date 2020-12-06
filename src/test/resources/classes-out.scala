@@ -133,6 +133,38 @@ class WithAnonymousInlineViewSomeChildren extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null
 }
+class WithChildExtends extends Dto {
+  var code: String = null
+  var name: String = null
+  var bank: List[WithChildExtendsBank] = Nil
+}
+class WithChildExtendsBank extends DtoWithId {
+  var id: java.lang.Long = null
+  var code: String = null
+  var name: String = null
+}
+class WithChildExtendsCrud1 extends /* WithChildExtends */ Dto {
+  // --- WithChildExtends
+  var code: String = null
+  var name: String = null
+  // var bank: List[WithChildExtendsBank] = Nil
+  // --- WithChildExtendsCrud1
+  /* override */ var bank: List[WithChildExtendsCrud1Bank] = Nil
+}
+class WithChildExtendsCrud1Bank extends WithChildExtendsBank with Dto {
+  var extra: String = null
+}
+class WithChildExtendsCrud2 extends /* WithChildExtends */ Dto {
+  // --- WithChildExtends
+  var code: String = null
+  var name: String = null
+  // var bank: List[WithChildExtendsBank] = Nil
+  // --- WithChildExtendsCrud2
+  var extra: String = null
+  /* override */ var bank: List[WithChildExtendsCrud2Bank] = Nil
+}
+class WithChildExtendsCrud2Bank extends WithChildExtendsBank with Dto {
+}
 class WithChildOrderByAsc extends Dto {
   var code: String = null
   var bank: List[WithChildOrderByAscBank] = Nil

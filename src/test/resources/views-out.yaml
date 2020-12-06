@@ -198,6 +198,45 @@ fields:
 - child_id
 - child_name
 
+name:     with_child_extends
+table:
+fields:
+- code
+- name
+- bank                  * with_child_extends_bank
+
+name:     with_child_extends_bank
+table:
+fields:
+- id
+- code
+- name
+
+name:     with_child_extends_crud1
+table:    country
+extends:  with_child_extends
+fields:
+- bank                  * with_child_extends_crud1_bank
+
+name:     with_child_extends_crud1_bank
+table:    bank
+extends:  with_child_extends_bank
+fields:
+- extra                                 =
+
+name:     with_child_extends_crud2
+table:    country
+extends:  with_child_extends
+fields:
+- extra                                 =
+- bank                  * with_child_extends_crud2_bank
+
+name:     with_child_extends_crud2_bank
+table:    bank
+extends:  with_child_extends_bank
+fields:
+
+
 name:     with_child_order_by_asc
 table:    country
 fields:

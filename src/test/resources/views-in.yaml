@@ -237,6 +237,37 @@ fields:
     fields:
     - child_name
 
+name: with_child_extends
+table:
+fields:
+- code
+- name
+- bank * :
+    table:
+    fields:
+    - id
+    - code
+    - name
+
+name: with_child_extends_crud1
+table: country
+extends: with_child_extends
+fields:
+- bank * :
+    table: bank
+    extends: with_child_extends_bank
+    fields:
+    - extra =
+
+name: with_child_extends_crud2
+table: country
+extends: with_child_extends
+fields:
+- extra =
+- bank * :
+    table: bank
+    extends: with_child_extends_bank
+
 name: resolver_test_1
 table: person
 fields:

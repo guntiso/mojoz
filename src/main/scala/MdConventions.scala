@@ -183,7 +183,7 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
         case _ => Option(type_)
       }
   }
-  def toExternal(view: MojozViewDef, tableMetadata: TableMetadata[MojozTableDef]) = {
+  def toExternal(view: MojozViewDef, tableMetadata: TableMetadata[MojozTableDef], allViews: Map[String, MojozViewDef]) = {
     def mapField(f: MojozFieldDef) = {
       import f._
       if (table == null || type_.isComplexType)
@@ -217,7 +217,7 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
     view.copy(
       table =
         if (table == null) ""
-        else if (extends_ != null) null
+        else if (extends_ != null && allViews.get(extends_).map(_.table == table).getOrElse(false)) null
         else table,
       comments = Option(comments)
         .filter(tableDef == null || _ != tableDef.comments).orNull,

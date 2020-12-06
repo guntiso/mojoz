@@ -26,6 +26,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
   val viewDefs = YamlViewDefLoader(tableMd, mdDefs).plainViewDefs
+  val nameToViewDef = viewDefs.map(v => v.name -> v).toMap
   val xsdWriter = new XsdGenerator(
     viewDefs,
     Naming.camelize _,
@@ -36,7 +37,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   }
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "views-out.yaml")
-    val ioViews = viewDefs.map(MdConventions.toExternal(_, tableMd))
+    val ioViews = viewDefs.map(MdConventions.toExternal(_, tableMd, nameToViewDef))
     val produced = (new YamlViewDefWriter).toYaml(ioViews)
     if (expected != produced)
       toFile(path + "/" + "views-out-produced.yaml", produced)
@@ -47,7 +48,7 @@ class ViewDefTests extends FlatSpec with Matchers {
       path = path, filter = _.getName == "views-out.yaml")
     val viewDefsFromOut = YamlViewDefLoader(tableMd, mdDefsFromOut).plainViewDefs
     val expected = fileToString(path + "/" + "views-out.yaml")
-    val ioViews = viewDefsFromOut.map(MdConventions.toExternal(_, tableMd))
+    val ioViews = viewDefsFromOut.map(MdConventions.toExternal(_, tableMd, nameToViewDef))
     val produced = (new YamlViewDefWriter).toYaml(ioViews)
     if (expected != produced)
       toFile(path + "/" + "views-out-roundtrip-produced.yaml", produced)
@@ -71,7 +72,6 @@ class ViewDefTests extends FlatSpec with Matchers {
   // TODO visualizer tests
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
-    // TODO api sucks
     object ScalaBuilder extends ScalaGenerator {
       override def scalaClassName(name: String) = Naming.camelize(name)
       override def scalaFieldName(name: String) = Naming.camelizeLower(name)
@@ -80,7 +80,6 @@ class ViewDefTests extends FlatSpec with Matchers {
           List("DtoWithId")
         else List("Dto")
     }
-    // TODO api sucks
     val produced = ScalaBuilder.generateScalaSource(
       List("package some.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
@@ -90,12 +89,10 @@ class ViewDefTests extends FlatSpec with Matchers {
   }
   "generated scala case class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "case-classes-out.scala")
-    // TODO api sucks
     object ScalaBuilder extends ScalaCaseClassGenerator {
       override def scalaClassName(name: String) = Naming.camelize(name)
       override def scalaFieldName(name: String) = Naming.camelizeLower(name)
     }
-    // TODO api sucks
     val produced = ScalaBuilder.generateScalaSource(
       List("package some.caseclass.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO

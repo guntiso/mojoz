@@ -28,6 +28,8 @@ class YamlViewDefLoader(
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   import YamlViewDefLoader._
   import tableMetadata.dbName
+  private val MojozExplicitComments    = "mojoz.explicit.comments"
+  private val MojozExplicitEnum        = "mojoz.explicit.enum"
   private val MojozExplicitNullability = "mojoz.explicit.nullability"
   private val MojozExplicitType        = "mojoz.explicit.type"
   private val parseJoins = joinsParser
@@ -64,22 +66,65 @@ class YamlViewDefLoader(
   val plainViewDefs: List[MojozViewDef] = buildViewDefs(rawViewDefs).sortBy(_.name)
   private[in] val nameToPlainViewDef = plainViewDefs.map(t => (t.name, t)).toMap
   protected def overrideField(baseView: MojozViewDef, baseField: MojozFieldDef,
-                              view: MojozViewDef, field: MojozFieldDef): MojozFieldDef = {
-    def overrideFailed(msg: String): String =
-      throw new RuntimeException(
-        s"Bad override of ${baseView.name}.${propName(baseField)} with ${view.name}.${propName(field)}: $msg"
-      )
-    if (baseField.type_ != field.type_)
-      overrideFailed(s"${baseField.type_} is not equal to ${field.type_}")
-    if (field.enum != null && baseField.enum != field.enum)
-      overrideFailed(s"Enum ${baseField.enum} is not equal to ${field.enum}")
-    if (field.comments != null && baseField.comments != field.comments)
-      overrideFailed(s"Comments '${baseField.comments}' are not equal to '${field.comments}'")
-    if  (field.enum == baseField.enum && field.comments == baseField.comments)
-         field
-    else field.copy(enum = baseField.enum, comments = baseField.comments)
+                              view: MojozViewDef, field: MojozFieldDef,
+                              viewNamesVisited: List[String]
+                             ): MojozFieldDef = {
+    def fieldOverrideFailed(msg: String): Nothing = throw new RuntimeException(
+      s"Bad override of ${baseView.name}.${propName(baseField)} with ${view.name}.${propName(field)}: $msg")
+    fieldOverrideIncompatibilityMessage(baseField, field, viewNamesVisited) match {
+      case null =>
+        if  (field.enum     == baseField.enum     &&
+             field.comments == baseField.comments &&
+             field.nullable == baseField.nullable)
+             field
+        else field.copy(
+          enum     = baseField.enum,
+          comments = baseField.comments,
+          nullable = baseField.nullable)
+      case errorMessage =>
+        fieldOverrideFailed(errorMessage)
+    }
   }
-  val nameToViewDef: Map[String, MojozViewDef] = plainViewDefs.map(t =>
+  protected def fieldOverrideIncompatibilityMessage(
+      baseField: MojozFieldDef, field: MojozFieldDef, viewNamesVisited: List[String]): String = {
+    def typeInfo(t: Type) =
+      (if (t.isComplexType) "complex type" else "simple type") + " \"" +
+      List(Option(t.name), t.length, t.totalDigits, t.fractionDigits).flatMap(x => x).mkString(" ") +
+      "\""
+    if (baseField.type_ != field.type_)
+      if (baseField.type_.isComplexType && field.type_.isComplexType) {
+        val view     = plainViewDefToViewDef(nameToPlainViewDef(field    .type_.name), viewNamesVisited)
+        val baseView = plainViewDefToViewDef(nameToPlainViewDef(baseField.type_.name), viewNamesVisited)
+        val nameToField =
+          view.fields.map(f => propName(f) -> f).toMap
+        baseView.fields.find(baseF => nameToField.get(propName(baseF))
+          .map(f => fieldOverrideIncompatibilityMessage(baseF, f, viewNamesVisited) != null)
+          .getOrElse(true)
+        ).map { problematicBaseF =>
+          s"${typeInfo(baseField.type_).capitalize} is not compatible with ${typeInfo(field.type_)} because "
+          nameToField.get(propName(problematicBaseF))
+          .map(problematicF =>
+            fieldOverrideIncompatibilityMessage(problematicBaseF, problematicF, viewNamesVisited)
+          ).getOrElse(s"field ${field.type_.name}.${propName(problematicBaseF)} is missing")
+        }.orNull
+      } else {
+        s"${typeInfo(baseField.type_).capitalize} is not equal to ${typeInfo(field.type_)}"
+      }
+    else if (field.enum != null && baseField.enum != field.enum &&
+             field.extras != null && field.extras.get(MojozExplicitEnum) == Some(true))
+      s"Enum ${baseField.enum} is not equal to ${field.enum}"
+    else if (field.comments != null && baseField.comments != field.comments &&
+             field.extras != null && field.extras.get(MojozExplicitComments) == Some(true))
+      s"Comments '${baseField.comments}' are not equal to '${field.comments}'"
+    else if (baseField.isCollection != field.isCollection)
+      s"Is collection '${baseField.isCollection}' is not equal to '${field.isCollection}'"
+    else if (baseField.nullable != field.nullable &&
+             field.extras != null && field.extras.get(MojozExplicitNullability) == Some(true))
+      s"Nullable '${baseField.nullable}' is not equal to '${field.nullable}'"
+    else
+      null
+  }
+  private def plainViewDefToViewDef(t: MojozViewDef, viewNamesVisited: List[String]): MojozViewDef = {
     if (t.extends_ == null) t else {
       def maybeAssignTable(tableName: String)(f: MojozFieldDef) = {
         if (tableName == null ||
@@ -94,10 +139,13 @@ class YamlViewDefLoader(
           v: MojozViewDef,
           extV: MojozViewDef,
           fields: Seq[MojozFieldDef],
-          tableName: String): Seq[MojozFieldDef] =
+          tableName: String,
+          visited: List[String]): Seq[MojozFieldDef] =
         if (v.extends_ == null && fields.isEmpty)
           v.fields.map(maybeAssignTable(tableName)) ++ fields
         else {
+          if (visited contains v.name) sys.error("Cyclic extends/overrides: " +
+            (v.name :: visited).reverse.mkString(" -> "))
           val vFieldsTransformed = v.fields.map(maybeAssignTable(tableName))
           val vFieldNames = vFieldsTransformed.map(propName).toSet
           val overridingFields = fields.collect {
@@ -111,7 +159,7 @@ class YamlViewDefLoader(
                 overridingFields.map(f => propName(f) -> f).toMap
               vFieldsTransformed.map { f =>
                 nameToOverrideField.get(propName(f))
-                  .map(of => overrideField(v, f, extV, of))
+                  .map(of => overrideField(v, f, extV, of, v.name :: visited))
                   .getOrElse(f)
               } ++ fields.filterNot(overridingFields.contains)
             }
@@ -122,12 +170,16 @@ class YamlViewDefLoader(
               nameToPlainViewDef(v.extends_),
               v,
               mergedFields,
-              v.table
+              v.table,
+              v.name :: visited
             )
         }
-      t.copy(fields = baseFields(t, null, Nil, null))
-    })
-    .map(t => (t.name, t)).toMap
+      t.copy(fields = baseFields(t, null, Nil, null, viewNamesVisited))
+    }
+  }
+  val nameToViewDef: Map[String, MojozViewDef] =
+    plainViewDefs.map(plainViewDefToViewDef(_, Nil))
+      .map(t => (t.name, t)).toMap
   protected def loadRawViewDefs(defs: String): List[MojozViewDef] = {
     Option((new Yaml).loadAs(defs, classOf[java.util.Map[String, _]]))
       .map {
@@ -225,15 +277,17 @@ class YamlViewDefLoader(
       val nullable = Option(cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = cardinality != null
+      val isForcedEnum = yfd.enum != null
       val isForcedType = yfd.typeName != null || yfd.length.isDefined || yfd.fraction.isDefined
       val joinToParent = yfd.joinToParent
       val enum = yfd.enum
       val orderBy = yfd.orderBy
       val comments = yfd.comments
       val extras =
-        if  (isForcedType || isForcedCardinality)
+        if  (isForcedCardinality || isForcedEnum || isForcedType)
              Option(yfd.extras).getOrElse(Map.empty) ++
               Map(
+                MojozExplicitEnum        -> isForcedEnum,
                 MojozExplicitType        -> isForcedType,
                 MojozExplicitNullability -> isForcedCardinality
               ).filter(_._2)
@@ -259,7 +313,7 @@ class YamlViewDefLoader(
         mojozType, enum, joinToParent, orderBy, comments, extras)
     }
     def isViewDef(m: Map[String, Any]) =
-      m != null && m.contains("fields")
+      m != null && !m.contains("columns") && (m.contains("fields") || m.contains("extends"))
     val fieldDefs = yamlFieldDefs
       .map(yfd => yfd -> toMojozFieldDef(yfd, name, table, saveTo))
       .map { case (yfd, f) => yfd -> (
@@ -313,9 +367,12 @@ class YamlViewDefLoader(
     val m = td.map(t => (t.name, t)).toMap
     td foreach { t =>
       t.fields.foreach { f =>
-        if (f.type_.isComplexType)
+        if (f.type_ == null)
+          sys.error(
+            "Unexpected null type for field " + t.name + "." + f.name)
+        else if (f.type_.isComplexType)
           m.get(f.type_.name) getOrElse sys.error("Type " + f.type_.name +
-            " referenced from " + t.name + " is not found")
+            " referenced from " + t.name + "." + f.name + " is not found")
         else if (f.table != null)
           tableMetadata.columnDef(t, f)
       }
@@ -488,12 +545,27 @@ class YamlViewDefLoader(
                    overrideSimpleType(col.type_, f.type_)
               else col.type_,
             enum = Option(f.enum) getOrElse col.enum,
-            comments = Option(f.comments) getOrElse col.comments)
+            comments = Option(f.comments) getOrElse col.comments,
+            extras =
+              if  (f.comments != null)
+                   Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
+              else f.extras
+          )
         }
       }
       def cleanExtras(f: MojozFieldDef) =
-        if  (f.extras != null && (f.extras.contains(MojozExplicitNullability) || f.extras.contains(MojozExplicitType)))
-             f.copy(extras = Option(f.extras).map(_ - MojozExplicitType - MojozExplicitNullability).filterNot(_.isEmpty).orNull)
+        if  (f.extras != null && (
+                f.extras.contains(MojozExplicitComments)    ||
+                f.extras.contains(MojozExplicitEnum)        ||
+                f.extras.contains(MojozExplicitNullability) ||
+                f.extras.contains(MojozExplicitType)))
+             f.copy(extras =
+               Option(f.extras)
+                .map(_ - MojozExplicitComments
+                       - MojozExplicitEnum
+                       - MojozExplicitNullability
+                       - MojozExplicitType)
+                .filterNot(_.isEmpty).orNull)
         else f
       t.copy(fields = t.fields
         .map(reduceExpression)

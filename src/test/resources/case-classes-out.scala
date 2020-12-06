@@ -6,10 +6,16 @@ case class Account (
   billingAccount: String = null,
   currency: List[String] = Nil
 )
-case class AccountDetails (
+case class AccountDetails /* extends Account */ (
+  // --- Account
+  id: java.lang.Long = null,
+  bankId: java.lang.Long = null,
+  // billingAccount: String = null
+  currency: List[String] = Nil,
+  // --- AccountDetails
   bankCode: String = null,
   bankName: String = null,
-  billingAccount: String = null
+  /* override */ billingAccount: String = null
 )
 case class BankListRow (
   id: java.lang.Long = null,
@@ -36,10 +42,14 @@ case class NoFields (
 )
 case class NoFieldsB (
 )
-case class NoFieldsExtendedB (
+case class NoFieldsExtendedB /* extends NoFieldsB */ (
+  // --- NoFieldsB
+  // --- NoFieldsExtendedB
   id: java.lang.Long = null
 )
-case class NoFieldsExtendedWithFields (
+case class NoFieldsExtendedWithFields /* extends NoFields */ (
+  // --- NoFields
+  // --- NoFieldsExtendedWithFields
   id: java.lang.Long = null,
   code: String = null,
   name: String = null,
@@ -132,6 +142,48 @@ case class WithAnonymousInlineView (
 case class WithAnonymousInlineViewSomeChildren (
   childId: java.lang.Long = null,
   childName: String = null
+)
+case class WithChildExtends (
+  code: String = null,
+  name: String = null,
+  bank: List[WithChildExtendsBank] = Nil
+)
+case class WithChildExtendsBank (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+)
+case class WithChildExtendsCrud1 /* extends WithChildExtends */ (
+  // --- WithChildExtends
+  code: String = null,
+  name: String = null,
+  // bank: List[WithChildExtendsBank] = Nil
+  // --- WithChildExtendsCrud1
+  /* override */ bank: List[WithChildExtendsCrud1Bank] = Nil
+)
+case class WithChildExtendsCrud1Bank /* extends WithChildExtendsBank */ (
+  // --- WithChildExtendsBank
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null,
+  // --- WithChildExtendsCrud1Bank
+  extra: String = null
+)
+case class WithChildExtendsCrud2 /* extends WithChildExtends */ (
+  // --- WithChildExtends
+  code: String = null,
+  name: String = null,
+  // bank: List[WithChildExtendsBank] = Nil
+  // --- WithChildExtendsCrud2
+  extra: String = null,
+  /* override */ bank: List[WithChildExtendsCrud2Bank] = Nil
+)
+case class WithChildExtendsCrud2Bank /* extends WithChildExtendsBank */ (
+  // --- WithChildExtendsBank
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+  // --- WithChildExtendsCrud2Bank
 )
 case class WithChildOrderByAsc (
   code: String = null,

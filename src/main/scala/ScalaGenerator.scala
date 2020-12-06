@@ -42,7 +42,6 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def initialValueString(col: MojozFieldDefBase) =
     if (col.isCollection) "Nil" else "null"
   def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
-    (if (col.isOverride) "// override " else "") +
     s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
   def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDefBase) =
     try
@@ -53,62 +52,107 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     }
   def scalaClassExtends(viewDef: MojozViewDefBase) =
     Option(viewDef.extends_).filter(_ != "").map(scalaClassName)
+  def isExtendsDisabled(viewDef: MojozViewDefBase): Boolean =
+    viewDef.fields.exists(f => f.type_.isComplexType && f.isOverride)
   def scalaClassTraits(viewDef: MojozViewDefBase): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
-  def scalaFieldsStrings(viewDef: MojozViewDefBase) =
-    viewDef.fields.map(f => scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
-  def scalaFieldsStringsWithHandler(viewDef: MojozViewDefBase) =
+  def scalaFieldsStrings(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): Seq[String] = {
+    val xtndsOpt = scalaClassExtends(viewDef)
+    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef)
+    def fieldsStrings(viewDef: MojozViewDefBase, overrided: Set[String]) =
+      viewDef.fields
+        .map(f =>
+          (if (overrided.nonEmpty && overrided.contains(Option(f.alias) getOrElse f.name)) "// "
+           else if (f.isOverride) (if (xtndsDisabled) "/* override */ " else "// override ") else "") +
+          scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
+    def fieldsStringsWithBase(viewDef: MojozViewDefBase, overrided: Set[String]): Seq[String] = {
+      val baseFields =
+        if (viewDef.extends_ == null) Nil
+        else {
+          val baseView = allViewDefs.get(viewDef.extends_).getOrElse {
+            throw new RuntimeException(
+              s"Failed to include scala fields into ${viewDef.name} from ${viewDef.extends_} because it is not found")
+          }
+          fieldsStringsWithBase(baseView, overrided ++ viewDef.fields.map(f => Option(f.alias) getOrElse f.name))
+        }
+      baseFields ++ (
+        s"// --- ${scalaNameString(scalaClassName(viewDef.name))}" +:
+        fieldsStrings(viewDef, overrided))
+    }
+    if (xtndsDisabled)
+         fieldsStringsWithBase(viewDef, Set.empty)
+    else fieldsStrings(viewDef, Set.empty)
+  }
+  def scalaFieldsStringsWithHandler(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) =
     try
-      scalaFieldsStrings(viewDef)
+      scalaFieldsStrings(viewDef, allViewDefs)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process view: ${viewDef.name}", ex)
     }
-  def scalaFieldsString(viewDef: MojozViewDefBase) =
-    scalaFieldsStringsWithHandler(viewDef)
+  def scalaFieldsString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) =
+    scalaFieldsStringsWithHandler(viewDef, allViewDefs)
       .map(scalaFieldsIndent + _ + nl).mkString
-  def scalaBody(viewDef: MojozViewDefBase) =
-    scalaFieldsString(viewDef) + Option(scalaBodyExtra(viewDef)).getOrElse("")
-  def scalaBodyExtra(viewDef: MojozViewDefBase) = ""
-  def scalaExtendsString(viewDef: MojozViewDefBase) =
+  def scalaBody(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) =
+    scalaFieldsString(viewDef, allViewDefs) + Option(scalaBodyExtra(viewDef, allViewDefs)).getOrElse("")
+  def scalaBodyExtra(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = ""
+  def scalaExtendsString(viewDef: MojozViewDefBase) = {
+    val xtndsOpt = scalaClassExtends(viewDef)
+    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef)
     Option(scalaClassTraits(viewDef))
-      .map(scalaClassExtends(viewDef).toList ::: _.toList)
-      .map(t => t.filter(_ != null).filter(_ != ""))
+      .map(xtndsOpt.toList ::: _.toList)
+      .map(_.filter(_ != null).filter(_ != ""))
       .filter(_.size > 0)
       .map(_ map scalaNameString)
-      .map(_.mkString(" extends ", " with ", ""))
+      .map(c =>
+        if (xtndsDisabled)
+          if (c.size == 1)
+             s" /* extends ${c.head} */"
+          else
+             s" extends /* ${c.head} */ " + c.tail.mkString(" with ")
+        else c.mkString(" extends ", " with ", "")
+      )
       .getOrElse("")
-  def scalaPrefix(viewDef: MojozViewDefBase) = "class"
-  def scalaClassString(viewDef: MojozViewDefBase) = {
-    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef)}}"
   }
-  def scalaObjectString(viewDef: MojozViewDefBase): String = ""
-  def scalaClassAndObjectString(viewDef: MojozViewDefBase): String =
-    Seq(scalaClassString(viewDef), scalaObjectString(viewDef))
+  def scalaPrefix(viewDef: MojozViewDefBase) = "class"
+  def scalaClassString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef, allViewDefs)}}"
+  }
+  def scalaObjectString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): String = ""
+  def scalaClassAndObjectString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): String =
+    Seq(scalaClassString(viewDef, allViewDefs), scalaObjectString(viewDef, allViewDefs))
       .filter(_ != null).filter(_ != "").mkString(nl)
   def generateScalaSource(
-    headers: Seq[String], viewDefs: Seq[MojozViewDefBase], footers: Seq[String]) =
-    List(headers, viewDefs map scalaClassAndObjectString, footers)
+    headers: Seq[String], viewDefs: Seq[MojozViewDefBase], footers: Seq[String]) = {
+    val allViewDefs = viewDefs.map(v => v.name -> v).toMap
+    List(headers, viewDefs.map(scalaClassAndObjectString(_, allViewDefs)), footers)
       .flatMap(x => x)
       .mkString("", nl, nl)
+  }
 }
 
-class ScalaCaseClassGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends ScalaGenerator(typeDefs) {
+trait ScalaCaseClassGenerator extends ScalaGenerator {
   override def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
     s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  override def scalaFieldsStrings(viewDef: MojozViewDefBase) = {
-    val fieldsStrings = super.scalaFieldsStrings(viewDef)
+  override def scalaFieldsStrings(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
+    val fieldsStrings = super.scalaFieldsStrings(viewDef, allViewDefs)
     if (fieldsStrings.size < 2) fieldsStrings
-    else (fieldsStrings.reverse.head :: fieldsStrings.reverse.tail.map(_ + ",").toList).reverse
+    else {
+      var isLastFound = false
+      fieldsStrings.reverse.map { f =>
+        if (f.startsWith("//")) f
+        else if (isLastFound) f + ","
+        else { isLastFound = true; f }
+      }.reverse
+    }
   }
-  // FIXME extends for case classes?
+  override def isExtendsDisabled(viewDef: MojozViewDefBase): Boolean = true
   override def scalaPrefix(viewDef: MojozViewDefBase) = "case class"
-  override def scalaClassExtends(viewDef: MojozViewDefBase) = None
-  override def scalaClassString(viewDef: MojozViewDefBase) = {
-    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef)})" +
-      Option(scalaBodyExtra(viewDef)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
+  override def scalaClassString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef, allViewDefs)})" +
+      Option(scalaBodyExtra(viewDef, allViewDefs)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }
 }
 
 object ScalaGenerator extends ScalaGenerator(TypeMetadata.customizedTypeDefs)
-object ScalaCaseClassGenerator extends ScalaCaseClassGenerator(TypeMetadata.customizedTypeDefs)
+object ScalaCaseClassGenerator extends ScalaGenerator(TypeMetadata.customizedTypeDefs) with ScalaCaseClassGenerator

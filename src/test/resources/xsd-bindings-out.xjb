@@ -92,6 +92,24 @@
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewSomeChildrenType']">
       <jaxb:class name="WithAnonymousInlineViewSomeChildren"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsType']">
+      <jaxb:class name="WithChildExtends"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsBankType']">
+      <jaxb:class name="WithChildExtendsBank"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud1Type']">
+      <jaxb:class name="WithChildExtendsCrud1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud1BankType']">
+      <jaxb:class name="WithChildExtendsCrud1Bank"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud2Type']">
+      <jaxb:class name="WithChildExtendsCrud2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud2BankType']">
+      <jaxb:class name="WithChildExtendsCrud2Bank"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithChildOrderByAscType']">
       <jaxb:class name="WithChildOrderByAsc"/>
     </jaxb:bindings>

@@ -635,6 +635,70 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithChildExtendsType">
+    <xs:sequence>
+      <xs:element name="Code" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Name" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Bank" minOccurs="0" maxOccurs="unbounded" type="tns:WithChildExtendsBankType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithChildExtendsBankType">
+    <xs:sequence>
+      <xs:element name="Id" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="Code" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Name" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithChildExtendsCrud1Type">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="tns:WithChildExtendsType">
+        <xs:sequence>
+          
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="WithChildExtendsCrud1BankType">
+    <xs:complexContent>
+      <xs:extension base="tns:WithChildExtendsBankType">
+        <xs:sequence>
+          <xs:element name="Extra" nillable="true" minOccurs="0" type="xs:string">
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="WithChildExtendsCrud2Type">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="tns:WithChildExtendsType">
+        <xs:sequence>
+          <xs:element name="Extra" nillable="true" minOccurs="0" type="xs:string">
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:complexType name="WithChildExtendsCrud2BankType">
+    <xs:complexContent>
+      <xs:extension base="tns:WithChildExtendsBankType">
+        <xs:sequence>
+          
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="WithChildOrderByAscType">
     <xs:annotation>
       <xs:documentation>Valstu klasifikators</xs:documentation>

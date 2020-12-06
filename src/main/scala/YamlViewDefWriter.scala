@@ -176,10 +176,3 @@ class YamlViewDefWriter {
     _wrapped(words.trim.split("[\\s]+").toList, Nil, prefix).mkString("\n")
   }
 }
-/*
-object YamlViewDefWriter {
-  def toYaml(views: Seq[ViewDef[FieldDef[Type]]],
-    conventions: (ViewDef[FieldDef[Type]]) => ViewDef[FieldDef[IoColumnType]] = MdConventions.toExternal) =
-    (new YamlViewDefWriter).toYaml(views.map(conventions))
-}
-*/
