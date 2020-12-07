@@ -19,10 +19,10 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def nl = System.getProperty("line.separator")
   def nonStickName(name: String) = if (name endsWith "_") s"$name " else name
   def scalaNameString(name: String) =
-    if (SimpleIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
+    if (name.startsWith("`") || SimpleIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
     else s"`$name`"
   def scalaQualifiedNameString(name: String) =
-    if (QualifiedIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
+    if (name.startsWith("`") || QualifiedIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
     else s"`$name`"
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
