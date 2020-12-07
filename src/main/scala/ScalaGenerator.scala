@@ -7,7 +7,9 @@ import scala.collection.immutable.Set
 // TODO ScalaTraitGenerator
 class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   private val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
+  private val qualifiedIdent = s"$ident(\\.$ident)*"
   private val SimpleIdentR = ("^" + ident + "$").r
+  private val QualifiedIdentR = ("^" + qualifiedIdent + "$").r
   val scalaKeywords: Set[String] = Set(
     "abstract", "case", "catch", "class", "def", "do", "else", "extends",
     "false", "final", "finally", "for", "forSome", "if", "implicit", "import", "lazy",
@@ -18,6 +20,9 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def nonStickName(name: String) = if (name endsWith "_") s"$name " else name
   def scalaNameString(name: String) =
     if (SimpleIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
+    else s"`$name`"
+  def scalaQualifiedNameString(name: String) =
+    if (QualifiedIdentR.pattern.matcher(name).matches && !(scalaKeywords contains name)) name
     else s"`$name`"
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
@@ -103,7 +108,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
       .map(xtndsOpt.toList ::: _.toList)
       .map(_.filter(_ != null).filter(_ != ""))
       .filter(_.size > 0)
-      .map(_ map scalaNameString)
+      .map(_ map scalaQualifiedNameString)
       .map(c =>
         if (xtndsDisabled)
           if (c.size == 1)
