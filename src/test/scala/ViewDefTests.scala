@@ -20,6 +20,10 @@ class ViewDefTests extends FlatSpec with Matchers {
       case x => x
     }
   }
+  trait CamelizedNames extends ScalaGenerator {
+    override def scalaClassName(name: String) = Naming.camelize(name)
+    override def scalaFieldName(name: String) = Naming.camelizeLower(name)
+  }
   val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "-in.yaml")
@@ -72,9 +76,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   // TODO visualizer tests
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
-    object ScalaBuilder extends ScalaGenerator {
-      override def scalaClassName(name: String) = Naming.camelize(name)
-      override def scalaFieldName(name: String) = Naming.camelizeLower(name)
+    object ScalaBuilder extends ScalaGenerator with CamelizedNames {
       override def scalaClassTraits(viewDef: MojozViewDefBase) =
         if (viewDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
           List("DtoWithId")
@@ -89,10 +91,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   }
   "generated scala case class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "case-classes-out.scala")
-    object ScalaBuilder extends ScalaCaseClassGenerator {
-      override def scalaClassName(name: String) = Naming.camelize(name)
-      override def scalaFieldName(name: String) = Naming.camelizeLower(name)
-    }
+    object ScalaBuilder extends ScalaCaseClassGenerator with CamelizedNames
     val produced = ScalaBuilder.generateScalaSource(
       List("package some.caseclass.pack", ""), viewDefs, Seq("// end"))
       .replace(nl, "\n") // normalize newlines here? TODO
