@@ -44,13 +44,13 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaSimpleTypeName(t: Type) =
     typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
-  def initialValueString(col: MojozFieldDefBase) =
-    if (col.isCollection) "Nil" else "null"
-  def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
-    s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
-  def scalaFieldStringWithHandler(fieldName: String, col: MojozFieldDefBase) =
+  def initialValueString(field: MojozFieldDefBase) =
+    if (field.isCollection) "Nil" else "null"
+  def scalaFieldString(fieldName: String, field: MojozFieldDefBase) =
+    s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(field)} = ${initialValueString(field)}"
+  def scalaFieldStringWithHandler(fieldName: String, field: MojozFieldDefBase) =
     try
-      scalaFieldString(fieldName, col)
+      scalaFieldString(fieldName, field)
     catch {
       case ex: Exception =>
         throw new RuntimeException(s"Failed to process field: $fieldName", ex)
@@ -137,8 +137,8 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
 }
 
 trait ScalaCaseClassGenerator extends ScalaGenerator {
-  override def scalaFieldString(fieldName: String, col: MojozFieldDefBase) =
-    s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(col)} = ${initialValueString(col)}"
+  override def scalaFieldString(fieldName: String, field: MojozFieldDefBase) =
+    s"${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(field)} = ${initialValueString(field)}"
   override def scalaFieldsStrings(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
     val fieldsStrings = super.scalaFieldsStrings(viewDef, allViewDefs)
     if (fieldsStrings.size < 2) fieldsStrings
