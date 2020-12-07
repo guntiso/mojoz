@@ -10,11 +10,11 @@ Used by [querease](https://github.com/guntiso/querease) to save and retrieve dat
 ## Table metadata
 
 Table metadata is typically loaded from YAML resource files bundled with application
-(see [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlTableDefLoader.html)).
+(see [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/YamlTableDefLoader.html)).
 Table metadata can also be extracted from
 [java.sql.DatabaseMetaData](https://docs.oracle.com/en/java/javase/11/docs/api/java.sql/java/sql/DatabaseMetaData.html)
 using JDBC connection and saved to yaml files for later use
-(see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)).
+(see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)).
 
 [Yaml 1.1](https://yaml.org/spec/1.1/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
 Key names are:
@@ -23,11 +23,11 @@ Key names are:
 * **comments**
 * **columns** - collection of columns
 * **pk** - primary key. If not provided, might be implied (based on columns) to be `id` or `code` or a pair of refs,
-  as defined in [MdConventions](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/io/MdConventions.html).fromExternalPk
+  as defined in [MdConventions](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/io/MdConventions.html).fromExternalPk
 * **uk** - collection of unique keys
 * **idx** - collection of indices
 * **refs** - collection of customized or additional references to columns (foreign keys)
-* any other (custom) keys can be used and are sent to `extras` field of [TableDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/TableDef.html)
+* any other (custom) keys can be used and are sent to `extras` field of [TableDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/TableDef.html)
   by YamlTableDefLoader.
 
 For example, table definition
@@ -40,7 +40,7 @@ columns:
 - mother.id              person.id
 - father.id              person.id
 ```
-corresponds to the following sql (as converted by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator$.html)):
+corresponds to the following sql (as converted by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator$.html)):
 ```sql
 create table person(
   id bigint,
@@ -71,15 +71,15 @@ where
 * _enum_ is optional list of comma and/or space separated values for the column (to enable spaces in values, all values should be wrapped in single quotes ('))
 * _default_ is optional default value for the column
 * _comment_ is optional text
-* additionally, any (custom) keys can be used and are sent to `extras` field of [ColumnDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/ColumnDef.html)
+* additionally, any (custom) keys can be used and are sent to `extras` field of [ColumnDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/ColumnDef.html)
   by YamlTableDefLoader.
 
 ### Indices (pk, uk, idx)
 
 ![Indices syntax diagram](docs/diagrams/png/indices.png)
 
-If index name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator.html) uses
-[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
+If index name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
 to create automatic index name.
 
 Examples:
@@ -97,8 +97,8 @@ idx:
 Refs are implied from column definitions where column name or type is _table_name.column_name_. Refs can be defined explicitly for: name customization, multi-column ref creation or _on delete_ / _on update_ settings.
 ![Refs syntax diagram](docs/diagrams/png/refs.png)
 
-If ref name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator.html) uses
-[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
+If ref name is not provided [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator.html) uses
+[ConstraintNamingRules](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator$$ConstraintNamingRules.html)
 to create automatic ref name.
 
 Examples:
@@ -116,25 +116,25 @@ Types can be customized and additional types can be added by including **mojoz-c
 Key names are:
 * **type** - [mojoz] type name
 * **_[some]_ name** - type name for specific purpose:
-  * **scala name** - used by [ScalaGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/ScalaGenerator.html)
-  * **xsd name** - used by [XsdGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/XsdGenerator.html)
+  * **scala name** - used by [ScalaGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/ScalaGenerator.html)
+  * **xsd name** - used by [XsdGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/XsdGenerator.html)
   * any other (custom) name will also be loaded into
-    `targetNames` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/TypeDef.html)
-    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlTypeDefLoader.html)
+    `targetNames` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/TypeDef.html)
+    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/YamlTypeDefLoader.html)
 * **jdbc** - type mappings from JDBC,
-  used by [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)
+  used by [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)
   to map jdbc type to mojoz type
   * **_[some db]_ jdbc** - db-specific type mappings from JDBC
 * **yaml** - type mappings for table and view metadata loading from mojoz yaml files,
-  used by [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlTableDefLoader.html)
-  and [YamlViewDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlViewDefLoader.html)
-* **sql** - type info used by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/out/SqlGenerator$.html),
+  used by [YamlTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/YamlTableDefLoader.html)
+  and [YamlViewDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/YamlViewDefLoader.html)
+* **sql** - type info used by [SqlGenerator](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/out/SqlGenerator$.html),
   can be overiden for specific database, for example:
   * **oracle sql** - type name specific to Oracle
   * **postgresql** - type name specific to PostgreSQL
   * **_[other db]_ sql** - any other keys ending with `sql` will also be loaded into
-    `sqlWrite` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/TypeDef.html)
-    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlTypeDefLoader.html)
+    `sqlWrite` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/TypeDef.html)
+    by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/YamlTypeDefLoader.html)
     and can be used by corresponding sql generator.
 
 Example:
@@ -148,4 +148,4 @@ sql:
 - numeric(12, 2)
 ```
 
-## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/index.html)
+## [API docs](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/index.html)
