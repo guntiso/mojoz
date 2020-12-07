@@ -135,7 +135,7 @@ Key names are:
   * **_[other db]_ sql** - any other keys ending with `sql` will also be loaded into
     `sqlWrite` field of [TypeDef](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/TypeDef.html)
     by [YamlTypeDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/2.0.0/org/mojoz/metadata/in/YamlTypeDefLoader.html)
-    and can be used by corresponding sql writer.
+    and can be used by corresponding sql generator.
 
 Example:
 ```yaml

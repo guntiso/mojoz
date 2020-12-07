@@ -96,19 +96,19 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new StandardSqlWriter(constraintNamingRules, typeDefs)
+  new StandardSqlGenerator(constraintNamingRules, typeDefs)
 def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new H2SqlWriter(constraintNamingRules, typeDefs)
+  new H2SqlGenerator(constraintNamingRules, typeDefs)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new HsqldbSqlWriter(constraintNamingRules, typeDefs)
+  new HsqldbSqlGenerator(constraintNamingRules, typeDefs)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new OracleSqlWriter(constraintNamingRules, typeDefs)
+  new OracleSqlGenerator(constraintNamingRules, typeDefs)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new PostgreSqlWriter(constraintNamingRules, typeDefs)
+  new PostgreSqlGenerator(constraintNamingRules, typeDefs)
 
 }
 
@@ -221,20 +221,20 @@ abstract class SqlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
       max.map(_ >= value.get).getOrElse(true)
 }
 
-private[out] class HsqldbSqlWriter(
+private[out] class HsqldbSqlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
+  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "hsqldb sql"
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
     if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
 }
 
-private[out] class H2SqlWriter(
+private[out] class H2SqlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends HsqldbSqlWriter(constraintNamingRules, typeDefs) {
+  extends HsqldbSqlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "h2 sql"
   // for index name jdbc roundtrip
   override def uniqueIndexes(t: TableDefBase[_]) = t.uk.map(uniqueIndex(t))
@@ -247,10 +247,10 @@ private[out] class H2SqlWriter(
   }.filter(_ != "") ++ super.tableChecks(t)
 }
 
-private[out] class OracleSqlWriter(
+private[out] class OracleSqlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
+  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "oracle sql"
   override def dbDefault(c: MojozColumnDefBase) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
@@ -272,7 +272,7 @@ private[out] class OracleSqlWriter(
       if (r.onUpdateAction != null) r.copy(onUpdateAction = null) else r)
 }
 
-private[out] class StandardSqlWriter(
+private[out] class StandardSqlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef]) extends SqlGenerator(typeDefs) with ConstraintNamingRules {
   override def pkName(tableName: String) =
@@ -297,9 +297,9 @@ private[out] class StandardSqlWriter(
   }
 }
 
-private[out] class PostgreSqlWriter(
+private[out] class PostgreSqlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlWriter(constraintNamingRules, typeDefs) {
+  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "postgresql"
 }
