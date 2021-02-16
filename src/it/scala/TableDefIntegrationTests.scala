@@ -26,7 +26,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .filterNot(_ startsWith "- uk_test_table1_code_col2")
         .filterNot(_ startsWith "- idx_tt1_spec_col3_col5d")
         .filterNot(_ startsWith "- code, col2 desc")
-        // do not compara extras-dependent lines
+        // do not compare extras-dependent lines
         .filterNot(_ == "- code                  ! 16            :")
         .filterNot(_ contains "SWIFT")
         .filterNot(_ contains "extra-for-bank")
@@ -70,7 +70,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       s.split("\\r?\\n")
         .filterNot(_ startsWith "- col2                    1") // postgres empty comments roundtrip fails
         .filterNot(_ ==   "comments: \"\"")                    // postgres empty comments roundtrip fails
-        // do not compara extras-dependent lines
+        // do not compare extras-dependent lines
         .filterNot(_ == "- code                  ! 16            :")
         .filterNot(_ contains "SWIFT")
         .filterNot(_ contains "extra-for-bank")
