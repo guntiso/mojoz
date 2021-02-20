@@ -128,9 +128,9 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     Seq(scalaClassString(viewDef, allViewDefs), scalaObjectString(viewDef, allViewDefs))
       .filter(_ != null).filter(_ != "").mkString(nl)
   def generateScalaSource(
-    headers: Seq[String], viewDefs: Seq[MojozViewDefBase], footers: Seq[String]) = {
-    val allViewDefs = viewDefs.map(v => v.name -> v).toMap
-    List(headers, viewDefs.map(scalaClassAndObjectString(_, allViewDefs)), footers)
+    headers: Seq[String], viewDefs: Seq[MojozViewDefBase], footers: Seq[String], allViewDefs: Map[String, MojozViewDefBase] = null) = {
+    val allViewDefsWithFallback = Option(allViewDefs).getOrElse(viewDefs.map(v => v.name -> v).toMap)
+    List(headers, viewDefs.map(scalaClassAndObjectString(_, allViewDefsWithFallback)), footers)
       .flatMap(x => x)
       .mkString("", nl, nl)
   }
