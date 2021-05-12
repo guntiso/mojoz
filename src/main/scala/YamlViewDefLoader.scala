@@ -11,6 +11,7 @@ import scala.collection.immutable.Seq
 import scala.io.Source
 import scala.util.control.NonFatal
 
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 
 import org.mojoz.metadata.in._
@@ -181,7 +182,9 @@ class YamlViewDefLoader(
     plainViewDefs.map(plainViewDefToViewDef(_, Nil))
       .map(t => (t.name, t)).toMap
   protected def loadRawViewDefs(defs: String): List[MojozViewDef] = {
-    Option((new Yaml).loadAs(defs, classOf[java.util.Map[String, _]]))
+    val loadingConfig = new LoaderOptions // new instance because it is not thread-safe otherwise
+    loadingConfig.setAllowDuplicateKeys(false)
+    Option((new Yaml(loadingConfig)).loadAs(defs, classOf[java.util.Map[String, _]]))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(

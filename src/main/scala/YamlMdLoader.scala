@@ -13,6 +13,7 @@ import org.mojoz.metadata.ColumnDef
 import org.mojoz.metadata.TableDef
 import org.mojoz.metadata.TableDef._
 import org.mojoz.metadata.Type
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 
 // TODO remove yaml table def
@@ -266,8 +267,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
   private def loadYamlTableDef(tableDefString: String) = {
+    val loadingConfig = new LoaderOptions // new instance because it is not thread-safe otherwise
+    loadingConfig.setAllowDuplicateKeys(false)
     val tdMap =
-      (new Yaml).loadAs(tableDefString, classOf[java.util.Map[String, _]]) match {
+      (new Yaml(loadingConfig)).loadAs(tableDefString, classOf[java.util.Map[String, _]]) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
