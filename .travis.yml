@@ -5,7 +5,6 @@ script:
 scala:
   - 2.13.4
   - 2.12.12
-  - 2.11.12
 jdk:
   - oraclejdk11
   - openjdk11

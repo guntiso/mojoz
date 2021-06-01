@@ -15,7 +15,6 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq(
     "2.13.4",
     "2.12.12",
-    "2.11.12",
   ),
   scalacOptions ++= Seq("-deprecation", "-feature"),
   resolvers ++= Seq(
@@ -33,8 +32,7 @@ lazy val mojoz = (project in file("."))
   .settings(
     Compile / unmanagedSourceDirectories ++= {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "compat"
-      if (scalaVersion.value.startsWith("2.12.") ||
-          scalaVersion.value.startsWith("2.11."))
+      if (scalaVersion.value startsWith "2.12.")
         Seq(sharedSourceDir / "scala-2.12")
       else Nil
     },
