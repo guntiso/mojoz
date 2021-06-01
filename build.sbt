@@ -44,7 +44,7 @@ lazy val mojoz = (project in file("."))
 
 autoAPIMappings := true
 
-scalacOptions in (Compile, doc) ++= (baseDirectory in LocalProject("mojoz")).map {
+Compile / doc / scalacOptions ++= (LocalProject("mojoz") / baseDirectory).map {
    bd => Seq("-sourcepath", bd.getAbsolutePath,
              "-doc-source-url", "https://github.com/guntiso/mojoz/blob/develop€{FILE_PATH}.scala")
 }.value
@@ -60,7 +60,7 @@ publishTo := {
 
 publishMavenStyle := true
 
-publishArtifact in Test := false
+Test / publishArtifact := false
 
 pomIncludeRepository := { _ => false }
 
