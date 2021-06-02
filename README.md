@@ -16,7 +16,7 @@ Table metadata can also be extracted from
 using JDBC connection and saved to yaml files for later use
 (see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_2.13/3.0.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)).
 
-[Yaml 1.1](https://yaml.org/spec/1.1/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
+[Yaml 1.1](https://yaml.org/spec/1.1/) syntax is used for table metadata, but some keys and values are further parsed by mojoz and empty line is used as delimiter.
 Key names are:
 
 * **table** - table name
