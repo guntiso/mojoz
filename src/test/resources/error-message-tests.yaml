@@ -1,0 +1,10 @@
+expected-error-message: Failed to load viewdef from error-message-tests.yaml
+expected-error-message: duplicate key name
+expected-error-message: line 10
+name: account
+table:  account
+fields:
+- id ?
+- bank_id
+- billing_account
+name: not-account
