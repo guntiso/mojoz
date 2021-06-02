@@ -2,6 +2,7 @@ package org.mojoz.metadata.in
 
 import java.io.File
 import scala.collection.immutable.Seq
+import scala.collection.mutable.Buffer
 import scala.io.Codec
 import scala.io.Source
 
@@ -12,15 +13,28 @@ case class YamlMd(
 
 private[in] trait MdSource {
   def split(mdDefs: Seq[YamlMd]) = {
-    // TODO set line numbers while splitting
-    def split(s: String) = s.split("((\\-\\-\\-)|(\\r?\\n[\\r\\n]+))+").toSeq
-    mdDefs.map { d =>
-      split(d.body)
-        .map(_.trim)
-        .filter(_.length > 0)
-        .map((d, _))
-    }.flatMap(x => x)
-      .map(x => x._1.copy(body = x._2))
+    def shouldSplitAt(line: String) =
+      (line == "")         ||  // empty line or
+      (line startsWith "...")  // yaml end-of-document marker
+    mdDefs.flatMap { d =>
+      val linesBuffer = Buffer[String]()
+      val mdBuffer    = Buffer[YamlMd]()
+      var lineNr = 0
+      (d.body + "\n\n").linesIterator foreach { line =>
+        lineNr += 1
+        if (shouldSplitAt(line)) {
+          if (linesBuffer.nonEmpty) {
+            mdBuffer += d.copy(
+              line = lineNr - linesBuffer.size,
+              body = linesBuffer.mkString("\n"))
+            linesBuffer.clear()
+          }
+        } else {
+          linesBuffer += line
+        }
+      }
+      mdBuffer.toSeq
+    }
   }
   def defSets: Seq[YamlMd]
   def defs = split(defSets)
