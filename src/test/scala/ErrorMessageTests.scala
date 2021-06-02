@@ -19,7 +19,7 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     if (ex == null) ""
     else ex.getMessage + Option(messageStack(ex.getCause)).filter(_ != "").map("\n" + _).getOrElse("")
 
-  viewMd.take(2).map(_.line).mkString(", ") should be ("1, 13")
+  viewMd.take(2).map(_.line).mkString(", ") should be ("1, 10")
 
   viewMd foreach { md =>
     val lines = md.body.split("\\r?\\n")

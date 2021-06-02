@@ -1,15 +1,3 @@
-expected-error-message: Failed to load viewdef from error-message-tests.yaml
-expected-error-message: duplicate key name
-expected-error-message: line 10
-name: account
-table:  account
-fields:
-- id ?
-- bank_id
-- billing_account
-name: not-account
-
-
 expected-error-message: Cyclic extends
 expected-error-message: account -> account
 name:       account
@@ -17,3 +5,13 @@ table:
 extends:    account
 fields:
 - id
+
+
+expected-error-message: Failed to load viewdef from error-message-tests.yaml, line 10
+expected-error-message: duplicate key name
+expected-error-message: in error-message-tests.yaml, line 17
+name: account
+table:  account
+fields:
+- id
+name: not-account

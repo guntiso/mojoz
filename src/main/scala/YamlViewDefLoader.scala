@@ -36,9 +36,9 @@ class YamlViewDefLoader(
   private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawViewDefs = transformRawViewDefs(sources.map { md: YamlMd =>
-    try loadRawViewDefs(md.body) catch {
+    try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
-        "Failed to load viewdef from " + md.filename, e) // TODO line number
+        s"Failed to load viewdef from ${md.filename}, line ${md.line}", e)
     }
   }.flatten)
   private val nameToRawViewDef = {
@@ -181,12 +181,13 @@ class YamlViewDefLoader(
   val nameToViewDef: Map[String, MojozViewDef] =
     plainViewDefs.map(plainViewDefToViewDef(_, Nil))
       .map(t => (t.name, t)).toMap
-  protected lazy val loaderSettings = LoadSettings.builder()
-    .setLabel("mojoz view metadata")
-    .setAllowDuplicateKeys(false)
-    .build();
-  protected def loadRawViewDefs(defs: String): List[MojozViewDef] = {
-    Option((new Load(loaderSettings)).loadFromString(defs))
+  protected def loadRawViewDefs(defs: String, labelOrFilename: String = null, lineNumber: Int = 0): List[MojozViewDef] = {
+    val loaderSettings = LoadSettings.builder()
+      .setLabel(Option(labelOrFilename) getOrElse "mojoz view metadata")
+      .setAllowDuplicateKeys(false)
+      .build();
+    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
+    Option((new Load(loaderSettings)).loadFromString(lineNumberCorrection + defs))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
