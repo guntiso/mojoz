@@ -2,8 +2,8 @@ package org.mojoz.metadata
 package in
 
 import org.mojoz.metadata.ColumnDef.ColumnDefBase
-import org.yaml.snakeyaml.LoaderOptions
-import org.yaml.snakeyaml.Yaml
+import org.snakeyaml.engine.v2.api.LoadSettings
+import org.snakeyaml.engine.v2.api.Load
 import scala.collection.immutable._
 import scala.jdk.CollectionConverters._
 import scala.util.Try
@@ -157,11 +157,13 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     SqlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
+  protected lazy val loaderSettings = LoadSettings.builder()
+    .setLabel("mojoz yaml typedef")
+    .setAllowDuplicateKeys(false)
+    .build();
   private def loadYamlTypeDef(typeDefString: String) = {
-    val loadingConfig = new LoaderOptions // new instance because it is not thread-safe otherwise
-    loadingConfig.setAllowDuplicateKeys(false)
     val tdMap =
-      (new Yaml(loadingConfig)).loadAs(typeDefString, classOf[java.util.Map[String, _]]) match {
+      (new Load(loaderSettings)).loadFromString(typeDefString) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
