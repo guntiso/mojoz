@@ -8,3 +8,12 @@ fields:
 - bank_id
 - billing_account
 name: not-account
+
+
+expected-error-message: Cyclic extends
+expected-error-message: account -> account
+name:       account
+table:
+extends:    account
+fields:
+- id
