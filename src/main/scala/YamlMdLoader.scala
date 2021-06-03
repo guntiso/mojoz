@@ -123,9 +123,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
   val tableDefs = {
     val rawTableDefs = sources map { md =>
-      try yamlTypeDefToTableDef(loadYamlTableDef(md.body)) catch {
+      try yamlTypeDefToTableDef(loadYamlTableDef(md.body, md.filename, md.line)) catch {
         case e: Exception => throw new RuntimeException(
-          "Failed to load typedef from " + md.filename, e) // TODO line number
+          s"Failed to load table definition from ${md.filename}, line ${md.line}", e)
       }
     }
     checkRawTableDefs(rawTableDefs)
@@ -266,13 +266,14 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       })
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
-  protected lazy val loaderSettings = LoadSettings.builder()
-    .setLabel("mojoz yaml metadata")
-    .setAllowDuplicateKeys(false)
-    .build();
-  private def loadYamlTableDef(tableDefString: String) = {
+  private def loadYamlTableDef(tableDefString: String, labelOrFilename: String = null, lineNumber: Int = 0) = {
+    val loaderSettings = LoadSettings.builder()
+      .setLabel(Option(labelOrFilename) getOrElse "mojoz table metadata")
+      .setAllowDuplicateKeys(false)
+      .build();
+    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
     val tdMap =
-      (new Load(loaderSettings)).loadFromString(tableDefString) match {
+      (new Load(loaderSettings)).loadFromString(lineNumberCorrection + tableDefString) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)

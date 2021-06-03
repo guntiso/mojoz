@@ -17,6 +17,16 @@ fields:
 name: not-account
 
 
+expected-error-message: Failed to load table definition from error-message-tests.yaml, line 20
+expected-error-message: duplicate key columns
+expected-error-message: in error-message-tests.yaml, line 26
+name: account
+columns:
+- id
+columns:
+- id
+
+
 name:       account_1
 table:
 extends:    account_2
