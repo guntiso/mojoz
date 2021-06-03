@@ -38,7 +38,7 @@ class YamlViewDefLoader(
   private val rawViewDefs = transformRawViewDefs(sources.map { md: YamlMd =>
     try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
-        s"Failed to load viewdef from ${md.filename}, line ${md.line}", e)
+        s"Failed to load view definition from ${md.filename}, line ${md.line}", e)
     }
   }.flatten)
   private val nameToRawViewDef = {

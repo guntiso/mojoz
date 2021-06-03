@@ -7,7 +7,7 @@ fields:
 - id
 
 
-expected-error-message: Failed to load viewdef from error-message-tests.yaml, line 10
+expected-error-message: Failed to load view definition from error-message-tests.yaml, line 10
 expected-error-message: duplicate key name
 expected-error-message: in error-message-tests.yaml, line 17
 name: account
