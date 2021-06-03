@@ -4,6 +4,7 @@ import org.scalatest.flatspec.{AnyFlatSpec => FlatSpec}
 import org.scalatest.matchers.should.Matchers
 
 import scala.collection.immutable.Seq
+import scala.collection.mutable.Buffer
 
 class ErrorMessageTests extends FlatSpec with Matchers {
   val path = "src/test/resources"
@@ -21,18 +22,23 @@ class ErrorMessageTests extends FlatSpec with Matchers {
 
   viewMd.take(2).map(_.line).mkString(", ") should be ("1, 10")
 
+  val mdBuffer = Buffer[YamlMd]()
   viewMd foreach { md =>
     val lines = md.body.split("\\r?\\n")
     val emKey = "expected-error-message:"
     val expectedErrorMessages =
       lines.filter(_ startsWith emKey).map(_.substring(emKey.length)).map(_.trim)
     val cleanMd = md.copy(body = lines.map(l => if (l startsWith emKey) "" else l).mkString(nl))
-    val exception = intercept[RuntimeException](
-      YamlViewDefLoader(tableMetadata, Seq(cleanMd)).plainViewDefs
-    )
-    val messages = messageStack(exception)
-    expectedErrorMessages foreach { expectedMsg =>
-      messages should include (expectedMsg)
+    mdBuffer += cleanMd
+    if (expectedErrorMessages.nonEmpty) {
+      val exception = intercept[RuntimeException](
+        YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
+      )
+      val messages = messageStack(exception)
+      expectedErrorMessages foreach { expectedMsg =>
+        messages should include (expectedMsg)
+      }
+      mdBuffer.clear()
     }
   }
 }
