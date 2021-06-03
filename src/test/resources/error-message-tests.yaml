@@ -15,3 +15,17 @@ table:  account
 fields:
 - id
 name: not-account
+
+
+name:       account_1
+table:
+extends:    account_2
+fields:
+- id
+
+
+expected-error-message: Cyclic extends
+expected-error-message: account_1 -> account_2 -> account_1
+name:       account_2
+table:
+extends:    account_1
