@@ -39,3 +39,13 @@ expected-error-message: account_1 -> account_2 -> account_1
 name:       account_2
 table:
 extends:    account_1
+
+
+expected-error-message: Duplicate fields in view test_duplicate_fields: a, b
+name:       test_duplicate_fields
+table:
+fields:
+- a
+- b
+- b
+- a

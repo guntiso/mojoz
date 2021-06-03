@@ -360,7 +360,7 @@ class YamlViewDefLoader(
     td.foreach(t => checkExtends(t, m, Nil))
     def checkRepeatingFieldNames(t: ViewDef[FieldDef[_]]) =
       if (t.fields.map(propName).toSet.size < t.fields.size) sys.error(
-        "Type " + t.name + " defines multiple fields named " + t.fields
+        "Duplicate fields in view " + t.name + ": " + t.fields
           .groupBy(propName).filter(_._2.size > 1).map(_._1).mkString(", "))
     td foreach checkRepeatingFieldNames
   }
