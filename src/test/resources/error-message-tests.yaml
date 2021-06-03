@@ -34,8 +34,7 @@ fields:
 - id
 
 
-expected-error-message: Cyclic extends
-expected-error-message: account_1 -> account_2 -> account_1
+expected-error-message: Cyclic extends: account_1 -> account_2 -> account_1
 name:       account_2
 table:
 extends:    account_1
