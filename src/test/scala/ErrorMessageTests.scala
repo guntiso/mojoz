@@ -10,7 +10,7 @@ class ErrorMessageTests extends FlatSpec with Matchers {
   val path = "src/test/resources"
   val tableMd = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "-in.yaml")
-  val viewMd = YamlMd.fromFiles(
+  val yamlMd = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "error-message-tests.yaml")
   val tableDefs = new YamlTableDefLoader(tableMd).tableDefs
   val tableMetadata = new TableMetadata(tableDefs)
@@ -20,10 +20,10 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     if (ex == null) ""
     else ex.getMessage + Option(messageStack(ex.getCause)).filter(_ != "").map("\n" + _).getOrElse("")
 
-  viewMd.take(2).map(_.line).mkString(", ") should be ("1, 10")
+  yamlMd.take(2).map(_.line).mkString(", ") should be ("1, 10")
 
   val mdBuffer = Buffer[YamlMd]()
-  viewMd foreach { md =>
+  yamlMd foreach { md =>
     val lines = md.body.split("\\r?\\n")
     val emKey = "expected-error-message:"
     val expectedErrorMessages =
@@ -31,9 +31,10 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     val cleanMd = md.copy(body = lines.map(l => if (l startsWith emKey) "" else l).mkString(nl))
     mdBuffer += cleanMd
     if (expectedErrorMessages.nonEmpty) {
-      val exception = intercept[RuntimeException](
-        YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
-      )
+      val exception = intercept[RuntimeException] {
+        val td = new YamlTableDefLoader(mdBuffer.toList).tableDefs
+        val vd = YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
+      }
       val messages = messageStack(exception)
       expectedErrorMessages foreach { expectedMsg =>
         messages should include (expectedMsg)
