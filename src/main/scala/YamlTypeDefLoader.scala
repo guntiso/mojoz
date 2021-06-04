@@ -13,9 +13,9 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   val sources = yamlMd.filter(YamlMd.isCustomTypeDef)
   val typeDefs = {
     val rawTypeDefs = sources map { td =>
-      try loadYamlTypeDef(td.body) catch {
+      try loadYamlTypeDef(td.body, td.filename, td.line) catch {
         case e: Exception => throw new RuntimeException(
-          "Failed to load typedef from " + td.filename, e) // TODO line number
+          s"Failed to load type definition from ${td.filename}, line ${td.line}", e)
       }
     }
     val nameToTableDef = {
@@ -157,13 +157,14 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     SqlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
-  protected lazy val loaderSettings = LoadSettings.builder()
-    .setLabel("mojoz yaml typedef")
-    .setAllowDuplicateKeys(false)
-    .build();
-  private def loadYamlTypeDef(typeDefString: String) = {
+  private def loadYamlTypeDef(typeDefString: String, labelOrFilename: String = null, lineNumber: Int = 0) = {
+    val loaderSettings = LoadSettings.builder()
+      .setLabel(Option(labelOrFilename) getOrElse "mojoz type metadata")
+      .setAllowDuplicateKeys(false)
+      .build();
+    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
     val tdMap =
-      (new Load(loaderSettings)).loadFromString(typeDefString) match {
+      (new Load(loaderSettings)).loadFromString(lineNumberCorrection + typeDefString) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)

@@ -27,6 +27,19 @@ columns:
 - id
 
 
+expected-error-message: Failed to load type definition from error-message-tests.yaml, line 30
+expected-error-message: duplicate key sql
+expected-error-message: in error-message-tests.yaml, line 39
+type:       bad_euro
+xsd name:   decimal
+yaml:
+- euro
+sql:
+- numeric(12, 2)
+sql:
+- numeric(12, 3)
+
+
 name:       account_1
 table:
 extends:    account_2
