@@ -32,6 +32,7 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     mdBuffer += cleanMd
     if (expectedErrorMessages.nonEmpty) {
       val exception = intercept[RuntimeException] {
+        val ct = new YamlTypeDefLoader(mdBuffer.toList).typeDefs
         val td = new YamlTableDefLoader(mdBuffer.toList).tableDefs
         val vd = YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
       }
