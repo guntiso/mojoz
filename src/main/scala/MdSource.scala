@@ -49,15 +49,19 @@ private[in] class FilesMdSource(
   val path: String,
   val filter: (File) => Boolean) extends MdSource {
   require(path != null)
-  private def recursiveListFiles(f: File): Array[File] = {
+  private def recursiveListFiles(relativePath: String, f: File): Array[(String, File)] = {
     val these = Option(f.listFiles) getOrElse Array()
-    these.filter(!_.isDirectory) ++
-      these.filter(_.isDirectory).flatMap(recursiveListFiles)
+    these.filter(!_.isDirectory)
+      .filter(filter)
+      .map(f => (relativePath + f.getName, f)) ++
+     these.filter(_.isDirectory)
+      .flatMap(f => recursiveListFiles(relativePath + f.getName + "/", f))
   }
-  private def typedefFiles =
-    recursiveListFiles(new File(path)).toList.filter(filter)
-  override def defSets = typedefFiles.map(f => YamlMd(f.getName, 0,
-    Source.fromFile(f).mkString))
+  override def defSets =
+    recursiveListFiles("", new File(path))
+      .sortBy(_._1)
+      .toList
+      .map { case (relativeName, f) => YamlMd(relativeName, 0, Source.fromFile(f).mkString) }
 }
 
 private[in] class ResourcesMdSource(
