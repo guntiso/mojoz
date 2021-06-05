@@ -20,27 +20,28 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     if (ex == null) ""
     else ex.getMessage + Option(messageStack(ex.getCause)).filter(_ != "").map("\n" + _).getOrElse("")
 
-  yamlMd.take(2).map(_.line).mkString(", ") should be ("1, 10")
-
   val mdBuffer = Buffer[YamlMd]()
-  yamlMd foreach { md =>
-    val lines = md.body.split("\\r?\\n")
-    val emKey = "expected-error-message:"
-    val expectedErrorMessages =
-      lines.filter(_ startsWith emKey).map(_.substring(emKey.length)).map(_.trim)
-    val cleanMd = md.copy(body = lines.map(l => if (l startsWith emKey) "" else l).mkString(nl))
-    mdBuffer += cleanMd
-    if (expectedErrorMessages.nonEmpty) {
-      val exception = intercept[RuntimeException] {
-        val ct = new YamlTypeDefLoader(mdBuffer.toList).typeDefs
-        val td = new YamlTableDefLoader(mdBuffer.toList).tableDefs
-        val vd = YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
+
+  "yaml loaders" should "produce expected error messages" in {
+    yamlMd foreach { md =>
+      val lines = md.body.split("\\r?\\n")
+      val emKey = "expected-error-message:"
+      val expectedErrorMessages =
+        lines.filter(_ startsWith emKey).map(_.substring(emKey.length)).map(_.trim)
+      val cleanMd = md.copy(body = lines.map(l => if (l startsWith emKey) "" else l).mkString(nl))
+      mdBuffer += cleanMd
+      if (expectedErrorMessages.nonEmpty) {
+        val exception = intercept[RuntimeException] {
+          val ct = new YamlTypeDefLoader(mdBuffer.toList).typeDefs
+          val td = new YamlTableDefLoader(mdBuffer.toList).tableDefs
+          val vd = YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
+        }
+        val messages = messageStack(exception)
+        expectedErrorMessages foreach { expectedMsg =>
+          messages should include (expectedMsg)
+        }
+        mdBuffer.clear()
       }
-      val messages = messageStack(exception)
-      expectedErrorMessages foreach { expectedMsg =>
-        messages should include (expectedMsg)
-      }
-      mdBuffer.clear()
     }
   }
 }
