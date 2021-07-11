@@ -699,6 +699,19 @@
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
+  <xs:complexType name="WithChildExtendsCrud3Type">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="tns:WithChildExtendsType">
+        <xs:sequence>
+          <xs:element name="Extra" nillable="true" minOccurs="0" type="xs:string">
+          </xs:element>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
   <xs:complexType name="WithChildOrderByAscType">
     <xs:annotation>
       <xs:documentation>Valstu klasifikators</xs:documentation>

@@ -185,6 +185,15 @@ case class WithChildExtendsCrud2Bank /* extends WithChildExtendsBank */ (
   name: String = null
   // --- WithChildExtendsCrud2Bank
 )
+case class WithChildExtendsCrud3 /* extends WithChildExtends */ (
+  // --- WithChildExtends
+  code: String = null,
+  name: String = null,
+  // bank: List[WithChildExtendsBank] = Nil
+  // --- WithChildExtendsCrud3
+  extra: String = null,
+  /* override */ bank: List[WithChildExtendsBank] = Nil
+)
 case class WithChildOrderByAsc (
   code: String = null,
   bank: List[WithChildOrderByAscBank] = Nil

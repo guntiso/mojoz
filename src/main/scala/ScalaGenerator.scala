@@ -57,13 +57,22 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     }
   def scalaClassExtends(viewDef: MojozViewDefBase) =
     Option(viewDef.extends_).filter(_ != "").map(scalaClassName)
-  def isExtendsDisabled(viewDef: MojozViewDefBase): Boolean =
-    viewDef.fields.exists(f => f.type_.isComplexType && f.isOverride)
+  def isExtendsDisabled(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): Boolean = {
+    def fieldType(viewName: String, fieldName: String): Type = {
+      allViewDefs.get(viewName).map { v =>
+        v.fields.find(f => Option(f.alias).getOrElse(f.name) == fieldName)
+          .map(_.type_)
+          .getOrElse(fieldType(v.extends_, fieldName))
+      }.orNull
+    }
+    viewDef.fields.exists(f =>
+      f.type_.isComplexType && f.isOverride && f.type_ != fieldType(viewDef.extends_, Option(f.alias).getOrElse(f.name)))
+  }
   def scalaClassTraits(viewDef: MojozViewDefBase): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
   def scalaFieldsStrings(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): Seq[String] = {
     val xtndsOpt = scalaClassExtends(viewDef)
-    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef)
+    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef, allViewDefs)
     def fieldsStrings(viewDef: MojozViewDefBase, overrided: Set[String]) =
       viewDef.fields
         .map(f =>
@@ -101,9 +110,9 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaBody(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) =
     scalaFieldsString(viewDef, allViewDefs) + Option(scalaBodyExtra(viewDef, allViewDefs)).getOrElse("")
   def scalaBodyExtra(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = ""
-  def scalaExtendsString(viewDef: MojozViewDefBase) = {
+  def scalaExtendsString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
     val xtndsOpt = scalaClassExtends(viewDef)
-    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef)
+    val xtndsDisabled = xtndsOpt.isDefined && isExtendsDisabled(viewDef, allViewDefs)
     Option(scalaClassTraits(viewDef))
       .map(xtndsOpt.toList ::: _.toList)
       .map(_.filter(_ != null).filter(_ != ""))
@@ -121,7 +130,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   }
   def scalaPrefix(viewDef: MojozViewDefBase) = "class"
   def scalaClassString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
-    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} {$nl${scalaBody(viewDef, allViewDefs)}}"
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef, allViewDefs)} {$nl${scalaBody(viewDef, allViewDefs)}}"
   }
   def scalaObjectString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): String = ""
   def scalaClassAndObjectString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): String =
@@ -151,10 +160,10 @@ trait ScalaCaseClassGenerator extends ScalaGenerator {
       }.reverse
     }
   }
-  override def isExtendsDisabled(viewDef: MojozViewDefBase): Boolean = true
+  override def isExtendsDisabled(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): Boolean = true
   override def scalaPrefix(viewDef: MojozViewDefBase) = "case class"
   override def scalaClassString(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]) = {
-    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef)} ($nl${scalaFieldsString(viewDef, allViewDefs)})" +
+    s"${scalaPrefix(viewDef)} ${scalaNameString(scalaClassName(viewDef.name))}${scalaExtendsString(viewDef, allViewDefs)} ($nl${scalaFieldsString(viewDef, allViewDefs)})" +
       Option(scalaBodyExtra(viewDef, allViewDefs)).filter(_ != "").map(txt => " {" + nl + txt + "}").getOrElse("")
   }
 }

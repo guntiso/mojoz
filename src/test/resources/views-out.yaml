@@ -237,6 +237,13 @@ extends:  with_child_extends_bank
 fields:
 
 
+name:     with_child_extends_crud3
+table:    country
+extends:  with_child_extends
+fields:
+- extra                                 =
+- bank                  * [true] with_child_extends_bank
+
 name:     with_child_order_by_asc
 table:    country
 fields:

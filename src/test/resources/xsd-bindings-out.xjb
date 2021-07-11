@@ -110,6 +110,9 @@
     <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud2BankType']">
       <jaxb:class name="WithChildExtendsCrud2Bank"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud3Type']">
+      <jaxb:class name="WithChildExtendsCrud3"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithChildOrderByAscType']">
       <jaxb:class name="WithChildOrderByAsc"/>
     </jaxb:bindings>

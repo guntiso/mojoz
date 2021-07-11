@@ -165,6 +165,10 @@ class WithChildExtendsCrud2 extends /* WithChildExtends */ Dto {
 }
 class WithChildExtendsCrud2Bank extends WithChildExtendsBank with Dto {
 }
+class WithChildExtendsCrud3 extends WithChildExtends with Dto {
+  var extra: String = null
+  // override var bank: List[WithChildExtendsBank] = Nil
+}
 class WithChildOrderByAsc extends Dto {
   var code: String = null
   var bank: List[WithChildOrderByAscBank] = Nil
