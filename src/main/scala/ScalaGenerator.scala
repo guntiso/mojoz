@@ -15,7 +15,17 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     "false", "final", "finally", "for", "forSome", "if", "implicit", "import", "lazy",
     "match", "new", "null", "object", "override", "package", "private", "protected",
     "return", "sealed", "super", "this", "throw", "trait", "true", "try", "type",
-    "val", "var", "while", "with", "yield")
+    "val", "var", "while", "with", "yield",
+    // Scala 3 regular keywords
+    "abstract", "case", "catch", "class", "def", "do", "else",
+    "enum", "export", "extends", "false", "final", "finally", "for",
+    "given", "if", "implicit", "import", "lazy", "match", "new",
+    "null", "object", "override", "package", "private", "protected", "return",
+    "sealed", "super", "then", "throw", "trait", "true", "try",
+    "type", "val", "var", "while", "with", "yield",
+    // Scala 3 soft keywords
+    "as", "derives", "end", "extension", "infix", "inline", "opaque", "open", "transparent", "using",
+  )
   def nl = System.getProperty("line.separator")
   def nonStickName(name: String) = if (name endsWith "_") s"$name " else name
   def scalaNameString(name: String) =
