@@ -76,7 +76,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(0) match {
           case "none" => None
           case "size" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     val targetTotalDigits:    Option[Integer] =
@@ -84,7 +84,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(0) match {
           case "none" => None
           case "size" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     val targetFractionDigits: Option[Integer] =
@@ -92,7 +92,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(1) match {
           case "none" => None
           case "frac" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     JdbcLoadInfo(jdbcNameOrCode, jdbcCode, minSize, maxSize, minFrac, maxFrac,
@@ -119,7 +119,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(0) match {
           case "none" => None
           case "size" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     val targetTotalDigits:    Option[Integer] =
@@ -127,7 +127,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(0) match {
           case "none" => None
           case "size" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     val targetFractionDigits: Option[Integer] =
@@ -135,7 +135,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
         targetPartParts(1) match {
           case "none" => None
           case "frac" => Some(null) // xxx Some(null) means copy from source
-          case fxSize => Some(new Integer(fxSize.toInt))
+          case fxSize => Some(Integer.valueOf(fxSize.toInt))
         }
       else None
     YamlLoadInfo(yamlName, minSize, maxSize, minFrac, maxFrac,
