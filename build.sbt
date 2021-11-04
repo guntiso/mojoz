@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.13.6",
   crossScalaVersions := Seq(
     "2.13.6",
-    "2.12.14",
+    "2.12.15",
   ),
   scalacOptions ++= Seq("-deprecation", "-feature"),
   resolvers ++= Seq(
