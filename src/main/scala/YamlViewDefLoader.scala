@@ -294,7 +294,7 @@ class YamlViewDefLoader(
       val isForcedEnum = yfd.enum != null
       val isForcedType = yfd.typeName != null || yfd.length.isDefined || yfd.fraction.isDefined
       val joinToParent = yfd.joinToParent
-      val enum = yfd.enum
+      val `enum` = yfd.enum
       val orderBy = yfd.orderBy
       val comments = yfd.comments
       val extras =

@@ -52,7 +52,7 @@ object FieldDef {
     val resolver: String // expression, calculates value to be saved
     val nullable: Boolean
     val type_ : T
-    val enum: Seq[String]
+    val `enum`: Seq[String]
     val joinToParent: String
     val orderBy: String
     val comments: String
@@ -72,7 +72,7 @@ case class FieldDef[+T](
   resolver: String, // expression, calculates value to be saved
   nullable: Boolean,
   type_ : T,
-  enum: Seq[String],
+  `enum`: Seq[String],
   joinToParent: String,
   orderBy: String,
   comments: String,
