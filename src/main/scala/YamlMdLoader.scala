@@ -39,7 +39,7 @@ private[in] case class YamlFieldDef(
   isResolvable: Boolean,
   saveTo: String,
   resolver: String,
-  `enum`: Seq[String],
+  enum_ : Seq[String],
   joinToParent: String,
   orderBy: String,
   comments: String,
@@ -333,7 +333,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       case x =>
         sys.error("Unexpected cardinality for table column: " + x)
     }
-    val `enum` = yfd.enum
+    val `enum` = yfd.enum_
     if (yfd.joinToParent != null)
       sys.error("joinToParent not supported for table columns")
     if (yfd.orderBy != null)
@@ -382,7 +382,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
-        def e(`enum`: String) = Option(enum)
+        def e(`enum` : String) = Option(enum)
           .map { e =>
             // TODO parse enums properly? Allow whitespace etc. when (single/double) quoted, allow escapes
             if (e contains '\'')

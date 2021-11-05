@@ -49,7 +49,7 @@ class YamlViewDefWriter {
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
     val orderByString = Option(orderBy) getOrElse ""
-    val enumString = Option(enum)
+    val enumString = Option(enum_)
       .filter(_ != null)
       .filter(_ != Nil)
       .map(_.mkString("(", ", ", ")"))

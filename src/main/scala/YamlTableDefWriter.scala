@@ -36,7 +36,7 @@ class YamlTableDefWriter {
       t.length,
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
-    val enumString = Option(colDef.enum)
+    val enumString = Option(colDef.enum_)
       .filter(_ != null)
       .filter(_ != Nil)
       .map(_.map(e => if (e contains ' ') "'" + e + "'" else e))

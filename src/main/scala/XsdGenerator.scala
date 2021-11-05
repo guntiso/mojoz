@@ -74,7 +74,7 @@ class XsdGenerator(viewDefs: Seq[MojozViewDefBase],
       (col.type_.length getOrElse 1) > 0
     val minLength = if (noBlankStr) Some(1) else None
     val t = col.type_
-    (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits, Option(col.enum)) match {
+    (minLength, t.length, t.totalDigits, t.fractionDigits, t.intDigits, Option(col.enum_)) match {
       case (None, None, None, None, None, None) =>
         indent(level, s"""
         <xs:element ${attribs("name nillable minOccurs maxOccurs type",

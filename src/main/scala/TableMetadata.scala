@@ -100,7 +100,7 @@ object ColumnDef {
     val type_ : T
     val nullable: Boolean
     val dbDefault: String
-    val `enum`: Seq[String]
+    val enum_ : Seq[String]
     val comments: String
     def withName(name: String): this.type
   }
@@ -110,7 +110,7 @@ case class ColumnDef[+T](
   type_ : T,
   nullable: Boolean,
   dbDefault: String,
-  `enum`: Seq[String],
+  enum_ : Seq[String],
   comments: String,
   extras: Map[String, Any]) extends ColumnDefBase[T] {
   override def withName(name: String) = copy(name = name).asInstanceOf[this.type]

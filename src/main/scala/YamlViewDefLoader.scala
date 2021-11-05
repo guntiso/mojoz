@@ -82,12 +82,12 @@ class YamlViewDefLoader(
       s"Bad override of ${baseView.name}.${propName(baseField)} with ${view.name}.${propName(field)}: $msg")
     fieldOverrideIncompatibilityMessage(baseField, field, viewNamesVisited) match {
       case null =>
-        if  (field.enum     == baseField.enum     &&
+        if  (field.enum_    == baseField.enum_    &&
              field.comments == baseField.comments &&
              field.nullable == baseField.nullable)
              field
         else field.copy(
-          enum     = baseField.enum,
+          enum_    = baseField.enum_,
           comments = baseField.comments,
           nullable = baseField.nullable)
       case errorMessage =>
@@ -119,9 +119,9 @@ class YamlViewDefLoader(
       } else {
         s"${typeInfo(baseField.type_).capitalize} is not equal to ${typeInfo(field.type_)}"
       }
-    else if (field.enum != null && baseField.enum != field.enum &&
+    else if (field.enum_ != null && baseField.enum_ != field.enum_ &&
              field.extras != null && field.extras.get(MojozExplicitEnum) == Some(true))
-      s"Enum ${baseField.enum} is not equal to ${field.enum}"
+      s"Enum ${baseField.enum_} is not equal to ${field.enum_}"
     else if (field.comments != null && baseField.comments != field.comments &&
              field.extras != null && field.extras.get(MojozExplicitComments) == Some(true))
       s"Comments '${baseField.comments}' are not equal to '${field.comments}'"
@@ -291,10 +291,10 @@ class YamlViewDefLoader(
       val nullable = Option(cardinality)
         .map(c => Set("?", "*").contains(c)) getOrElse true
       val isForcedCardinality = cardinality != null
-      val isForcedEnum = yfd.enum != null
+      val isForcedEnum = yfd.enum_ != null
       val isForcedType = yfd.typeName != null || yfd.length.isDefined || yfd.fraction.isDefined
       val joinToParent = yfd.joinToParent
-      val `enum` = yfd.enum
+      val `enum` = yfd.enum_
       val orderBy = yfd.orderBy
       val comments = yfd.comments
       val extras =
@@ -545,7 +545,7 @@ class YamlViewDefLoader(
                   (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
                    overrideSimpleType(col.type_, f.type_)
               else col.type_,
-            enum = Option(f.enum) getOrElse col.enum,
+            enum_ = Option(f.enum_) getOrElse col.enum_,
             comments = Option(f.comments) getOrElse col.comments,
             extras =
               if  (f.comments != null)

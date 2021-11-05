@@ -56,7 +56,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val colToEnum = checkColEnum.map(cce => (cce._2, cce._3)).toMap
       val mappedCols = cols map {c =>
         val `enum` = colToEnum.get(c)
-        if (enum.isDefined) c.copy(enum = enum.get) else c
+        if (enum.isDefined) c.copy(enum_ = enum.get) else c
       }
 
       val tableFullName =
@@ -111,7 +111,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         List("N", "Y"), List("Y", "N"))
       def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
         c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
-          emulatedBooleanEnums.contains(c.enum.toList)
+          emulatedBooleanEnums.contains(c.enum_.toList)
 
       def oraFix3(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       tableDefs map { td =>
@@ -119,7 +119,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           td.copy(cols = td.cols.map { c =>
             if (isEmulatedBoolean(c)) c.copy(
               type_ = c.type_.copy(jdbcTypeCode = Types.BOOLEAN),
-              enum = null,
+              enum_ = null,
               dbDefault =
                 if (c.dbDefault == null) null
                 else c.dbDefault.trim match {

@@ -286,11 +286,11 @@ private[out] class StandardSqlGenerator(
   override def colCheck(c: MojozColumnDefBase) = {
     val xt = c.type_
     xt.name match {
-      case "string" if c.enum != null =>
-        c.enum.map("'" + _ + "'")
+      case "string" if c.enum_ != null =>
+        c.enum_.map("'" + _ + "'")
           .mkString(" check (" + c.name + " in (", ", ", "))")
-      case _ if c.enum != null =>
-        c.enum
+      case _ if c.enum_ != null =>
+        c.enum_
           .mkString(" check (" + c.name + " in (", ", ", "))")
       case _ => ""
     }
