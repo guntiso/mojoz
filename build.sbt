@@ -8,12 +8,13 @@ lazy val dependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.9" % "it,test"
 )
 
+val scalaV = "2.13.7"
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.13.7",
+  scalaVersion := scalaV,
   crossScalaVersions := Seq(
-    "2.13.7",
+    scalaV,
     "2.12.15",
   ),
   scalacOptions ++= Seq("-deprecation", "-feature"),
