@@ -70,7 +70,7 @@ class YamlViewDefLoader(
     else if (extendsOrModifies == null) true
     else checkExtends(nameToViewDef.get(extendsOrModifies)
       .getOrElse(sys.error(
-        s"""View "${extendsOrModifies}" extended or modified by "${v.name}" is not found""")),
+        s"""View "${extendsOrModifies}" extended or modified by view "${v.name}" is not found""")),
       nameToViewDef, v.name :: visited)
   }
   val plainViewDefs: List[MojozViewDef] = buildViewDefs(rawViewDefs).sortBy(_.name)
@@ -374,7 +374,7 @@ class YamlViewDefLoader(
             "Unexpected null type for field " + t.name + "." + f.name)
         else if (f.type_.isComplexType)
           m.get(f.type_.name) getOrElse sys.error(
-            s"""Type "${f.type_.name}" referenced from "${t.name}.${f.name}" is not found""")
+            s"""Type "${f.type_.name}" referenced from field "${t.name}.${f.name}" is not found""")
         else if (f.table != null)
           tableMetadata.columnDef(t, f)
       }

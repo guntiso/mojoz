@@ -63,7 +63,7 @@ fields:
 - a
 
 
-expected-error-message: Type "unknown_type" referenced from "test_type_not_found.x" is not found
+expected-error-message: Type "unknown_type" referenced from field "test_type_not_found.x" is not found
 name:       test_type_not_found
 table:
 fields:
@@ -75,6 +75,6 @@ name:       test_table_not_found
 table:      unknown_table
 
 
-expected-error-message: View "unknown_view" extended or modified by "test_view_not_found" is not found
+expected-error-message: View "unknown_view" extended or modified by view "test_view_not_found" is not found
 name:       test_view_not_found
 extends:    unknown_view
