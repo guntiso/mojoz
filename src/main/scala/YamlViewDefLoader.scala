@@ -33,6 +33,7 @@ class YamlViewDefLoader(
   private val MojozExplicitEnum        = "mojoz.explicit.enum"
   private val MojozExplicitNullability = "mojoz.explicit.nullability"
   private val MojozExplicitType        = "mojoz.explicit.type"
+  private val MojozIsOuterJoined       = "mojoz.internal.is-outer-joined"
   private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
   private val rawViewDefs = transformRawViewDefs(sources.map { md: YamlMd =>
@@ -487,8 +488,15 @@ class YamlViewDefLoader(
           val tableOrAlias = dbName(parts(0))
           var table = Option(
             aliasToTable.get(tableOrAlias)
-              .getOrElse(tableMetadata.ref(t.table, tableOrAlias).map(_.refTable)
+              .getOrElse(tableMetadata.aliasedRef(t.table, tableOrAlias).map(_.refTable)
                 .getOrElse(tableOrAlias))).map(dbName).orNull
+          var isOuterJoined = tableOrAliasToJoin.get(tableOrAlias).map(_.isOuterJoin).getOrElse {
+            Option(t.table).flatMap(table => tableMetadata.ref(table, tableOrAlias)) match {
+              case Some(ref) =>
+                !ref.cols.forall(c => !tableMetadata.col(t.table, c).map(_.nullable).getOrElse(true))
+              case None => false // ref not found - not outer joined?
+            }
+          }
           val tableAlias =
             if (table == tableOrAlias ||
                 t.tableAlias == tableOrAlias ||
@@ -499,9 +507,14 @@ class YamlViewDefLoader(
           val name = dbName(partsReverseList.head)
           val path = partsReverseList.tail.reverse
           path.tail foreach { step =>
-            table = tableMetadata.ref(table, step) match {
-              case Some(ref) => ref.refTable
-              case None => step
+            tableMetadata.ref(table, step) match {
+              case Some(ref) =>
+                isOuterJoined = isOuterJoined ||
+                  !ref.cols.forall(c => !tableMetadata.col(table, c).map(_.nullable).getOrElse(true))
+                table = ref.refTable
+              case None =>
+                isOuterJoined = true
+                table = step
             }
           }
           def maybeNoPrefix(fName: String) = fName.indexOf("_.") match {
@@ -513,8 +526,16 @@ class YamlViewDefLoader(
           val expression =
             if (f.expression != null || parts.size < 3) f.expression
             else parts.map(dbName).mkString(".")
+          val willNeedOuterJoinInfo = // TODO merge methods to get rid of MojozIsOuterJoined extra?
+            isOuterJoined && (
+              f.extras == null ||
+              !f.extras.contains(MojozExplicitNullability)
+            )
+          val extras = if (!willNeedOuterJoinInfo) f.extras else {
+            Option(f.extras).getOrElse(Map.empty) ++ Map(MojozIsOuterJoined -> true)
+          }
           f.copy(table = table, tableAlias = tableAlias,
-            name = name, alias = alias, expression = expression)
+            name = name, alias = alias, expression = expression, extras = extras)
         }
       def overrideSimpleType(base: Type, override_ : Type) = Type(
         Option(override_.name) getOrElse base.name,
@@ -531,14 +552,16 @@ class YamlViewDefLoader(
         else {
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
-          // FIXME autojoins nullable?
           val joinOpt = tableOrAliasToJoin.get(tableOrAlias)
           val joinColOpt =
             // TODO make use of join col type info?
             joinOpt.map(_.columns).getOrElse(Nil).find(_.name == f.name)
           val nullable =
             if (f.extras != null && f.extras.get(MojozExplicitNullability) == Some(true)) f.nullable
-            else joinColOpt.map(_.nullable).getOrElse(col.nullable)
+            else
+              (f.extras != null && f.extras.get(MojozIsOuterJoined) == Some(true)) ||
+                joinColOpt.map(_.nullable)
+                  .getOrElse(col.nullable)
           f.copy(nullable = nullable,
             type_ =
               if (f.type_ != null &&
@@ -559,13 +582,16 @@ class YamlViewDefLoader(
                 f.extras.contains(MojozExplicitComments)    ||
                 f.extras.contains(MojozExplicitEnum)        ||
                 f.extras.contains(MojozExplicitNullability) ||
-                f.extras.contains(MojozExplicitType)))
+                f.extras.contains(MojozExplicitType)        ||
+                f.extras.contains(MojozIsOuterJoined)))
              f.copy(extras =
                Option(f.extras)
                 .map(_ - MojozExplicitComments
                        - MojozExplicitEnum
                        - MojozExplicitNullability
-                       - MojozExplicitType)
+                       - MojozExplicitType
+                       - MojozIsOuterJoined
+                )
                 .filterNot(_.isEmpty).orNull)
         else f
       t.copy(fields = t.fields

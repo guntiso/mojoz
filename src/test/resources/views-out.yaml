@@ -19,7 +19,7 @@ fields:
 - id
 - code
 - country_code                        (LT, LV, RU)
-- country.name
+- country.name          ?
 - name                                  : <p>special xml 'chars' & "strings" test</p>
 
 name:     cardinality_overide_test
@@ -65,7 +65,7 @@ fields:
 - id
 - code
 - name
-- country.name
+- country.name          ?
 
 name:     no_table
 table:
@@ -92,13 +92,13 @@ table:    person
 fields:
 - name
 - surname
-- mother.name
-- father.name
-- maternal_grandmother_name             = mother.mother.name
-- maternal_grandfather_name             = mother.father.name
+- mother.name           ?
+- father.name           ?
+- maternal_grandmother_name ?           = mother.mother.name
+- maternal_grandfather_name ?           = mother.father.name
 - maternal_grandfather_surname          = mother.father.surname
-- father.mother.name
-- father.father.name
+- father.mother.name    ?
+- father.father.name    ?
 - father.father.father.surname
 
 name:     resolver_test_1
@@ -114,6 +114,8 @@ comments: ""
 fields:
 - account                               = account.billing_account -> account_id
 - currency.name                         -> currency_code
+- account.bank.code
+- account.bank.name_eng
 
 name:     resolver_test_3
 table:    account
@@ -145,13 +147,13 @@ table:    bank b
 fields:
 - id
 - name
-- country                               = country.name -> country_code
+- country               ?               = country.name -> country_code
 
 name:     resolver_test_7b
 table:    bank b
 fields:
 - id
-- country                               = country.name -> country_code = to_country_code(_)
+- country               ?               = country.name -> country_code = to_country_code(_)
 
 name:     resolver_test_8
 table:    account

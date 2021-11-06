@@ -77,6 +77,8 @@ class ResolverTest1 extends DtoWithId {
 class ResolverTest2 extends Dto {
   var account: String = null
   var currencyName: String = null
+  var accountBankCode: String = null
+  var accountBankNameEng: String = null
 }
 class ResolverTest3 extends DtoWithId {
   var id: java.lang.Long = null

@@ -86,7 +86,9 @@ case class ResolverTest1 (
 )
 case class ResolverTest2 (
   account: String = null,
-  currencyName: String = null
+  currencyName: String = null,
+  accountBankCode: String = null,
+  accountBankNameEng: String = null
 )
 case class ResolverTest3 (
   id: java.lang.Long = null,

@@ -102,14 +102,12 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="CountryName">
+      <xs:element name="CountryName" nillable="true" minOccurs="0">
         <xs:annotation>
           <xs:documentation>Valsts nosaukums.</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="64"/>
           </xs:restriction>
         </xs:simpleType>
@@ -224,14 +222,12 @@
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
-          <xs:element name="CountryName">
+          <xs:element name="CountryName" nillable="true" minOccurs="0">
             <xs:annotation>
               <xs:documentation>Valsts nosaukums.</xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:minLength value="1"/>
-                <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
                 <xs:maxLength value="64"/>
               </xs:restriction>
             </xs:simpleType>
@@ -294,38 +290,30 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MotherName">
+      <xs:element name="MotherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherName">
+      <xs:element name="FatherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MaternalGrandmotherName">
+      <xs:element name="MaternalGrandmotherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="MaternalGrandfatherName">
+      <xs:element name="MaternalGrandfatherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
@@ -337,20 +325,16 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherMotherName">
+      <xs:element name="FatherMotherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="FatherFatherName">
+      <xs:element name="FatherFatherName" nillable="true" minOccurs="0">
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="51"/>
           </xs:restriction>
         </xs:simpleType>
@@ -400,6 +384,28 @@
             <xs:minLength value="1"/>
             <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="100"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="AccountBankCode">
+        <xs:annotation>
+          <xs:documentation>Bankas SWIFT kods.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="16"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="AccountBankNameEng" nillable="true" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>Bankas pilnais nosaukums, angliski.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="240"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -491,14 +497,12 @@
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="Country">
+      <xs:element name="Country" nillable="true" minOccurs="0">
         <xs:annotation>
           <xs:documentation>Valsts nosaukums.</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="64"/>
           </xs:restriction>
         </xs:simpleType>
@@ -512,14 +516,12 @@
           <xs:documentation>Ieraksta identifikators.</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="Country">
+      <xs:element name="Country" nillable="true" minOccurs="0">
         <xs:annotation>
           <xs:documentation>Valsts nosaukums.</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:minLength value="1"/>
-            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
             <xs:maxLength value="64"/>
           </xs:restriction>
         </xs:simpleType>

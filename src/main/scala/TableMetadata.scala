@@ -125,6 +125,10 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     .map(r => ((t.name, r.defaultRefTableAlias), r)))
     .flatMap(x => x)
     .toMap
+  private val refTableOrAliasToRef = tableDefs.map(t => t.refs
+    .map(r => ((t.name, Option(r.defaultRefTableAlias).getOrElse(r.refTable)), r)))
+    .flatMap(x => x)
+    .toMap
   private val colNameToCol =
     tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
 
@@ -161,6 +165,8 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
 
   def col(table: String, column: String) =
     colNameToCol.get((table, column))
-  def ref(table: String, refTableAlias: String): Option[Ref] =
+  def aliasedRef(table: String, refTableAlias: String): Option[Ref] =
     refTableAliasToRef.get((table, refTableAlias))
+  def ref(table: String, refTableOrAlias: String): Option[Ref] =
+    refTableOrAliasToRef.get((table, refTableOrAlias))
 }

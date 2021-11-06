@@ -39,6 +39,30 @@ class ViewDefTests extends FlatSpec with Matchers {
   "known keys view" should "have no extras" in {
     viewDefs.find(_.name == "with_many_known_keys").head.extras should be(Map.empty)
   }
+  "field nullability" should "be set correctly" in {
+    def checkNullability(viewName: String, fieldName: String, expectedNullable: Boolean) = {
+      def infoString(viewName: String, fieldName: String, nullable: Boolean): String = {
+        val prefix = if (nullable) "1" else "0" // to not trim viewName.fieldName in error message
+        s"$prefix: $viewName.$fieldName.nullable = $nullable"
+      }
+      val actualNullable =
+        nameToViewDef(viewName).fields.find(f => Option(f.alias).getOrElse(f.name) == fieldName).get.nullable
+      val actual   = infoString(viewName, fieldName, actualNullable)
+      val expected = infoString(viewName, fieldName, expectedNullable)
+      actual shouldBe expected
+    }
+    checkNullability("person",  "name",                           false)
+    checkNullability("person",  "surname",                        true)
+    checkNullability("person",  "mother_name",                    true)
+    checkNullability("person",  "maternal_grandmother_name",      true)
+    checkNullability("resolver_test_2",  "account",               false)
+    checkNullability("resolver_test_2",  "account_bank_code",     false)
+    checkNullability("resolver_test_2",  "account_bank_name_eng", true)
+    checkNullability("resolver_test_4",  "name",                  false)
+    checkNullability("bank_list_row",    "country_name",          true)
+    checkNullability("resolver_test_7",  "country",               true)
+    checkNullability("resolver_test_7b", "country",               true)
+  }
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "views-out.yaml")
     val ioViews = viewDefs.map(MdConventions.toExternal(_, tableMd, nameToViewDef))
