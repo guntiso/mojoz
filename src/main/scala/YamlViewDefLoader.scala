@@ -373,8 +373,8 @@ class YamlViewDefLoader(
           sys.error(
             "Unexpected null type for field " + t.name + "." + f.name)
         else if (f.type_.isComplexType)
-          m.get(f.type_.name) getOrElse sys.error("Type " + f.type_.name +
-            " referenced from " + t.name + "." + f.name + " is not found")
+          m.get(f.type_.name) getOrElse sys.error(
+            s"""Type "${f.type_.name}" referenced from "${t.name}.${f.name}" is not found""")
         else if (f.table != null)
           tableMetadata.columnDef(t, f)
       }

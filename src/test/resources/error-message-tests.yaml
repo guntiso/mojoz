@@ -63,7 +63,7 @@ fields:
 - a
 
 
-expected-error-message: Type unknown_type referenced from test_type_not_found.x is not found
+expected-error-message: Type "unknown_type" referenced from "test_type_not_found.x" is not found
 name:       test_type_not_found
 table:
 fields:
