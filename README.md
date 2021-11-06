@@ -1,6 +1,6 @@
 # mojoz
 
-[![Build Status](https://travis-ci.org/guntiso/mojoz.svg?branch=develop)](https://travis-ci.org/guntiso/mojoz)
+![Build Status](https://github.com/guntiso/mojoz/actions/workflows/ci.yaml/badge.svg)
 
 Manages relational database table metadata and query definitions.
 Generates SQL [DDL](https://en.wikipedia.org/wiki/Data_definition_language) statements from table metadata.
