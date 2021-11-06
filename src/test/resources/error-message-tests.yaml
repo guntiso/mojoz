@@ -70,8 +70,8 @@ fields:
 - x         unknown_type
 
 
-expected-error-message: table not found: unknown_table
-name:       test_view_not_found
+expected-error-message: Table "unknown_table" referenced from view "test_table_not_found" is not found
+name:       test_table_not_found
 table:      unknown_table
 
 

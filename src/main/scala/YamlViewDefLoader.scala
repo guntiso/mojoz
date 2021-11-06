@@ -414,10 +414,11 @@ class YamlViewDefLoader(
 
     def inheritTableComments[T](t: ViewDef[T]) =
       if (t.table == null || t.comments != null) t
-      else tableMetadata.tableDef(t.table).comments match {
+      else tableMetadata.tableDefOption(t.table).map(_.comments match {
         case null => t
         case tableComments => t.copy(comments = tableComments)
-      }
+      })
+      .getOrElse(sys.error(s"""Table "${t.table}" referenced from view "${t.name}" is not found"""))
 
     def mergeStringSeqs(s1: Seq[String], s2: Seq[String]) = (s1, s2) match {
       case (null, null) => null
