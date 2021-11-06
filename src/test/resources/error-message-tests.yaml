@@ -75,7 +75,6 @@ name:       test_view_not_found
 table:      unknown_table
 
 
-expected-error-message: View test_view_not_found extends or modifies non-existing type unknown_view
+expected-error-message: View "unknown_view" extended or modified by "test_view_not_found" is not found
 name:       test_view_not_found
 extends:    unknown_view
-table:

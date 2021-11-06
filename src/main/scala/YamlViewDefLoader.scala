@@ -69,8 +69,8 @@ class YamlViewDefLoader(
       (v.name :: visited).reverse.mkString(" -> "))
     else if (extendsOrModifies == null) true
     else checkExtends(nameToViewDef.get(extendsOrModifies)
-      .getOrElse(sys.error("View " + v.name +
-        " extends or modifies non-existing type " + extendsOrModifies)),
+      .getOrElse(sys.error(
+        s"""View "${extendsOrModifies}" extended or modified by "${v.name}" is not found""")),
       nameToViewDef, v.name :: visited)
   }
   val plainViewDefs: List[MojozViewDef] = buildViewDefs(rawViewDefs).sortBy(_.name)
