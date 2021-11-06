@@ -100,7 +100,9 @@ class YamlTableDefWriter {
       Option(ref.onUpdateAction).map("on update " + _))
       .flatMap(x => x).mkString(" ")
   def toYaml(tableDef: IoTableDef): String =
-    List(Some(tableDef.name).map("table:    " + _),
+    List(
+      Option(tableDef.db).map("db:       " + _),
+      Some(tableDef.name).map("table:    " + _),
       Option(tableDef.comments).map(c =>
         wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Some("columns:"),

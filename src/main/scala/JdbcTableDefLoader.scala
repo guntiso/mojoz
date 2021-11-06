@@ -58,12 +58,12 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         val `enum` = colToEnum.get(c)
         if (enum.isDefined) c.copy(enum_ = enum.get) else c
       }
-
+      val db = null // TODO db?
       val tableFullName =
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
       val extras = Map[String, Any]()
-      tableDefs += TableDef(tableFullName, comments, mappedCols,
+      tableDefs += TableDef(db, tableFullName, comments, mappedCols,
           pk, uk, unmappedCk, idx, refs, extras)
     }
 

@@ -11,8 +11,8 @@ import org.mojoz.metadata.io.MdConventions
 class MdConventionsTests extends FlatSpec with Matchers {
   def ref(col: String, refTable: String, refCol: String) =
     Ref(null, Seq(col), refTable, Seq(refCol), null, null, null, null)
-  def tableDef(tableName: String, col: String, ref: Ref) =
-    TableDef(tableName, null, Seq(colDef(col)), None, Nil, Nil, Nil, Seq(ref), Map.empty)
+  def tableDef(db: String, tableName: String, col: String, ref: Ref) =
+    TableDef(db, tableName, null, Seq(colDef(col)), None, Nil, Nil, Nil, Seq(ref), Map.empty)
   def colDef(colName: String) =
     ColumnDef(colName, new Type("test"), true, null, null, null, Map.empty)
   "metadata conventions" should "encode ref cols properly" in {
@@ -33,15 +33,16 @@ class MdConventionsTests extends FlatSpec with Matchers {
       .map(_.split("->"))
       .map(a => (a(0).split(",").toList.map(_.trim),
         a(1).split(",").toList.map(_.trim)))
+    val db = null
     tests foreach {
       case (d @ List(tab, col, refTab, refCol), List(ccol)) =>
-        val td = tableDef(tab, col, ref(col, refTab, refCol))
+        val td = tableDef(db, tab, col, ref(col, refTab, refCol))
         val cd = MdConventions.toExternal(td, td.cols(0))
         val expected = (d, ccol, None)
         val produced = (d, cd.name, cd.type_.type_)
         expected should be(produced)
       case (d @ List(tab, col, refTab, refCol), List(ccol, refType)) =>
-        val td = tableDef(tab, col, ref(col, refTab, refCol))
+        val td = tableDef(db, tab, col, ref(col, refTab, refCol))
         val cd = MdConventions.toExternal(td, td.cols(0))
         val expected = (d, ccol, Some(refType))
         val produced = (d, cd.name, cd.type_.type_.map(_.name))

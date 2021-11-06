@@ -18,6 +18,7 @@ import org.snakeyaml.engine.v2.api.Load
 
 // TODO remove yaml table def
 private[in] case class YamlTableDef(
+  db: String,
   table: String,
   comments: String,
   columns: Seq[YamlFieldDef],
@@ -69,7 +70,7 @@ private[in] object YamlTableDefLoader {
   val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
   object TableDefKeys extends Enumeration {
     type TableDefKeys = Value
-    val table, comments, columns, pk, uk, idx, refs = Value
+    val db, table, comments, columns, pk, uk, idx, refs = Value
   }
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
@@ -278,6 +279,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         case x => throw new RuntimeException(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
+    val db    = tdMap.get("db"   ).filter(_ != null).map(_.toString).filter(_ != "").orNull
     val table = tdMap.get("table").filter(_ != null).map(_.toString).filter(_ != "")
       .getOrElse(sys.error("Missing table name"))
     val comments = toList(tdMap.get("comments")) match {
@@ -307,10 +309,11 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val refs = toList(tdMap.get("refs"))
       .map(loadYamlRefDef)
     val extras = tdMap -- TableDefKeyStrings
-    YamlTableDef(table, comments, colDefs, pk, uk, idx, refs, extras)
+    YamlTableDef(db, table, comments, colDefs, pk, uk, idx, refs, extras)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     // TODO cleanup?
+    val db = y.db
     val name = y.table
     val comments = y.comments
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
@@ -320,7 +323,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val idx = y.idx
     val refs = y.refs
     val extras = y.extras
-    val exTypeDef = TableDef(name, comments, cols, pk, uk, ck, idx, refs, extras)
+    val exTypeDef = TableDef(db, name, comments, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {

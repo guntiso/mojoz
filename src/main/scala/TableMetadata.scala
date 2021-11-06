@@ -55,6 +55,7 @@ object TableDef {
 }
 
 case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
+  db: String,
   name: String,
   comments: String,
   cols: Seq[C],
