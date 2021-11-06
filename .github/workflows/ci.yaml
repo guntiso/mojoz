@@ -2,9 +2,10 @@ name: Build and test
 on:   [push]
 jobs:
   Build-and-test:
-    runs-on: ubuntu-latest
+    runs-on:  ${{ matrix.os }}
     strategy:
       matrix:
+        os:   [ubuntu-latest]  # TODO macos-latest, windows-latest
         java: [8, 11, 17]
     services:
       postgres:
