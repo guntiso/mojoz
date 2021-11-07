@@ -22,11 +22,12 @@ class MdConventionsTests extends FlatSpec with Matchers {
       "t, person_id, person, id -> person.id",
       "t, mother_id, person, id -> mother.id, person.id",
       "t, col_blah, rt, blah -> col.blah, rt.blah",
-      "sch.table, col_blah, sch.rt, blah -> col.blah, rt.blah",
+      //sch.table,col_blah, sch.rt, blah -> col.blah,     rt.blah",   // de-optimized
+      "sch.table, col_blah, sch.rt, blah -> col.blah, sch.rt.blah",
       "sch1.table, col_blah, sch2.rt, blah -> col.blah, sch2.rt.blah",
       "sch1.table, col_blax, sch2.rt, blah -> col_blax, sch2.rt.blah",
       "table, col_baxy_blah, rt, baxy_blah -> col.baxy_blah, rt.baxy_blah",
-      "s.table, reftab_refcol, s.reftab, refcol -> reftab.refcol",
+      // "s.table, reftab_refcol, s.reftab, refcol -> reftab.refcol", // de-optimized
       "s1.table, reftab_refcol, s2.reftab, refcol -> reftab.refcol, s2.reftab.refcol",
       "s1.table, s2_reftab_refcol, s2.reftab, refcol -> s2.reftab.refcol",
       "table, s2_reftab_refcol, s2.reftab, refcol -> s2.reftab.refcol")

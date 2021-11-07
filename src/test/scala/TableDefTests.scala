@@ -58,14 +58,19 @@ class TableDefTests extends FlatSpec with Matchers {
     implicit val ci = h2Ci
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val statements =
+     "create schema test_schema_1" ::
       SqlGenerator.h2().schema(tableDefs)
         .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(statements: _*)
     val conn = getConn
-    val Schema = "PUBLIC"
+    val Schema0 = "PUBLIC"
+    val Schema1 = "TEST_SCHEMA_1"
+    val Schemas = List(Schema0, Schema1)
+    val Prefix1 = "TEST."
     val idxNames = indexNames(statements).map(_.toUpperCase)
     val rawJdbcTableDefs = {
-      try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
+      try
+        Schemas.flatMap(schema => JdbcTableDefLoader.tableDefs(conn, null, schema, null))
       finally conn.close
     }.map(t => t.copy(
       // h2-specific synthetic index cleanup
@@ -75,7 +80,15 @@ class TableDefTests extends FlatSpec with Matchers {
       cols = t.cols.map(c => c.copy(comments = Option(c.comments).filter(_ != "").orNull))
     ))
 
-    val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
+    val jdbcTableDefs =
+      rawJdbcTableDefs
+        .map(td =>
+          if (td.name contains Schema1)
+            td.unprefixTableNames(Prefix1)
+          else
+            td.toSimpleNames
+        )
+        .map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-jdbc-produced.yaml", produced)
@@ -94,16 +107,21 @@ class TableDefTests extends FlatSpec with Matchers {
   "generated hsqldb roundtrip file" should "almost equal sample file" in {
     implicit val ci = hsqldbCi
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlGenerator.hsqldb().schema(tableDefs)
+    val statements =
+     "create schema test_schema_1" ::
+     SqlGenerator.hsqldb().schema(tableDefs)
       .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(statements: _*)
     val conn = getConn
     val Catalog = "PUBLIC"
-    val Schema = "PUBLIC"
-    val Prefx = Catalog + "." + Schema + "."
+    val Schema0 = "PUBLIC"
+    val Schema1 = "TEST_SCHEMA_1"
+    val Schemas = List(Schema0, Schema1)
+    val Prefix1 = s"$Catalog."
     val idxNames = indexNames(statements).map(_.toUpperCase)
     val rawJdbcTableDefs = {
-      try JdbcTableDefLoader.tableDefs(conn, null, Schema, null)
+      try
+        Schemas.flatMap(schema => JdbcTableDefLoader.tableDefs(conn, null, schema, null))
       finally conn.close
     }.map(t => t.copy( // hsqldb-specific synthetic index cleanup
       uk = t.uk.map { uk =>
@@ -118,15 +136,19 @@ class TableDefTests extends FlatSpec with Matchers {
       },
       idx = t.idx.filter(i => idxNames.contains(i.name))))
 
-    val jdbcTableDefs = rawJdbcTableDefs.map(_.toSimpleNames).map(_.toLowerCase)
+    val jdbcTableDefs =
+      rawJdbcTableDefs
+        .map(td =>
+          if (td.name contains Schema1)
+            td.unprefixTableNames(Prefix1)
+          else
+            td.toSimpleNames
+        )
+        .map(_.toLowerCase)
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
     skipSome(expected) should be(skipSome(produced))
-    val jdbcTableDefs2 =
-      rawJdbcTableDefs.map(_.unprefixTableNames(Prefx)).map(_.toLowerCase)
-    val produced2 = YamlTableDefWriter.toYaml(jdbcTableDefs2)
-    skipSome(expected) should be(skipSome(produced2))
   }
 }
 

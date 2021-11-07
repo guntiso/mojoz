@@ -153,9 +153,11 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
       val refTable = ref.get.refTable
       val refCol = ref.get.refCols(0)
       val refTypeName =
+        /* De-optimized. TODO re-optimize ref representation in column type?
         if (prefix(table.name) == prefix(refTable))
           suffix(refTable) + "." + refCol
-        else refTable + "." + refCol
+        else */
+          refTable + "." + refCol
       val (typeOpt, refColName) =
         if (col.name == refTypeName.replace(".", "_"))
           (None, refTypeName)

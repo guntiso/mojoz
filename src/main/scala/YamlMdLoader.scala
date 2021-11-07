@@ -141,8 +141,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       rawTableDefs.map(t => (t.name, t)).toMap
     }
     def refToCol(ref: String) =
-      (ref.split("\\.", 2).toList match {
-        case t :: c :: Nil => Some((t, c)) case x => None
+      (ref.lastIndexOf('.') match {
+        case -1 => None
+        case  i => Some((ref.substring(0, i), ref.substring(i + 1)))
       })
         .flatMap(tc => nameToTableDef.get(tc._1).map((_, tc._2)))
         .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)

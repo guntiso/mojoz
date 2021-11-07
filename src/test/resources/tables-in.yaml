@@ -161,3 +161,23 @@ columns:
 - id
 - name                   50
 pk:
+
+table:    test_schema_1.test_table1
+columns:
+- id
+- name                   50
+
+table:    test_schema_1.test_table2
+columns:
+- t1.id   test_schema_1.test_table1.id
+
+table:    test_schema_1.test_table3
+columns:
+- t1.id   test_schema_1.ts_table1.id
+refs:
+- t1_id -> test_schema_1.ts_table1(id) on delete cascade
+
+table:    test_schema_1.ts_table1
+columns:
+- id
+- name                   50

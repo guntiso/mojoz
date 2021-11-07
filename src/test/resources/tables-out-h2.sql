@@ -166,6 +166,24 @@ create table test_table8(
   name varchar(50)
 );
 
+create table test_schema_1.test_table1(
+  id bigint not null,
+  name varchar(50)
+);
+
+create table test_schema_1.test_table2(
+  t1_id bigint
+);
+
+create table test_schema_1.test_table3(
+  t1_id bigint
+);
+
+create table test_schema_1.ts_table1(
+  id bigint not null,
+  name varchar(50)
+);
+
 alter table account add constraint pk_account primary key (id);
 
 alter table bank add constraint pk_bank primary key (id);
@@ -196,6 +214,10 @@ alter table test_table6 add constraint pk_test_table6 primary key (id);
 
 alter table test_table7 add constraint pk_test_table7 primary key (key1, key2);
 
+alter table test_schema_1.test_table1 add constraint pk_test_table1 primary key (id);
+
+alter table test_schema_1.ts_table1 add constraint pk_ts_table1 primary key (id);
+
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);
@@ -205,3 +227,5 @@ alter table person add constraint fk_person_father_id foreign key (father_id) re
 alter table test_table2 add constraint fk_test_table2_code_name foreign key (code, name) references test_table1(code, col1) on delete cascade;
 alter table test_table2 add constraint fk_tt2_spec_code_name foreign key (code, name) references test_table1(code, col2);
 alter table test_table5 add constraint fk_test_table5_bank_id foreign key (bank_id) references bank(id) on delete cascade;
+alter table test_schema_1.test_table2 add constraint fk_test_table2_t1_id foreign key (t1_id) references test_schema_1.test_table1(id);
+alter table test_schema_1.test_table3 add constraint fk_test_table3_t1_id foreign key (t1_id) references test_schema_1.ts_table1(id) on delete cascade;

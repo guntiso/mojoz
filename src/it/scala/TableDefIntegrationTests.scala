@@ -81,11 +81,22 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       .split(";").toList.map(_.trim).filter(_ != "")
     executeStatements(cfg, statements: _*)
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
-    val Schema = "mojoz"
+    val Schema0 = "mojoz"
+    val Schema1 = "test_schema_1"
+    val Schemas = List(Schema0, Schema1)
     val jdbcTableDefs = {
-      try JdbcTableDefLoader.tableDefs(conn, null, Schema, null, "TABLE")
+      try
+        Schemas.flatMap(schema => JdbcTableDefLoader.tableDefs(conn, null, schema, null, "TABLE"))
       finally conn.close
-    }.map(_.toSimpleNames).map(_.toLowerCase)
+    }
+    .map(td =>
+      if (td.name contains Schema1)
+        td
+      else
+        td.toSimpleNames
+    )
+    .map(_.toLowerCase)
+
     val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
@@ -105,10 +116,16 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       "grant connect, resource to mojoz")
   }
   def clearPostgresqlDbSchema(cfg: Cfg): Unit = {
-    try executeStatements(cfg, "drop schema mojoz cascade") catch {
+    try executeStatements(cfg,
+        "drop schema mojoz cascade",
+        "drop schema test_schema_1 cascade",
+    ) catch {
       case ex: Exception => println("failed to drop schema: " + ex.toString)
     }
-    executeStatements(cfg, "create schema mojoz authorization mojoz")
+    executeStatements(cfg,
+      "create schema mojoz authorization mojoz",
+      "create schema test_schema_1 authorization mojoz",
+    )
   }
   def executeStatements(cfg: Cfg, statements: String*): Unit = {
     val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
