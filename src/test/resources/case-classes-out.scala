@@ -128,6 +128,18 @@ case class ResolverTest9 (
   mother: String = null,
   father: String = null
 )
+case class SchemaTest1 (
+  t1Id: java.lang.Long = null,
+  t1Name: String = null
+)
+case class SchemaTest2 (
+  id: java.lang.Long = null,
+  testSchema1TestTable1Name: String = null
+)
+case class SchemaTest3 (
+  id: java.lang.Long = null,
+  name: String = null
+)
 case class TypeOverrideTest (
   bank: java.lang.Long = null,
   lastModified: java.sql.Date = null

@@ -80,6 +80,15 @@
     <jaxb:bindings node="//xs:complexType[@name='ResolverTest9Type']">
       <jaxb:class name="ResolverTest9"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='SchemaTest1Type']">
+      <jaxb:class name="SchemaTest1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='SchemaTest2Type']">
+      <jaxb:class name="SchemaTest2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='SchemaTest3Type']">
+      <jaxb:class name="SchemaTest3"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTestType']">
       <jaxb:class name="TypeOverrideTest"/>
     </jaxb:bindings>

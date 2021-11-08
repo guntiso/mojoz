@@ -348,3 +348,21 @@ fields:
 - id
 - mother = mother.name || mother.surname ->
 - father = father.name || ' ' || father.surname ->
+
+name:   schema_test_1
+table:  test_schema_1.test_table2
+fields:
+- t1_id
+- t1.name
+
+name:   schema_test_2
+table:  test_schema_1.test_table2
+fields:
+- id = t1_id
+- test_schema_1.test_table1.name
+
+name:   schema_test_3
+table:  test_schema_1.test_table2
+fields:
+- id   = test_schema_1.test_table1.id
+- name = test_schema_1.test_table1.name

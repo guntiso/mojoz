@@ -579,6 +579,45 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="SchemaTest1Type">
+    <xs:sequence>
+      <xs:element name="T1Id" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="T1Name" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="50"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="SchemaTest2Type">
+    <xs:sequence>
+      <xs:element name="Id" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="TestSchema1TestTable1Name" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="50"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="SchemaTest3Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Name" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="50"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="TypeOverrideTestType">
     <xs:annotation>
       <xs:documentation>Klienta norēķina konts</xs:documentation>

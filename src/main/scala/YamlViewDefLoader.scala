@@ -485,8 +485,23 @@ class YamlViewDefLoader(
           if (f.isExpression || t.table == null) f
           else f.copy(name = dbName(f.name), table = dbName(t.table))
         else {
-          val parts = f.name.split("\\.")
-          val tableOrAlias = dbName(parts(0))
+          def isTableOrAliasInScope(tableOrAlias: String) =
+            aliasToTable.contains(tableOrAlias)                       ||
+            tableMetadata.aliasedRef(t.table, tableOrAlias).isDefined ||
+            tableMetadata.tableDefOption(tableOrAlias).isDefined
+          val (parts, tableOrAlias) = {
+            val parts = f.name.split("\\.")
+            (1 to parts.length - 1).find { i =>
+              isTableOrAliasInScope(dbName(parts.take(i).mkString(".")))
+            } match {
+              case Some(1) => (parts.toList, dbName(parts(0)))
+              case Some(i) =>
+                val tableOrAlias = dbName(parts.take(i).mkString("."))
+                (tableOrAlias :: parts.drop(i).toList, tableOrAlias)
+              case None    =>
+                (parts.toList, dbName(parts(0)))
+            }
+          }
           var table = Option(
             aliasToTable.get(tableOrAlias)
               .getOrElse(tableMetadata.aliasedRef(t.table, tableOrAlias).map(_.refTable)
@@ -504,7 +519,7 @@ class YamlViewDefLoader(
                 parts.size > 2)
               null
             else tableOrAlias
-          val partsReverseList = parts.toList.reverse
+          val partsReverseList = parts.reverse
           val name = dbName(partsReverseList.head)
           val path = partsReverseList.tail.reverse
           path.tail foreach { step =>

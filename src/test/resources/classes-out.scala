@@ -118,6 +118,18 @@ class ResolverTest9 extends DtoWithId {
   var mother: String = null
   var father: String = null
 }
+class SchemaTest1 extends Dto {
+  var t1Id: java.lang.Long = null
+  var t1Name: String = null
+}
+class SchemaTest2 extends Dto {
+  var id: java.lang.Long = null
+  var testSchema1TestTable1Name: String = null
+}
+class SchemaTest3 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
 class TypeOverrideTest extends Dto {
   var bank: java.lang.Long = null
   var lastModified: java.sql.Date = null
