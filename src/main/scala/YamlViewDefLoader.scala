@@ -459,14 +459,18 @@ class YamlViewDefLoader(
       }
 
     def resolveFieldNamesAndTypes_(t: MojozViewDef) = {
+      def simpleName(name: String) = if (name == null) null else name.lastIndexOf('.') match {
+        case -1 => name
+        case  i => name.substring(i + 1)
+      }
       lazy val joins = parseJoins(
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
           .orNull,
         t.joins)
-      lazy val aliasToTable =
-        joins.filter(_.alias != null).map(j => j.alias -> j.table).toMap ++
-          Seq(t.tableAlias).filter(_ != null).map(_ -> t.table).toMap
+      lazy val aliasToTable: Map[String, String] =
+        joins.map(j => simpleName(Option(j.alias).getOrElse(j.table)) -> j.table).toMap ++
+        Map(Option(t.tableAlias).getOrElse(simpleName(t.table)) -> t.table)
       lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def reduceExpression[T](f: FieldDef[T]) =
