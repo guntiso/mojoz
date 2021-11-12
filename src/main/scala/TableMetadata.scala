@@ -157,7 +157,7 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
         // TODO print filename, lineNr, colNr, too!
         throw new RuntimeException(
           "Problem finding column (view: " + viewDef.name
-            + ", column: " + f.table + "." + colName +
+            + ", table: " + f.table + ", column: " + colName +
             (if (f.tableAlias == null) ""
             else " (table alias " + f.tableAlias + ")") + ")"
             + ", joins: " + viewDef.joins, ex)
