@@ -469,7 +469,10 @@ class YamlViewDefLoader(
           .orNull,
         t.joins)
       lazy val aliasToTable: Map[String, String] =
+        // FIXME exclude clashing simple names from different qualified names!
+        joins.map(j => Option(j.alias).getOrElse(j.table) -> j.table).toMap ++
         joins.map(j => simpleName(Option(j.alias).getOrElse(j.table)) -> j.table).toMap ++
+        Map(Option(t.tableAlias).getOrElse(t.table) -> t.table) ++
         Map(Option(t.tableAlias).getOrElse(simpleName(t.table)) -> t.table)
       lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
