@@ -459,21 +459,20 @@ class YamlViewDefLoader(
       }
 
     def resolveFieldNamesAndTypes_(t: MojozViewDef) = {
-      def simpleName(name: String) = if (name == null) null else name.lastIndexOf('.') match {
-        case -1 => name
-        case  i => name.substring(i + 1)
-      }
+      def tailists[B](l: List[B]): List[List[B]] =
+        if (l.isEmpty) Nil else l :: tailists(l.tail)
       lazy val joins = parseJoins(
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
           .orNull,
         t.joins)
-      lazy val aliasToTable: Map[String, String] =
-        // FIXME exclude clashing simple names from different qualified names!
-        joins.map(j => Option(j.alias).getOrElse(j.table) -> j.table).toMap ++
-        joins.map(j => simpleName(Option(j.alias).getOrElse(j.table)) -> j.table).toMap ++
-        Map(Option(t.tableAlias).getOrElse(t.table) -> t.table) ++
-        Map(Option(t.tableAlias).getOrElse(simpleName(t.table)) -> t.table)
+      lazy val nameOrAliasToTables: Map[String, Set[String]] = {
+        joins.map(j => Option(j.alias).getOrElse(j.table) -> j.table).toSet +
+        (Option(t.tableAlias).getOrElse(t.table) -> t.table)
+      }.filter  { case (n, t) => n != null }
+       .flatMap { case (n, t) => tailists(n.split("\\.").toList).map(_.mkString(".") -> t) }
+       .groupBy(_._1)
+       .map { kvv => kvv._1 -> kvv._2.map(_._2).toSet }
       lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       def reduceExpression[T](f: FieldDef[T]) =
@@ -493,7 +492,7 @@ class YamlViewDefLoader(
           else f.copy(name = dbName(f.name), table = dbName(t.table))
         else {
           def isTableOrAliasInScope(tableOrAlias: String) =
-            aliasToTable.contains(tableOrAlias)                       ||
+            nameOrAliasToTables.contains(tableOrAlias)                ||
             tableMetadata.aliasedRef(t.table, tableOrAlias).isDefined ||
             tableMetadata.tableDefOption(tableOrAlias).isDefined
           val (parts, tableOrAlias) = {
@@ -510,7 +509,7 @@ class YamlViewDefLoader(
             }
           }
           var table = Option(
-            aliasToTable.get(tableOrAlias)
+            nameOrAliasToTables.get(tableOrAlias).filter(_.size == 1).map(_.head)
               .getOrElse(tableMetadata.aliasedRef(t.table, tableOrAlias).map(_.refTable)
                 .getOrElse(tableOrAlias))).map(dbName).orNull
           var isOuterJoined = tableOrAliasToJoin.get(tableOrAlias).map(_.isOuterJoin).getOrElse {
