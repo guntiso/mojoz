@@ -136,7 +136,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       val duplicateNames =
         rawTableDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
       if (duplicateNames.size > 0)
-        throw new RuntimeException(
+        sys.error(
           "Duplicate table definitions: " + duplicateNames.mkString(", "))
       rawTableDefs.map(t => (t.name, t)).toMap
     }
@@ -217,12 +217,12 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       case idx: java.lang.String => idx match {
         case NamedIdxDef(name, _, cols, _, _, _) => dbIndex(name, cols)
         case ColsIdxDef(cols, _, _, _) => dbIndex(null, cols)
-        case _ => throw new RuntimeException(ThisFail +
+        case _ => sys.error(ThisFail +
           " - unexpected format: " + idx.trim)
       }
       case arr: java.util.ArrayList[_] =>
         extractIndex(arr.asScala.mkString(", "))
-      case x => throw new RuntimeException(ThisFail +
+      case x => sys.error(ThisFail +
         " - unexpected index definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
@@ -242,16 +242,16 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
             else refAndActions(1) match {
               case OnDeleteDef(d) => (d, null)
               case OnDeleteOnUpdateDef(_, d, u) => (d, u)
-              case x => throw new RuntimeException(ThisFail +
+              case x => sys.error(ThisFail +
                 " - unexpected format: " + x.trim)
             }
           Ref(nameAndCols.name, nameAndCols.cols,
             refTableRefCols.name, refTableRefCols.cols,
             null, null,
             onDelete, onUpdate)
-        } else throw new RuntimeException(ThisFail +
+        } else sys.error(ThisFail +
           " - unexpected format: " + r.trim)
-      case x => throw new RuntimeException(ThisFail +
+      case x => sys.error(ThisFail +
         " - unexpected ref definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
@@ -277,7 +277,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val tdMap =
       (new Load(loaderSettings)).loadFromString(lineNumberCorrection + tableDefString) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-        case x => throw new RuntimeException(
+        case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
     val db    = tdMap.get("db"   ).filter(_ != null).map(_.toString).filter(_ != "").orNull
@@ -291,7 +291,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       .map {
         case null => Nil
         case a: java.util.ArrayList[_] => a.asScala.toList
-        case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+        case x => sys.error("Unexpected class: " + x.getClass)
       }
       .getOrElse(Nil)
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
@@ -300,7 +300,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       case x => toList(x).map(loadYamlIndexDef)
     }
     if (pk_list.size > 1)
-      throw new RuntimeException(
+      sys.error(
         "Multiple primary keys are not allowed, composite key columns should be comma-separated")
     val pk = pk_list.headOption
     val uk = toList(tdMap.get("uk"))
@@ -414,7 +414,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         YamlFieldDef(name, t(options), cardinality, t(typ), i(len), i(frac),
           isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comments,
           child)
-      case _ => throw new RuntimeException(ThisFail +
+      case _ => sys.error(ThisFail +
         " - unexpected format: " + nameEtc.trim)
     }
     src match {
@@ -444,10 +444,10 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
               + "\nvalue: " + x.toString)
           }
           colDef(nameEtc.toString, Option(comments).map(_.toString).orNull, child)
-        } else throw new RuntimeException(ThisFail +
+        } else sys.error(ThisFail +
           // TODO do not throw, allow decomposed or with custom extras instead
           " - more than one entry for column: " + m.asScala.toMap.toString())
-      case x => throw new RuntimeException(ThisFail +
+      case x => sys.error(ThisFail +
         " - unexpected field definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }

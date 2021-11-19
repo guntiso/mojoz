@@ -314,7 +314,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       Type(td.name, length, totalDigits, fractionDigits, isComplexType)
     }.getOrElse {
       val jdbcTypeName = jdbcCodeToTypeName.get(jdbcTypeCode) getOrElse ""
-      throw new RuntimeException(
+      sys.error(
         s"Failed to convert jdbc type (code: $jdbcTypeCode, name: $jdbcTypeName, size: $size, fractionDigits: $frac)" +
           " to mojoz type - mo match found")
     }

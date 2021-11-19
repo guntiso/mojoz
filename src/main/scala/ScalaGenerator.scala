@@ -94,7 +94,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
         if (viewDef.extends_ == null) Nil
         else {
           val baseView = allViewDefs.get(viewDef.extends_).getOrElse {
-            throw new RuntimeException(
+            sys.error(
               s"Failed to include scala fields into ${viewDef.name} from ${viewDef.extends_} because it is not found")
           }
           fieldsStringsWithBase(baseView, overrided ++ viewDef.fields.map(f => Option(f.alias) getOrElse f.name))

@@ -46,7 +46,7 @@ class YamlViewDefLoader(
     val duplicateNames =
       rawViewDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
     if (duplicateNames.size > 0)
-      throw new RuntimeException(
+      sys.error(
         "Duplicate view definitions: " + duplicateNames.mkString(", "))
     rawViewDefs.map(t => (t.name, t)).toMap
   }
@@ -79,7 +79,7 @@ class YamlViewDefLoader(
                               view: MojozViewDef, field: MojozFieldDef,
                               viewNamesVisited: List[String]
                              ): MojozFieldDef = {
-    def fieldOverrideFailed(msg: String): Nothing = throw new RuntimeException(
+    def fieldOverrideFailed(msg: String): Nothing = sys.error(
       s"Bad override of ${baseView.name}.${propName(baseField)} with ${view.name}.${propName(field)}: $msg")
     fieldOverrideIncompatibilityMessage(baseField, field, viewNamesVisited) match {
       case null =>
@@ -199,7 +199,7 @@ class YamlViewDefLoader(
     Option((new Load(loaderSettings)).loadFromString(lineNumberCorrection + defs))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-        case x => throw new RuntimeException(
+        case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
       .map(loadRawViewDefs)
@@ -241,7 +241,7 @@ class YamlViewDefLoader(
     val saveTo = getStringSeq(k.saveTo)
     val extras = tdMap -- ViewDefKeyStrings
     val (name, table) = (rawName, rawTable) match {
-      case (null, table) => throw new RuntimeException("Missing view name" +
+      case (null, table) => sys.error("Missing view name" +
         List(table, xtnds).filter(_ != null).filter(_ != "").mkString(" (view is based on ", ", ", ")"))
       case (name, null) => (name, null)
       case (name, table) => (name, dbName(table))
@@ -283,9 +283,9 @@ class YamlViewDefLoader(
                 .map(_.cols(0))
                 .foldLeft(Set[String]())(_ + _).toSet
               if (matches.size == 1) matches.head
-              else throw new RuntimeException(errorMessage)
+              else sys.error(errorMessage)
             }
-          }.getOrElse(throw new RuntimeException(errorMessage))
+          }.getOrElse(sys.error(errorMessage))
         } else null
       }
       val resolver = yfd.resolver

@@ -22,7 +22,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       val duplicateNames =
         rawTypeDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
       if (duplicateNames.size > 0)
-        throw new RuntimeException(
+        sys.error(
           "Duplicate type definitions: " + duplicateNames.mkString(", "))
       rawTypeDefs.map(t => (t.name, t)).toMap
     }
@@ -32,7 +32,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   private def toString(src: Any, thisFail: String) = {
     src match {
       case s: java.lang.String => s
-      case x => throw new RuntimeException(
+      case x => sys.error(
         " - unexpected definition class: " + x.getClass
         + "\nentry: " + x.toString)
     }
@@ -55,7 +55,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val sParts = s.split("->", 2)
     val jdbcPart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
     if (jdbcPart == null)
-      throw new RuntimeException(
+      sys.error(
         "Unexpected format for jdbc load info: " + s)
     val targetPart =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
@@ -102,7 +102,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val sParts = s.split("->", 2)
     val yamlPart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
     if (yamlPart == null)
-      throw new RuntimeException(
+      sys.error(
         "Unexpected format for yaml load info: " + s)
     val targetPart =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
@@ -145,7 +145,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val sParts = s.split("->", 2)
     val typePart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
     if (typePart == null)
-      throw new RuntimeException(
+      sys.error(
         "Unexpected format for sql info: " + s)
     val targetPattern =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "") getOrElse typePart
@@ -166,7 +166,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val tdMap =
       (new Load(loaderSettings)).loadFromString(lineNumberCorrection + typeDefString) match {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-        case x => throw new RuntimeException(
+        case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
     val typeName = tdMap.get("type").map(_.toString)
@@ -182,7 +182,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
           (v match {
             case null => Nil
             case a: java.util.ArrayList[_] => a.asScala.toList
-            case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+            case x => sys.error("Unexpected class: " + x.getClass)
           })
             .map(toString(_, s"Failed to load jdbc load definition for $k"))
             .map(toJdbcLoadInfo)
@@ -192,7 +192,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       .map {
         case null => Nil
         case a: java.util.ArrayList[_] => a.asScala.toList
-        case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+        case x => sys.error("Unexpected class: " + x.getClass)
       }
       .getOrElse(Nil)
       .map(toString(_, "Failed to load yaml load definition"))
@@ -204,7 +204,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
           (v match {
             case null => Nil
             case a: java.util.ArrayList[_] => a.asScala.toList
-            case x => throw new RuntimeException("Unexpected class: " + x.getClass)
+            case x => sys.error("Unexpected class: " + x.getClass)
           })
             .map(toString(_, s"Failed to load sql write definition for $k"))
             .map(toSqlWriteInfo)
