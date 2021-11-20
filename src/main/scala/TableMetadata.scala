@@ -152,16 +152,12 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
     val f = fieldDef
     val colName = dbName(f.name)
-    try colNameToCol((f.table, colName)) catch {
-      case ex: Exception =>
-        // TODO print filename, lineNr, colNr, too!
-        throw new RuntimeException(
-          "Problem finding column (view: " + viewDef.name
-            + ", table: " + f.table + ", column: " + colName +
-            (if (f.tableAlias == null) ""
-            else " (table alias " + f.tableAlias + ")") + ")"
-            + ", joins: " + viewDef.joins, ex)
-    }
+    colNameToCol.getOrElse((f.table, colName), sys.error(
+      "Column not found (view: " + viewDef.name
+        + ", table: " + f.table + ", column: " + colName +
+        (if (f.tableAlias == null) ""
+        else " (table alias " + f.tableAlias + ")") + ")"
+        + ", joins: " + viewDef.joins))
   }
 
   def col(table: String, column: String) =
