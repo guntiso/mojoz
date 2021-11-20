@@ -101,6 +101,12 @@ fields:
 - father.father.name    ?
 - father.father.father.surname
 
+name:     referenced_column_types_test
+table:
+fields:
+- field_1               ?             (LV, TO, LT) = account.bank.country.code
+- field_2                               = test_table3.int6_col
+
 name:     resolver_test_1
 table:    person
 fields:

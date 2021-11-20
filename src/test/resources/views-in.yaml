@@ -366,3 +366,10 @@ table:  test_schema_1.test_table2
 fields:
 - id   = test_schema_1.test_table1.id
 - name = test_schema_1.test_table1.name
+
+# referenced column types test for view without table
+name:   referenced_column_types_test
+table:
+fields:
+- field_1 = account.bank.country.code
+- field_2 = test_table3.int6_col

@@ -69,6 +69,10 @@ class Person extends Dto {
   var fatherFatherName: String = null
   var fatherFatherFatherSurname: String = null
 }
+class ReferencedColumnTypesTest extends Dto {
+  var field1: String = null
+  var field2: java.lang.Integer = null
+}
 class ResolverTest1 extends DtoWithId {
   var id: java.lang.Long = null
   var mother: String = null

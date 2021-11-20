@@ -348,6 +348,31 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ReferencedColumnTypesTestType">
+    <xs:sequence>
+      <xs:element name="Field1" nillable="true" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>ISO 3166-1 divu burtu valsts kods</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="2"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="TO"/>
+            <xs:enumeration value="LT"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Field2" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:int">
+            <xs:totalDigits value="6"/>
+            <xs:maxExclusive value="1000000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="ResolverTest1Type">
     <xs:sequence>
       <xs:element name="Id" type="xs:long">

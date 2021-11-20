@@ -79,6 +79,10 @@ case class Person (
   fatherFatherName: String = null,
   fatherFatherFatherSurname: String = null
 )
+case class ReferencedColumnTypesTest (
+  field1: String = null,
+  field2: java.lang.Integer = null
+)
 case class ResolverTest1 (
   id: java.lang.Long = null,
   mother: String = null,

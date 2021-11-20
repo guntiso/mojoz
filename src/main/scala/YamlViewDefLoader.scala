@@ -566,11 +566,30 @@ class YamlViewDefLoader(
         override_.fractionDigits orElse base.fractionDigits,
         false)
       def resolveTypeFromDbMetadata(f: MojozFieldDef) = {
+        def applyColumnAndNullable(col: ColumnDef.ColumnDefBase[Type], nullable: Boolean) = f.copy(
+          nullable = nullable,
+          type_ =
+            if (f.type_ != null &&
+                (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
+                 overrideSimpleType(col.type_, f.type_)
+            else col.type_,
+          enum_ = Option(f.enum_) getOrElse col.enum_,
+          comments = Option(f.comments) getOrElse col.comments,
+          extras =
+            if  (f.comments != null)
+                 Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
+            else f.extras
+        )
         if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.typeFromExternal(f.name, Option(f.type_)))
         else if (f.table == null) f
-        else if (t.table == null) f
+        else if (t.table == null) {
+          tableMetadata.columnDefOption(t, f) match {
+            case Some(col) => applyColumnAndNullable(col, f.nullable)
+            case None      => f
+          }
+        }
         else {
           val col = tableMetadata.columnDef(t, f)
           val tableOrAlias = Option(f.tableAlias) getOrElse f.table
@@ -584,19 +603,7 @@ class YamlViewDefLoader(
               (f.extras != null && f.extras.get(MojozIsOuterJoined) == Some(true)) ||
                 joinColOpt.map(_.nullable)
                   .getOrElse(col.nullable)
-          f.copy(nullable = nullable,
-            type_ =
-              if (f.type_ != null &&
-                  (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
-                   overrideSimpleType(col.type_, f.type_)
-              else col.type_,
-            enum_ = Option(f.enum_) getOrElse col.enum_,
-            comments = Option(f.comments) getOrElse col.comments,
-            extras =
-              if  (f.comments != null)
-                   Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
-              else f.extras
-          )
+          applyColumnAndNullable(col, nullable)
         }
       }
       def cleanExtras(f: MojozFieldDef) =

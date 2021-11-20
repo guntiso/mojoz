@@ -160,6 +160,9 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
         + ", joins: " + viewDef.joins))
   }
 
+  def columnDefOption(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) =
+    colNameToCol.get((fieldDef.table, dbName(fieldDef.name)))
+
   def col(table: String, column: String) =
     colNameToCol.get((table, column))
   def aliasedRef(table: String, refTableAlias: String): Option[Ref] =

@@ -47,6 +47,9 @@
     <jaxb:bindings node="//xs:complexType[@name='PersonType']">
       <jaxb:class name="Person"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ReferencedColumnTypesTestType']">
+      <jaxb:class name="ReferencedColumnTypesTest"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ResolverTest1Type']">
       <jaxb:class name="ResolverTest1"/>
     </jaxb:bindings>
