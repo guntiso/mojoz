@@ -14,10 +14,6 @@ import org.mojoz.metadata.out.YamlTableDefWriter
 
 class TableDefTests extends FlatSpec with Matchers {
   import TableDefTests._
-  val path = "src/test/resources"
-  val mdDefs = YamlMd.fromFiles(
-    path = path, filter = _.getName == "tables-in.yaml")
-  val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   "generated yaml file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out.yaml")
     val produced = YamlTableDefWriter.toYaml(tableDefs)
@@ -172,6 +168,10 @@ object TableDefTests {
   val h2Ci2 = ("jdbc:h2:mem:test2;DB_CLOSE_DELAY=-1", "SA", "")
   val hsqldbCi = ("jdbc:hsqldb:mem:mymemdb", "SA", "")
   val hsqldbCi2 = ("jdbc:hsqldb:mem:mymemdb2", "SA", "")
+  val path = "src/test/resources"
+  val mdDefs = YamlMd.fromFiles(
+    path = path, filter = _.getName == "tables-in.yaml")
+  val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
   def skipSome(s: String) = {
     // h2 and hsqldb ignores 'desc' on index cols, do not compare these lines
     s.split("\\r?\\n")
