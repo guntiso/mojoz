@@ -82,9 +82,11 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
   private def checkRawTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
-    val m: Map[String, _] = td.map(t => (t.name, t)).toMap
-    if (m.size < td.size) sys.error("repeating definition of " +
-      td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
+    val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
+    if (m.size < td.size) sys.error("Duplicate table definitions: " +
+      td.groupBy(t => (t.db, t.name)).filter(_._2.size > 1).map(_._1).map( dt =>
+        Option(dt._1).map(_ + ":").getOrElse("") + dt._2
+      ).mkString(", "))
     def checkName(t: TableDef[_]) =
       if (t.name == null || t.name.trim == "") sys.error("Table without name")
     def checkHasColumns(t: TableDef[_]) =
@@ -122,7 +124,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     }
     td foreach checkIndices
   }
-  val tableDefs = {
+  val tableDefs: Seq[MojozTableDef] = {
     val rawTableDefs = sources map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body, md.filename, md.line)) catch {
         case e: Exception => throw new RuntimeException(
@@ -132,20 +134,22 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     checkRawTableDefs(rawTableDefs)
 
     def resolvedName(n: String) = n.replace('.', '_')
-    val nameToTableDef = {
+    val dbAndNameToTableDef = {
       val duplicateNames =
-        rawTableDefs.map(_.name).groupBy(n => n).filter(_._2.size > 1).map(_._1)
+        rawTableDefs.map(t => (t.db, t.name)).groupBy(n => n).filter(_._2.size > 1).map(_._1)
       if (duplicateNames.size > 0)
         sys.error(
-          "Duplicate table definitions: " + duplicateNames.mkString(", "))
-      rawTableDefs.map(t => (t.name, t)).toMap
+          "Duplicate table definitions: " + duplicateNames.map( dt =>
+            Option(dt._1).map(_ + ":").getOrElse("") + dt._2
+          ).mkString(", "))
+      rawTableDefs.map(t => (t.db, t.name) -> t).toMap
     }
-    def refToCol(ref: String) =
+    def refToCol(db: String, ref: String) =
       (ref.lastIndexOf('.') match {
         case -1 => None
         case  i => Some((ref.substring(0, i), ref.substring(i + 1)))
       })
-        .flatMap(tc => nameToTableDef.get(tc._1).map((_, tc._2)))
+        .flatMap(tc => dbAndNameToTableDef.get(db, tc._1).map((_, tc._2)))
         .flatMap(tc => tc._1.cols.find(c => resolvedName(c.name) == tc._2)
           .map(c => (tc._1, c)))
         .getOrElse(sys.error("Bad ref: " + ref))
@@ -155,12 +159,12 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       override_.totalDigits orElse base.totalDigits,
       override_.fractionDigits orElse base.fractionDigits,
       false)
-    def baseRefChain(col: MojozColumnDef, visited: List[String]): List[String] = {
+    def baseRefChain(db: String, col: MojozColumnDef, visited: List[String]): List[String] = {
       def chain(ref: String) =
         if (visited contains ref)
           sys.error("Cyclic column refs: " +
             (ref :: visited).reverse.mkString(" -> "))
-        else baseRefChain(refToCol(ref)._2, ref :: visited)
+        else baseRefChain(db, refToCol(db, ref)._2, ref :: visited)
       // TODO ??? if type explicitly defined, why ref? throw?
       if (Option(col.type_.name).map(_ contains ".") getOrElse false)
         chain(col.type_.name)
@@ -169,7 +173,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     }
     val tableDefs: Seq[MojozTableDef] = rawTableDefs map { r =>
       val resolvedColsAndRefs: Seq[(MojozColumnDef, Seq[Ref])] = r.cols.map { c =>
-        val refChain = baseRefChain(c, Nil)
+        val refChain = baseRefChain(r.db, c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {
           val defaultRefTableAlias =
@@ -177,10 +181,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
             else c.name.substring(0, c.name.indexOf('.'))
           val colName = c.name.replace('.', '_')
           val (refTable, refCol) =
-            refToCol(Option(c.type_.name) getOrElse c.name)
+            refToCol(r.db, Option(c.type_.name) getOrElse c.name)
           val mojozType = overrideMojozType(
             refChain.foldLeft(new Type(null))((t, ref) =>
-              overrideMojozType(t, refToCol(ref)._2.type_)),
+              overrideMojozType(t, refToCol(r.db, ref)._2.type_)),
             c.type_)
           val ref = Ref(null, List(colName), refTable.name, List(refCol.name),
             null, defaultRefTableAlias, null, null)

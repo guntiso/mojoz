@@ -175,6 +175,14 @@ create table test_schema_1.ts_table1(
   name varchar(50)
 );
 
+create table person(
+  id bigint,
+  name varchar(51) not null,
+  surname varchar(52),
+  mother_id bigint,
+  father_id bigint
+);
+
 alter table account add constraint pk_account primary key (id);
 
 alter table bank add constraint pk_bank primary key (id);
@@ -209,6 +217,8 @@ alter table test_schema_1.test_table1 add constraint pk_test_table1 primary key 
 
 alter table test_schema_1.ts_table1 add constraint pk_ts_table1 primary key (id);
 
+alter table person add constraint pk_person primary key (id);
+
 alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);
@@ -220,3 +230,5 @@ alter table test_table2 add constraint fk_tt2_spec_code_name foreign key (code, 
 alter table test_table5 add constraint fk_test_table5_bank_id foreign key (bank_id) references bank(id) on delete cascade;
 alter table test_schema_1.test_table2 add constraint fk_test_table2_t1_id foreign key (t1_id) references test_schema_1.test_table1(id);
 alter table test_schema_1.test_table3 add constraint fk_test_table3_t1_id foreign key (t1_id) references test_schema_1.ts_table1(id) on delete cascade;
+alter table person add constraint fk_person_mother_id foreign key (mother_id) references person(id);
+alter table person add constraint fk_person_father_id foreign key (father_id) references person(id);

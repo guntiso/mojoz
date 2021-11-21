@@ -78,3 +78,27 @@ table:      unknown_table
 expected-error-message: View "unknown_view" extended or modified by view "test_view_not_found" is not found
 name:       test_view_not_found
 extends:    unknown_view
+
+
+table:      person
+columns:
+- name
+
+
+expected-error-message: Duplicate table definitions: person
+table:      person
+columns:
+- name
+
+
+db:         other_db
+table:      person
+columns:
+- name
+
+
+expected-error-message: Duplicate table definitions: other_db:person
+db:         other_db
+table:      person
+columns:
+- name

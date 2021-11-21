@@ -64,8 +64,10 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
   val hasPostgres = conf.getBoolean("mojoz.postgresql.available")
   if (hasPostgres) "generated postgresql roundtrip file" should "equal sample file" in {
     Class.forName("org.postgresql.Driver") //fix random No suitable driver found
-    val cfg = getCfg("mojoz.postgresql.")
-    clearPostgresqlDbSchema(cfg)
+    val dbAndCfgList = List(
+      (null,       getCfg("mojoz.postgresql.")),
+      ("other_db", getCfg("mojoz.postgresql.", "2")),
+    )
     def skipSome(s: String) = {
       s.split("\\r?\\n")
         .filterNot(_ startsWith "- col2                    1") // postgres empty comments roundtrip fails
@@ -77,33 +79,36 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .mkString(nl)
     }
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val statements = SqlGenerator.postgresql().schema(tableDefs)
-      .split(";").toList.map(_.trim).filter(_ != "")
-    executeStatements(cfg, statements: _*)
-    val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
-    val Schema0 = "mojoz"
-    val Schema1 = "test_schema_1"
-    val Schemas = List(Schema0, Schema1)
-    val jdbcTableDefs = {
-      try
-        Schemas.flatMap(schema => JdbcTableDefLoader.tableDefs(conn, null, schema, null, "TABLE"))
-      finally conn.close
-    }
-    .map(td =>
-      if (td.name contains Schema1)
-        td
-      else
-        td.toSimpleNames
-    )
-    .map(_.toLowerCase)
-
-    val produced = YamlTableDefWriter.toYaml(jdbcTableDefs)
+    val produced = dbAndCfgList.map { case (db, cfg) =>
+      clearPostgresqlDbSchema(cfg)
+      val statements = SqlGenerator.postgresql().schema(tableDefs.filter(_.db == db))
+        .split(";").toList.map(_.trim).filter(_ != "")
+      executeStatements(cfg, statements: _*)
+      val conn = DriverManager.getConnection(cfg.url, cfg.user, cfg.password)
+      val Schema0 = "mojoz"
+      val Schema1 = "test_schema_1"
+      val Schemas = List(Schema0, Schema1)
+      val jdbcTableDefs = {
+        try
+          Schemas.flatMap(schema => JdbcTableDefLoader.tableDefs(conn, null, schema, null, "TABLE"))
+        finally conn.close
+      }
+      .map(td =>
+        if (td.name contains Schema1)
+          td
+        else
+          td.toSimpleNames
+      )
+      .map(_.toLowerCase)
+      .map(_.copy(db = db))
+      YamlTableDefWriter.toYaml(jdbcTableDefs)
+    }.mkString("\n")
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
     skipSome(expected) should be(skipSome(produced))
   }
-  def getCfg(prefix: String) = Cfg(
-    url = conf.getString(prefix + "jdbc.url"),
+  def getCfg(prefix: String, suffix: String = "") = Cfg(
+    url = conf.getString(prefix + "jdbc.url" + suffix),
     user = conf.getString(prefix + "user"),
     password = conf.getString(prefix + "password"),
     debug = conf.getBoolean(prefix + "debug"))
