@@ -9,6 +9,7 @@ import FieldDef._
 object ViewDef {
   trait ViewDefBase[+F] {
     val name: String
+    val db: String
     val table: String
     val tableAlias: String
     val joins: Seq[String] // from clause
@@ -24,6 +25,7 @@ object ViewDef {
 }
 case class ViewDef[+F](
   name: String,
+  db: String,
   table: String,
   tableAlias: String,
   joins: Seq[String], // from clause

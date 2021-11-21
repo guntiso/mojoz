@@ -87,6 +87,13 @@ fields:
 - the_one
 extra: some extra
 
+name:     other_db_person_view
+db:       other_db
+table:    person
+fields:
+- id
+- full_name
+
 name:     person
 table:    person
 fields:

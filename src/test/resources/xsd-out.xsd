@@ -272,6 +272,21 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="OtherDbPersonViewType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="FullName">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="128"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="PersonType">
     <xs:sequence>
       <xs:element name="Name">

@@ -128,7 +128,9 @@ class YamlViewDefWriter {
       .getOrElse(cols.mkString(", "))
   def toYaml(view: ViewDef[FieldDef[IoColumnType]]): String = {
     import view._
-    List(Some(name).map("name:     " + _),
+    List(
+      Some(name).map("name:     " + _),
+      Option(db).map(escapeYamlValue).map("db:       " + _),
       Option(table)
         .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
@@ -156,8 +158,8 @@ class YamlViewDefWriter {
       Option(filter).filter(_.size > 0)
         .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),
       Option(extras).filter(!_.isEmpty) // TODO map extras - all types
-        .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")))
-      .flatMap(x => x).mkString("\n")
+        .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")),
+    ).flatMap(x => x).mkString("\n")
   }
   def toYaml(views: Seq[ViewDef[FieldDef[IoColumnType]]]): String =
     views.map(toYaml).mkString("\n\n") +

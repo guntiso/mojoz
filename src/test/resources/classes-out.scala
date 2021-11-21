@@ -57,6 +57,10 @@ class NoTable extends Dto {
 class OneFielder extends Dto {
   var theOne: String = null
 }
+class OtherDbPersonView extends DtoWithId {
+  var id: java.lang.Long = null
+  var fullName: String = null
+}
 class Person extends Dto {
   var name: String = null
   var surname: String = null

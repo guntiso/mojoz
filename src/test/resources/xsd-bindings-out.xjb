@@ -44,6 +44,9 @@
     <jaxb:bindings node="//xs:complexType[@name='OneFielderType']">
       <jaxb:class name="OneFielder"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='OtherDbPersonViewType']">
+      <jaxb:class name="OtherDbPersonView"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='PersonType']">
       <jaxb:class name="Person"/>
     </jaxb:bindings>

@@ -178,7 +178,4 @@ db:       other_db
 table:    person
 columns:
 - id
-- name                  ! 51
-- surname                 52
-- mother.id               person.id
-- father.id               person.id
+- full_name             ! 128

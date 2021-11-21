@@ -1,7 +1,7 @@
 package org.mojoz.metadata
 
 import scala.annotation.tailrec
-import scala.collection.immutable.Seq
+import scala.collection.immutable.{Map, Seq}
 
 import org.mojoz.metadata.in.YamlTableDefLoader
 import TableDef._
@@ -43,6 +43,7 @@ object TableDef {
       "Invalid expression for check constraint: " + expression)
   }
   trait TableDefBase[+C <: ColumnDefBase[_]] { // TODO bound too tight?
+    val db: String
     val name: String
     val comments: String
     val cols: Seq[C]
@@ -120,53 +121,81 @@ case class ColumnDef[+T](
 class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
   val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
   val dbName: String => String = identity) {
-  private val md = tableDefs.map(e => (e.name, e)).toMap
-  private val refTableAliasToRef = tableDefs.map(t => t.refs
-    .filter(_.defaultRefTableAlias != null)
-    .map(r => ((t.name, r.defaultRefTableAlias), r)))
-    .flatMap(x => x)
-    .toMap
-  private val refTableOrAliasToRef = tableDefs.map(t => t.refs
-    .map(r => ((t.name, Option(r.defaultRefTableAlias).getOrElse(r.refTable)), r)))
-    .flatMap(x => x)
-    .toMap
-  private val colNameToCol =
-    tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
+  val dbToTableDefs: Map[String, Seq[T]] = tableDefs.groupBy(_.db)
+  private val md = dbToTableDefs.map { case (db, tableDefs) =>
+    db -> tableDefs.map(e => (e.name, e)).toMap
+  }
+  private val dbToRefTableAliasToRef = dbToTableDefs.map { case (db, tableDefs) =>
+    db -> tableDefs.map(t => t.refs
+            .filter(_.defaultRefTableAlias != null)
+            .map(r => ((t.name, r.defaultRefTableAlias), r)))
+            .flatMap(x => x)
+            .toMap
+  }
+  private val dbToRefTableOrAliasToRef = dbToTableDefs.map { case (db, tableDefs) =>
+    db -> tableDefs.map(t => t.refs
+            .map(r => ((t.name, Option(r.defaultRefTableAlias).getOrElse(r.refTable)), r)))
+            .flatMap(x => x)
+            .toMap
+  }
+  private val dbToColNameToCol = dbToTableDefs.map { case (db, tableDefs) =>
+    db -> tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
+  }
+  private def throwDbNotFound(db: String) =
+    sys.error(s"Table metadata for database $db not found")
+  private def dbAndTable(db: String, table: String) =
+    Option(db).map(db => s"$db:$table") getOrElse table
 
-  def tableDefOption(tableName: String) =
-    md.get(tableName)
-
-  def tableDef(tableName: String) =
-    md.get(tableName) getOrElse
-      sys.error("table not found: " + tableName)
-
-  def tableDefOption(viewDef: ViewDefBase[_]) =
-    md.get(viewDef.table)
-
-  def tableDef(viewDef: ViewDefBase[_]) =
-    // TODO get line, file info
-    md.get(viewDef.table) getOrElse
-      sys.error("table not found: " + viewDef.table +
-        ", view: " + viewDef.name)
-
-  def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) = {
+  def tableDefOption(tableName: String, db: String): Option[T] =
+    md.getOrElse(db, throwDbNotFound(db))
+      .get(tableName)
+  def tableDef(tableName: String, db: String): T =
+    md.getOrElse(db, throwDbNotFound(db))
+      .getOrElse(tableName,
+        sys.error(s"Table not found: ${dbAndTable(db, tableName)}"))
+  def tableDefOption(viewDef: ViewDefBase[_]): Option[T] =
+    md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
+      .get(viewDef.table)
+  def tableDef(viewDef: ViewDefBase[_]): T =
+    md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
+      .getOrElse(viewDef.table,
+        sys.error(s"Table not found: ${dbAndTable(viewDef.db, viewDef.table)} (view: ${viewDef.name})"))
+  def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]): ColumnDefBase[Type] = {
     val f = fieldDef
     val colName = dbName(f.name)
-    colNameToCol.getOrElse((f.table, colName), sys.error(
-      "Column not found (view: " + viewDef.name
-        + ", table: " + f.table + ", column: " + colName +
-        (if (f.tableAlias == null) ""
-        else " (table alias " + f.tableAlias + ")") + ")"
-        + ", joins: " + viewDef.joins))
+    import viewDef.db
+    dbToColNameToCol
+      .getOrElse(db, throwDbNotFound(db))
+      .getOrElse((f.table, colName), {
+        tableDefOption(f.table, db) match {
+          case None =>
+            sys.error(s"Table not found: ${dbAndTable(db, f.table)}" +
+              s" (view: ${viewDef.name}${
+                Option(f.tableAlias).map(alias => s" (table alias $alias") getOrElse ""})${
+                Option(viewDef.joins).map(joins => s", joins: $joins") getOrElse ""}")
+          case Some(tableDef) =>
+            sys.error(s"Column not found: $colName" +
+              s" (table: ${dbAndTable(db, f.table)}, view: ${viewDef.name}${
+                Option(f.tableAlias).map(alias => s" (table alias $alias") getOrElse ""})${
+                Option(viewDef.joins).map(joins => s", joins: $joins") getOrElse ""}")
+        }
+      })
   }
+  def columnDefOption(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]): Option[ColumnDefBase[Type]] =
+    dbToColNameToCol
+      .getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
+      .get((fieldDef.table, dbName(fieldDef.name)))
 
-  def columnDefOption(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]) =
-    colNameToCol.get((fieldDef.table, dbName(fieldDef.name)))
-
-  def col(table: String, column: String) =
-    colNameToCol.get((table, column))
-  def aliasedRef(table: String, refTableAlias: String): Option[Ref] =
-    refTableAliasToRef.get((table, refTableAlias))
-  def ref(table: String, refTableOrAlias: String): Option[Ref] =
-    refTableOrAliasToRef.get((table, refTableOrAlias))
+  def col(table: String, column: String, db: String): Option[ColumnDefBase[Type]] =
+    dbToColNameToCol
+      .getOrElse(db, throwDbNotFound(db))
+      .get((table, column))
+  def aliasedRef(table: String, refTableAlias: String, db: String): Option[Ref] =
+    dbToRefTableAliasToRef
+      .getOrElse(db, throwDbNotFound(db))
+      .get((table, refTableAlias))
+  def ref(table: String, refTableOrAlias: String, db: String): Option[Ref] =
+    dbToRefTableOrAliasToRef
+      .getOrElse(db, throwDbNotFound(db))
+      .get((table, refTableOrAlias))
 }

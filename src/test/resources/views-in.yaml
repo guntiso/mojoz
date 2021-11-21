@@ -373,3 +373,10 @@ table:
 fields:
 - field_1 = account.bank.country.code
 - field_2 = test_table3.int6_col
+
+name:   other_db_person_view
+db:     other_db
+table:  person
+fields:
+- id
+- full_name

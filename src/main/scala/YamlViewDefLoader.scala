@@ -142,7 +142,7 @@ class YamlViewDefLoader(
             f.type_ != null && f.type_.isComplexType)
           f
         else
-          tableMetadata.col(tableName, f.name).map(c => f.copy(table = dbName(tableName))) getOrElse f
+          tableMetadata.col(tableName, f.name, t.db).map(c => f.copy(table = dbName(tableName))) getOrElse f
       }
       @tailrec
       def baseFields(
@@ -229,6 +229,7 @@ class YamlViewDefLoader(
     }
     val k = ViewDefKeys
     val rawName = get(k.name)
+    val db = get(k.db)
     val rawTable = get(k.table)
     val joins = getStringSeq(k.joins)
     val filter = getStringSeq(k.filter)
@@ -251,7 +252,7 @@ class YamlViewDefLoader(
     def typeName(v: Map[String, Any], defaultSuffix: String) =
       if (v.contains("name")) "" + v("name")
       else name + "_" + defaultSuffix
-    def toMojozFieldDef(yfd: YamlFieldDef, viewName: String, viewTable: String, viewSaveTo: Seq[String]) = {
+    def toMojozFieldDef(yfd: YamlFieldDef, viewName: String, viewDb: String, viewTable: String, viewSaveTo: Seq[String]) = {
       val table = null
       val tableAlias = null
       val name = yfd.name
@@ -271,7 +272,7 @@ class YamlViewDefLoader(
               ", please provide target column name"
           Option(viewSaveTo).filter(_.size > 0)
               .orElse(Option(viewTable).map(_.split("\\s+", 2)(0)).map(Seq(_))).map { tNames =>
-            val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName))
+            val tables = tNames.flatMap(tName => tableMetadata.tableDefOption(tName, db))
             if (tables.exists(t => t.cols.exists(_.name == simpleName)))
               simpleName
             else {
@@ -330,7 +331,7 @@ class YamlViewDefLoader(
     def isViewDef(m: Map[String, Any]) =
       m != null && !m.contains("columns") && (m.contains("fields") || m.contains("extends"))
     val fieldDefs = yamlFieldDefs
-      .map(yfd => yfd -> toMojozFieldDef(yfd, name, table, saveTo))
+      .map(yfd => yfd -> toMojozFieldDef(yfd, name, db, table, saveTo))
       .map { case (yfd, f) => yfd -> (
         if (f.extras == null) f
         else f.copy(
@@ -338,7 +339,7 @@ class YamlViewDefLoader(
             .filterNot(_.isEmpty).orNull)
       )}
       .map{ case (yfd, f) => transformRawFieldDef(yfd, f) }
-    ViewDef(name, table, null, joins, filter, group, having, order,
+    ViewDef(name, db, table, null, joins, filter, group, having, order,
       xtnds, comments, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
@@ -414,7 +415,7 @@ class YamlViewDefLoader(
 
     def inheritTableComments[T](t: ViewDef[T]) =
       if (t.table == null || t.comments != null) t
-      else tableMetadata.tableDefOption(t.table).map(_.comments match {
+      else tableMetadata.tableDefOption(t.table, t.db).map(_.comments match {
         case null => t
         case tableComments => t.copy(comments = tableComments)
       })
@@ -492,9 +493,9 @@ class YamlViewDefLoader(
           else f.copy(name = dbName(f.name), table = dbName(t.table))
         else {
           def isTableOrAliasInScope(tableOrAlias: String) =
-            nameOrAliasToTables.contains(tableOrAlias)                ||
-            tableMetadata.aliasedRef(t.table, tableOrAlias).isDefined ||
-            tableMetadata.tableDefOption(tableOrAlias).isDefined
+            nameOrAliasToTables.contains(tableOrAlias)                      ||
+            tableMetadata.aliasedRef(t.table, tableOrAlias, t.db).isDefined ||
+            tableMetadata.tableDefOption(tableOrAlias, t.db).isDefined
           val (parts, tableOrAlias) = {
             val parts = f.name.split("\\.")
             (1 to parts.length - 1).find { i =>
@@ -510,12 +511,12 @@ class YamlViewDefLoader(
           }
           var table = Option(
             nameOrAliasToTables.get(tableOrAlias).filter(_.size == 1).map(_.head)
-              .getOrElse(tableMetadata.aliasedRef(t.table, tableOrAlias).map(_.refTable)
+              .getOrElse(tableMetadata.aliasedRef(t.table, tableOrAlias, t.db).map(_.refTable)
                 .getOrElse(tableOrAlias))).map(dbName).orNull
           var isOuterJoined = tableOrAliasToJoin.get(tableOrAlias).map(_.isOuterJoin).getOrElse {
-            Option(t.table).flatMap(table => tableMetadata.ref(table, tableOrAlias)) match {
+            Option(t.table).flatMap(table => tableMetadata.ref(table, tableOrAlias, t.db)) match {
               case Some(ref) =>
-                !ref.cols.forall(c => !tableMetadata.col(t.table, c).map(_.nullable).getOrElse(true))
+                !ref.cols.forall(c => !tableMetadata.col(t.table, c, t.db).map(_.nullable).getOrElse(true))
               case None => false // ref not found - not outer joined?
             }
           }
@@ -529,10 +530,10 @@ class YamlViewDefLoader(
           val name = dbName(partsReverseList.head)
           val path = partsReverseList.tail.reverse
           path.tail foreach { step =>
-            tableMetadata.ref(table, step) match {
+            tableMetadata.ref(table, step, t.db) match {
               case Some(ref) =>
                 isOuterJoined = isOuterJoined ||
-                  !ref.cols.forall(c => !tableMetadata.col(table, c).map(_.nullable).getOrElse(true))
+                  !ref.cols.forall(c => !tableMetadata.col(table, c, t.db).map(_.nullable).getOrElse(true))
                 table = ref.refTable
               case None =>
                 isOuterJoined = true
@@ -645,7 +646,7 @@ class YamlViewDefLoader(
 object YamlViewDefLoader {
   private object ViewDefKeys extends Enumeration {
     type ViewDefKeys = Value
-    val name, table, joins, filter, group, having, order = Value
+    val name, db, table, joins, filter, group, having, order = Value
     val extends_ = Value("extends")
     val saveTo = Value("save-to")
     val comments, fields = Value

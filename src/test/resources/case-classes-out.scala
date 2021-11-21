@@ -67,6 +67,10 @@ case class NoTable (
 case class OneFielder (
   theOne: String = null
 )
+case class OtherDbPersonView (
+  id: java.lang.Long = null,
+  fullName: String = null
+)
 case class Person (
   name: String = null,
   surname: String = null,
