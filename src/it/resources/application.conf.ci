@@ -1,11 +1,3 @@
-mojoz.oracle {
-  available = false
-}
 mojoz.postgresql {
-  available = true
-  jdbc.url = "jdbc:postgresql://localhost:5432/mojoz"
   jdbc.url2 = "jdbc:postgresql://localhost:5433/mojoz2"
-  user = mojoz
-  password = mojoz
-  debug = false
 }
