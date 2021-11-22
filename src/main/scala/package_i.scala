@@ -4,8 +4,8 @@ import scala.collection.immutable.Seq
 
 package object in {
   case class Join(alias: String, table: String, isOuterJoin: Boolean, columns: Seq[MojozColumnDef])
-  /** basetable and joins to parsed joins */
-  type JoinsParser = (String, Seq[String]) => Seq[Join]
+  /** db and basetable and joins to parsed joins */
+  type JoinsParser = (String, String, Seq[String]) => Seq[Join]
 }
 
 package object io {

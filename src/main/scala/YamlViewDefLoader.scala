@@ -23,7 +23,7 @@ import FieldDef._
 class YamlViewDefLoader(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]] = new TableMetadata,
     yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
-    joinsParser: JoinsParser = (_, _) => Nil, 
+    joinsParser: JoinsParser = (_, _, _) => Nil, 
     conventions: MdConventions = new SimplePatternMdConventions,
     uninheritableExtras: Seq[String] = Seq(),
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
@@ -463,6 +463,7 @@ class YamlViewDefLoader(
       def tailists[B](l: List[B]): List[List[B]] =
         if (l.isEmpty) Nil else l :: tailists(l.tail)
       lazy val joins = parseJoins(
+        t.db,
         Option(t.table)
           .map(_ + Option(t.tableAlias).map(" " + _).getOrElse(""))
           .orNull,
@@ -655,7 +656,7 @@ object YamlViewDefLoader {
   def apply(
     tableMetadata: TableMetadata[TableDef.TableDefBase[ColumnDef.ColumnDefBase[Type]]],
     yamlMd: Seq[YamlMd],
-    joinsParser: JoinsParser = (_, _) => Nil,
+    joinsParser: JoinsParser = (_, _, _) => Nil,
     conventions: MdConventions = new SimplePatternMdConventions,
     uninheritableExtras: Seq[String] = Seq(),
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) =
