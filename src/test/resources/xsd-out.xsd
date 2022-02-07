@@ -1076,6 +1076,36 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithSaveOptionsType">
+    <xs:sequence>
+      <xs:element name="ReadOnly" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="InsertOnly" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="UpdateOnly" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="Bank" minOccurs="0" maxOccurs="unbounded" type="tns:WithSaveOptionsBankType">
+      </xs:element>
+      <xs:element name="BankRo" minOccurs="0" maxOccurs="unbounded" type="tns:WithSaveOptionsBankRoType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithSaveOptionsBankType">
+    <xs:sequence>
+      <xs:element name="Id" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="Code" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithSaveOptionsBankRoType">
+    <xs:sequence>
+      <xs:element name="Id" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="Code" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithScalaKeywordsType">
     <xs:sequence>
       <xs:element name="This" nillable="true" minOccurs="0" type="xs:string">

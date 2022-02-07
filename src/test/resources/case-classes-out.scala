@@ -280,6 +280,21 @@ case class WithNamedInlineView2 (
 case class WithNamedInlineView3 (
   singleChild: NamedInlineView3 = null
 )
+case class WithSaveOptions (
+  readOnly: String = null,
+  insertOnly: String = null,
+  updateOnly: String = null,
+  bank: List[WithSaveOptionsBank] = Nil,
+  bankRo: List[WithSaveOptionsBankRo] = Nil
+)
+case class WithSaveOptionsBank (
+  id: java.lang.Long = null,
+  code: String = null
+)
+case class WithSaveOptionsBankRo (
+  id: java.lang.Long = null,
+  code: String = null
+)
 case class WithScalaKeywords (
   `this`: String = null,
   `super`: String = null,

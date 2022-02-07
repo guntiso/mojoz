@@ -275,6 +275,22 @@ fields:
 - extra =
 - bank * [true] with_child_extends_bank
 
+name: with_save_options
+table:
+fields:
+- read_only     [!]
+- insert_only   [+]
+- update_only   [=]
+- bank [+-=] * :
+    table:
+    fields:
+    - id
+    - code [+]
+- bank_ro [!] * :
+    table:
+    fields:
+    - id
+    - code
 
 name: resolver_test_1
 table: person

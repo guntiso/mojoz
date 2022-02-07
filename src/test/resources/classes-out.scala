@@ -255,6 +255,21 @@ class WithNamedInlineView2 extends Dto {
 class WithNamedInlineView3 extends Dto {
   var singleChild: NamedInlineView3 = null
 }
+class WithSaveOptions extends Dto {
+  var readOnly: String = null
+  var insertOnly: String = null
+  var updateOnly: String = null
+  var bank: List[WithSaveOptionsBank] = Nil
+  var bankRo: List[WithSaveOptionsBankRo] = Nil
+}
+class WithSaveOptionsBank extends DtoWithId {
+  var id: java.lang.Long = null
+  var code: String = null
+}
+class WithSaveOptionsBankRo extends DtoWithId {
+  var id: java.lang.Long = null
+  var code: String = null
+}
 class WithScalaKeywords extends Dto {
   var `this`: String = null
   var `super`: String = null

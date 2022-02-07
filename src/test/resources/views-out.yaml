@@ -394,6 +394,27 @@ table:
 fields:
 - single_child            named_inline_view3
 
+name:     with_save_options
+table:
+fields:
+- read_only             [!]
+- insert_only           [+]
+- update_only           [=]
+- bank                  [+-=] * with_save_options_bank
+- bank_ro               [!] * with_save_options_bank_ro
+
+name:     with_save_options_bank
+table:
+fields:
+- id
+- code                  [+]
+
+name:     with_save_options_bank_ro
+table:
+fields:
+- id
+- code
+
 name:     with_scala_keywords
 table:
 fields:
