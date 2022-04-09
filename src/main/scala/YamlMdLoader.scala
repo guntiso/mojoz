@@ -363,7 +363,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
 
     val name = qualifiedIdent
     val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
-    val options = "\\[([\\+\\-\\=]+|!)\\]"
+    val options = "\\[[\\+\\-\\=\\/\\!]+\\]"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
     val `enum` = "\\(.*?\\)"
@@ -384,7 +384,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comments: String,
         child: Map[String, Any]) = nameEtc match {
-      case FieldPattern(name, _, options, _, quant, _, _, _, _, joinToParent, typ, _,
+      case FieldPattern(name, _, options, quant, _, _, _, _, joinToParent, typ, _,
         len, frac, order, _, enum,
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
