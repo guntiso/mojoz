@@ -46,7 +46,7 @@ class ViewDefTests extends FlatSpec with Matchers {
         s"$prefix: $viewName.$fieldName.nullable = $nullable"
       }
       val actualNullable =
-        nameToViewDef(viewName).fields.find(f => Option(f.alias).getOrElse(f.name) == fieldName).get.nullable
+        nameToViewDef(viewName).field(fieldName).nullable
       val actual   = infoString(viewName, fieldName, actualNullable)
       val expected = infoString(viewName, fieldName, expectedNullable)
       actual shouldBe expected

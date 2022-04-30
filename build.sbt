@@ -25,7 +25,7 @@ lazy val commonSettings = Seq(
 )
 
 ThisBuild / sbt.Keys.versionScheme := Some("semver-spec")
-ThisBuild / versionPolicyIntention := Compatibility.BinaryAndSourceCompatible
+ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible
 
 lazy val mojoz = (project in file("."))
   .configs(IntegrationTest)

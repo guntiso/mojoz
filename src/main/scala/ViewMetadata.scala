@@ -21,6 +21,8 @@ object ViewDef {
     val comments: String
     val fields: Seq[F]
     val saveTo: Seq[String]
+    def field(fieldName: String): F = null.asInstanceOf[F]
+    def fieldOpt(fieldName: String): Option[F] = None
   }
 }
 case class ViewDef[+F](
@@ -37,7 +39,18 @@ case class ViewDef[+F](
   comments: String,
   fields: Seq[F],
   saveTo: Seq[String],
-  extras: Map[String, Any]) extends ViewDefBase[F]
+  extras: Map[String, Any]) extends ViewDefBase[F] {
+  private val nameToField: Map[String, F] =
+    fields.map {
+      case f: FieldDefBase[_] => Option(f.alias).getOrElse(f.name) -> f.asInstanceOf[F]
+      case f                  => (null, f)
+    } .filter(_._1 != null)
+      .toMap
+  override def field(fieldName: String): F = fieldOpt(fieldName).getOrElse(
+    sys.error(s"Field $fieldName is not found in view $name")
+  )
+  override def fieldOpt(fieldName: String): Option[F] = nameToField.get(fieldName)
+}
 
 object FieldDef {
   trait FieldDefBase[+T] {

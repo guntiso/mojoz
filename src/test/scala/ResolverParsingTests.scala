@@ -176,5 +176,5 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t9, "father").resolver should be(null)
   }
   def field(v: MojozViewDefBase, n: String) =
-    v.fields.filter(f => Option(f.alias).getOrElse(f.name) == n).head
+    v.field(n)
 }

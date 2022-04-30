@@ -70,7 +70,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def isExtendsDisabled(viewDef: MojozViewDefBase, allViewDefs: Map[String, MojozViewDefBase]): Boolean = {
     def fieldType(viewName: String, fieldName: String): Type = {
       allViewDefs.get(viewName).map { v =>
-        v.fields.find(f => Option(f.alias).getOrElse(f.name) == fieldName)
+        v.fieldOpt(fieldName)
           .map(_.type_)
           .getOrElse(fieldType(v.extends_, fieldName))
       }.orNull
