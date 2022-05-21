@@ -132,4 +132,5 @@ case class FieldDef[+T](
     comments = that.comments,
     extras = that match { case f: FieldDef[_] => f.extras case _ => null }
   )
+  val fieldName = Option(alias).getOrElse(name)
 }
