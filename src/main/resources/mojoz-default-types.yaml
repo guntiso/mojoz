@@ -63,6 +63,8 @@ jdbc:
 - TIME
 yaml:
 - time
+sql:
+- time
 
 type:       dateTime
 xsd name:   dateTime
