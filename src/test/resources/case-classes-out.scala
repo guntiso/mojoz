@@ -154,7 +154,7 @@ case class TypeOverrideTest (
 )
 case class TypeOverrideTest2 (
   intColAsString: String = null,
-  decimal266ColMod: BigDecimal = null
+  decimal266ColMod: scala.math.BigDecimal = null
 )
 case class WithAnonymousInlineView (
   someId: java.lang.Long = null,

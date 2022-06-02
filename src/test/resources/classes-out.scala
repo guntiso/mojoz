@@ -144,7 +144,7 @@ class TypeOverrideTest extends Dto {
 }
 class TypeOverrideTest2 extends Dto {
   var intColAsString: String = null
-  var decimal266ColMod: BigDecimal = null
+  var decimal266ColMod: scala.math.BigDecimal = null
 }
 class WithAnonymousInlineView extends Dto {
   var someId: java.lang.Long = null

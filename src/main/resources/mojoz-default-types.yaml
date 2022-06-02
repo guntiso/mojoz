@@ -58,7 +58,7 @@ sql:
 type:       time
 xsd name:   time
 json name:  string
-scala name: time
+scala name: java.sql.Time
 jdbc:
 - TIME
 yaml:
@@ -79,7 +79,7 @@ sql:
 type:       short
 xsd name:   short
 json name:  number
-scala name: short
+scala name: java.lang.Short
 jdbc:
 - SMALLINT
 - TINYINT # TODO? signed/unsigned byte?
@@ -128,7 +128,7 @@ oracle sql:
 type:       integer
 xsd name:   integer
 json name:  number
-scala name: BigInt
+scala name: scala.math.BigInt
 jdbc:
 - DECIMAL 19..* 0   -> size, none
 - NUMERIC 19..* 0   -> size, none
@@ -143,7 +143,7 @@ sql:
 type:       float
 xsd name:   float
 json name:  number
-scala name: float
+scala name: java.lang.Float
 jdbc:
 - REAL
 yaml:
@@ -164,7 +164,7 @@ sql:
 type:       decimal
 xsd name:   decimal
 json name:  number
-scala name: BigDecimal
+scala name: scala.math.BigDecimal
 jdbc:
 - DECIMAL * 1..*    -> size, frac
 - NUMERIC * 1..*    -> size, frac
