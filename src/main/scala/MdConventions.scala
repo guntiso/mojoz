@@ -198,10 +198,9 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
         val type_ = Option(f.type_).filter(_ != col.type_)
         val (newName, newExpr) =
           if (isExpression || expression != null) {
-            val n = Option(alias) getOrElse name
-            if (expression != null && expression.replace(".", "_") == n)
+            if (expression != null && expression.replace(".", "_") == fieldName)
               (expression, null)
-            else (n, expression)
+            else (fieldName, expression)
           } else if (tableAlias != null && tableAlias != view.tableAlias)
             (tableAlias + "." + name, expression)
           else if (table != null && table != view.table)

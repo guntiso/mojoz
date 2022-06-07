@@ -65,7 +65,7 @@ class YamlViewDefWriter {
       else ""
     val explicitSaveTo =
       // TODO & != unique refs.defaultRefTableAlias (use code from loader)
-      Option(saveTo).filter(_ != Option(alias).getOrElse(name)).orNull
+      Option(saveTo).filter(_ != fieldName).orNull
     val hasResolver = explicitSaveTo != null || saveTo != null && isExpression || resolver != null
     val saveExpr =
       if (hasResolver)

@@ -80,7 +80,7 @@ class YamlViewDefLoader(
                               viewNamesVisited: List[String]
                              ): MojozFieldDef = {
     def fieldOverrideFailed(msg: String): Nothing = sys.error(
-      s"Bad override of ${baseView.name}.${propName(baseField)} with ${view.name}.${propName(field)}: $msg")
+      s"Bad override of ${baseView.name}.${baseField.fieldName} with ${view.name}.${field.fieldName}: $msg")
     fieldOverrideIncompatibilityMessage(baseField, field, viewNamesVisited) match {
       case null =>
         if  (field.enum_    == baseField.enum_    &&
@@ -106,16 +106,16 @@ class YamlViewDefLoader(
         val view     = plainViewDefToViewDef(nameToPlainViewDef(field    .type_.name), viewNamesVisited)
         val baseView = plainViewDefToViewDef(nameToPlainViewDef(baseField.type_.name), viewNamesVisited)
         val nameToField =
-          view.fields.map(f => propName(f) -> f).toMap
-        baseView.fields.find(baseF => nameToField.get(propName(baseF))
+          view.fields.map(f => f.fieldName -> f).toMap
+        baseView.fields.find(baseF => nameToField.get(baseF.fieldName)
           .map(f => fieldOverrideIncompatibilityMessage(baseF, f, viewNamesVisited) != null)
           .getOrElse(true)
         ).map { problematicBaseF =>
           s"${typeInfo(baseField.type_).capitalize} is not compatible with ${typeInfo(field.type_)} because "
-          nameToField.get(propName(problematicBaseF))
+          nameToField.get(problematicBaseF.fieldName)
           .map(problematicF =>
             fieldOverrideIncompatibilityMessage(problematicBaseF, problematicF, viewNamesVisited)
-          ).getOrElse(s"field ${field.type_.name}.${propName(problematicBaseF)} is missing")
+          ).getOrElse(s"field ${field.type_.name}.${problematicBaseF.fieldName} is missing")
         }.orNull
       } else {
         s"${typeInfo(baseField.type_).capitalize} is not equal to ${typeInfo(field.type_)}"
@@ -157,18 +157,18 @@ class YamlViewDefLoader(
           if (visited contains v.name) sys.error("Cyclic extends/overrides: " +
             (v.name :: visited).reverse.mkString(" -> "))
           val vFieldsTransformed = v.fields.map(maybeAssignTable(tableName))
-          val vFieldNames = vFieldsTransformed.map(propName).toSet
+          val vFieldNames = vFieldsTransformed.map(_.fieldName).toSet
           val overridingFields = fields.collect {
-            case f if vFieldNames.contains(propName(f)) => f
+            case f if vFieldNames.contains(f.fieldName) => f
           }
           val mergedFields =
             if (overridingFields.isEmpty)
               vFieldsTransformed ++ fields
             else {
               val nameToOverrideField =
-                overridingFields.map(f => propName(f) -> f).toMap
+                overridingFields.map(f => f.fieldName -> f).toMap
               vFieldsTransformed.map { f =>
-                nameToOverrideField.get(propName(f))
+                nameToOverrideField.get(f.fieldName)
                   .map(of => overrideField(v, f, extV, of, v.name :: visited))
                   .getOrElse(f)
               } ++ fields.filterNot(overridingFields.contains)
@@ -354,16 +354,15 @@ class YamlViewDefLoader(
     yfd: YamlFieldDef, mojozFieldDef: MojozFieldDef): MojozFieldDef = mojozFieldDef
   /** called once, can be overriden to transform raw viewdefs */
   protected def transformRawViewDefs(raw: Seq[MojozViewDef]): Seq[MojozViewDef] = raw
-  private def propName(f: FieldDef[_]) = Option(f.alias) getOrElse f.name
   private def checkViewDefs(td: Seq[ViewDef[FieldDef[_]]]) = {
     val m: Map[String, ViewDef[_]] = td.map(t => (t.name, t)).toMap
     if (m.size < td.size) sys.error("repeating definition of " +
       td.groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
     td.foreach(t => checkExtends(t, m, Nil))
     def checkRepeatingFieldNames(t: ViewDef[FieldDef[_]]) =
-      if (t.fields.map(propName).toSet.size < t.fields.size) sys.error(
+      if (t.fields.map(_.fieldName).toSet.size < t.fields.size) sys.error(
         "Duplicate fields in view " + t.name + ": " + t.fields
-          .groupBy(propName).filter(_._2.size > 1).map(_._1).mkString(", "))
+          .groupBy(_.fieldName).filter(_._2.size > 1).map(_._1).mkString(", "))
     td foreach checkRepeatingFieldNames
   }
   private def checkTypedefMapping(td: Seq[MojozViewDef]) = {
@@ -389,13 +388,13 @@ class YamlViewDefLoader(
         def allFieldNames(
             v: MojozViewDef,
             names: Set[String]): Set[String] = {
-          val allNames = names ++ v.fields.map(propName).toSet
+          val allNames = names ++ v.fields.map(_.fieldName).toSet
           if (v.extends_ == null) allNames
           else allFieldNames(nameToView(v.extends_), allNames)
         }
         val superNames = allFieldNames(nameToView(t.extends_), Set.empty)
         def isOverride(f: MojozFieldDef) =
-          superNames.contains(propName(f))
+          superNames.contains(f.fieldName)
         if (t.fields.exists(isOverride))
           t.copy(fields = t.fields.map { f =>
             if (isOverride(f)) f.copy(isOverride = true) else f
