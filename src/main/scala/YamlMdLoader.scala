@@ -363,7 +363,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
 
     val name = qualifiedIdent
     val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
-    val options = "\\[[\\+\\-\\=\\/\\!]+\\]"
+    val options = "\\[[\\+\\-\\=\\/\\!\\?]+\\]"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
     val `enum` = "\\(.*?\\)"
