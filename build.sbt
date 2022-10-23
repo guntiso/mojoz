@@ -8,7 +8,7 @@ lazy val dependencies = Seq(
   "org.scalatest" %% "scalatest" % "3.2.13" % "it,test"
 )
 
-val scalaV = "2.13.8"
+val scalaV = "2.13.10"
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
