@@ -5,7 +5,7 @@ lazy val dependencies = Seq(
   "com.h2database" % "h2" % "1.4.200" % "test",
   "com.typesafe"   % "config"     % "1.4.2"  % "it,test",           // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "42.5.0" % "it,test",          // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest" % "3.2.13" % "it,test"
+  "org.scalatest" %% "scalatest"  % "3.2.14" % "it,test"
 )
 
 val scalaV = "2.13.10"
