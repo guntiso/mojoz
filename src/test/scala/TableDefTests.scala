@@ -96,11 +96,8 @@ class TableDefTests extends FlatSpec with Matchers {
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-jdbc-produced.yaml", produced)
     def skipSomeH2(s: String) = {
-      // ignoring h2 STRINGDECODE garbage in check constraints (diacritics enum roundtrip fails for h2)
       skipSome(s).split("\\r?\\n")
-        .filterNot(_ == "ck:")
-        .filterNot(_.contains("diacritics"))
-        .filterNot(_.contains("DIACRITICS"))
+        .filterNot(_ startsWith "- uk_tt2_spec_code_col2")     // h2 optimizes index count?
         .filterNot(_ startsWith "- col2                    1") // h2 empty comments roundtrip fails
         .filterNot(_ ==   "comments: \"\"")                    // h2 empty comments roundtrip fails
         .mkString(nl)

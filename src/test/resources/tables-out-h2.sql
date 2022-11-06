@@ -34,15 +34,14 @@ comment on column bank.name_eng is 'Bankas pilnais nosaukums, angliski.';
 comment on column bank.name_rus is 'Bankas pilnais nosaukums, transliterēts krieviski.';
 
 create table country(
-  code varchar(2) not null,
+  code varchar(2) not null check (code in ('LV', 'TO', 'LT')),
   code3 varchar(3) not null,
   code_n3 varchar(3) not null,
   name varchar(64) not null,
   name_eng varchar(64),
   name_rus varchar(64),
   is_active boolean not null,
-  is_eu boolean not null,
-  check (code in ('LV', 'TO', 'LT'))
+  is_eu boolean not null
 );
 comment on table country is 'Valstu klasifikators';
 comment on column country.code is 'ISO 3166-1 divu burtu valsts kods';
@@ -54,11 +53,10 @@ comment on column country.name_rus is 'Valsts nosaukums krieviski.';
 comment on column country.is_eu is 'Vai valsts ir Eiropas Savienības dalībvalsts';
 
 create table currency(
-  code varchar(3) not null,
+  code varchar(3) not null check (code in ('USD', 'EUR')),
   name varchar(100) not null,
   name_eng varchar(100) not null,
-  name_rus varchar(100) not null,
-  check (code in ('USD', 'EUR'))
+  name_rus varchar(100) not null
 );
 comment on table currency is 'Sistēmā uzturēto valūtu klasifikators.';
 comment on column currency.code is 'Starptautiski pieņemtais valūtas apzīmējums (burti).';
@@ -133,20 +131,13 @@ and line 3
 
 create table test_table5(
   bank_id bigint,
-  enum_for_int integer,
-  enum_for_long bigint,
-  enum_for_decimal numeric(3, 1),
-  enum_with_diacritics varchar(6),
-  enum_spešal_diacritics varchar(6),
-  enum varchar(5),
-  enum_ws varchar(6),
-  check (enum_for_int in (-1, 0, 1)),
-  check (enum_for_long in (-99, 0, 99)),
-  check (enum_for_decimal in (-9.9, 0, 9.9)),
-  check (enum_with_diacritics in ('rūķīši', 'darbā', 'vai', 'mājās')),
-  check (enum_spešal_diacritics in ('bladāc')),
-  check (enum in ('list1', 'list2')),
-  check (enum_ws in ('list 1', 'list 2'))
+  enum_for_int integer check (enum_for_int in (-1, 0, 1)),
+  enum_for_long bigint check (enum_for_long in (-99, 0, 99)),
+  enum_for_decimal numeric(3, 1) check (enum_for_decimal in (-9.9, 0, 9.9)),
+  enum_with_diacritics varchar(6) check (enum_with_diacritics in ('rūķīši', 'darbā', 'vai', 'mājās')),
+  enum_spešal_diacritics varchar(6) check (enum_spešal_diacritics in ('bladāc')),
+  enum varchar(5) check (enum in ('list1', 'list2')),
+  enum_ws varchar(6) check (enum_ws in ('list 1', 'list 2'))
 );
 comment on table test_table5 is 'Alternative multiline comments
 with line 2';
@@ -200,12 +191,12 @@ alter table currency add constraint pk_currency primary key (code);
 alter table person add constraint pk_person primary key (id);
 
 alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
-create unique index uk_test_table1_code on test_table1(code);
-create unique index uk_test_table1_code_col1 on test_table1(code, col1);
+alter table test_table1 add constraint uk_test_table1_code unique(code);
+alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
 create unique index uk_test_table1_code_col2 on test_table1(code, col2);
-create unique index uk_test_table1_col1_col2_col3 on test_table1(col1, col2, col3);
-create unique index uk_tt1_spec_col2 on test_table1(col2);
-create unique index uk_tt2_spec_code_col2 on test_table1(code, col2);
+alter table test_table1 add constraint uk_test_table1_col1_col2_col3 unique(col1, col2, col3);
+alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
+alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
 create index idx_test_table1_id on test_table1(id);
 create index idx_test_table1_id_col1 on test_table1(id, col1);
 create index idx_tt1_spec_col3 on test_table1(col3);

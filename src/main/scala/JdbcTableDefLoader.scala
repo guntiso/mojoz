@@ -334,23 +334,17 @@ object JdbcTableDefLoader {
   class H2(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override val jdbcLoadInfoKey = "h2 jdbc"
     override def checkConstraints(conn: Connection,
-        catalog: String, schemaPattern: String, tableNamePattern: String) = {
-      // FIXME table def loaders: use like or equals (like may fail!)? escape _?
-      // FIXME table def loaders: ignore pars if null!
-      val ps = conn.prepareStatement("""
-        |select constraint_name, check_expression check_clause
-        |  from information_schema.constraints
-        | where constraint_type = 'CHECK'
-        |   and table_catalog like ?
-        |   and table_schema like ?
-        |   and table_name like ?
-        """.stripMargin.trim)
-      ps.setString(1, catalog)
-      ps.setString(2, schemaPattern)
-      ps.setString(3, tableNamePattern)
-      val rs = ps.executeQuery()
-      val checks = checkConstraints(rs)
-      checks
+      catalog: String, schemaPattern: String, tableNamePattern: String) =
+      standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
+    private val h2_uk_drop_suffix = "_INDEX_F"
+    private val h2_uk_drop_suffix_len = h2_uk_drop_suffix.length
+    private def h2_ukRoundtripNameFix(ukName: String) =
+      if (ukName endsWith h2_uk_drop_suffix)
+        ukName.substring(0, ukName.length - h2_uk_drop_suffix_len)
+      else ukName
+    override def ukAndIdx(rs: ResultSet) = {
+      val (uks, idxs) = super.ukAndIdx(rs)
+      (uks.map(uk => uk.copy(name = h2_ukRoundtripNameFix(uk.name))).sortBy(_.name), idxs)
     }
   }
   class Hsqldb(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
@@ -453,12 +447,13 @@ object JdbcTableDefLoader {
 
 private[in] object CkParser {
   val s = "\\s*"
-  val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
+  val ident = "[_\\p{IsLatin}\\\\][_\\p{IsLatin}0-9\\\\]*"
   val qi = s"$ident(\\.$ident)*"
   val in = "[iI][nN]"
-  val `enum` = """\(?'?[\+\-_\p{IsLatin}0-9\.\s]+'?\)?"""
+  val `enum` = """\(?U?&?'?[\+\-_\p{IsLatin}0-9\.\s\\]+'?\)?"""
   val cast = """::[\w\.\s]+"""
-  val qiQuotQi = s"""$qi|"$qi""""
+  val qiQuotQi = s"""$qi|U?&?"$qi""""
+  val checkIn0 = s"""_(($qiQuotQi))_ = $enum"""
   val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enum( , $enum)*))_"""
   val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = (_($enum($cast)?)_ ($cast)?))_"""
   val checkIn3 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enum($cast)?)_ ($cast)?( , $enum($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
@@ -472,14 +467,23 @@ private[in] object CkParser {
       .replace(")_", "[\\s\\)]*")
       .replace(" ", "\\s*") +
     "$").r
+  val CheckIn0 = regex(checkIn0)
   val CheckIn1 = regex(checkIn1)
   val CheckIn2 = regex(checkIn2)
   val CheckIn3 = regex(checkIn3)
   val CheckNotNull = regex(checkNotNull)
+  private def maybeDecode(s: String) = {
+    if  (s.startsWith("U&'") || s.startsWith("U&\"")) // h2 unicode string encoding
+         decodeUnicodeStringSQL(s.substring(2), '\\')
+    else s
+  }
   private def toColEnum(col: String, values: String) =
-    (col.replace(""""""", ""),
-      values.split("[\\(,\\)]+").toList.map(_.trim.replace("'", "")).filter(_.trim != ""))
+    (maybeDecode(col).replace(""""""", ""),
+      values.split("[\\(,\\)]+").toList
+        .map(_.trim).map(maybeDecode).map(_.replace("'", "")).filter(_.trim != ""))
   def colAndEnum(ck: String) = ck match {
+    case CheckIn0(col, value) =>
+      Some(toColEnum(col, value))
     case CheckIn1(col, _, _, values, _) =>
       Some(toColEnum(col, values))
     case CheckIn2(col, _, _, _, values, _, _) =>
@@ -493,4 +497,38 @@ private[in] object CkParser {
     case CheckNotNull(_, _, _) => true
     case _ => false
   }
-}
+
+  // copied from h2 to decode h2 check constraints
+  def decodeUnicodeStringSQL(s: String, uencode: Int): String = {
+    def malformedStringException(s: String, i: Int) =
+      new RuntimeException(s"Failed to decode unicode string at position $i: $s")
+    val l: Int = s.length
+    val builder = new java.lang.StringBuilder(l)
+    var i: Int = 0
+    while ( {
+      i < l
+    }) {
+      var cp: Int = s.codePointAt(i)
+      i += Character.charCount(cp)
+      if (cp == uencode) {
+        if (i >= l) throw malformedStringException(s, i)
+        cp = s.codePointAt(i)
+        if (cp == uencode) i += Character.charCount(cp)
+        else {
+          if (i + 4 > l) throw malformedStringException(s, i)
+          val ch: Char = s.charAt(i)
+          try if (ch == '+') {
+            if (i + 7 > l) throw malformedStringException(s, i)
+            cp = Integer.parseUnsignedInt(s.substring(i + 1, { i += 7; i }), 16)
+          }
+          else cp = Integer.parseUnsignedInt(s.substring(i, { i += 4; i }), 16)
+          catch {
+            case e: NumberFormatException =>
+              throw malformedStringException(s, i)
+          }
+        }
+      }
+      builder.appendCodePoint(cp)
+    }
+    builder.toString
+  }}
