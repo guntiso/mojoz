@@ -24,7 +24,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*) = {
-    val tableDefs = ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]()
+    val tableDefs = ListBuffer[JdbcTableDef]()
     val dmd = conn.getMetaData
     val rs = dmd.getTables(catalog, schemaPattern, tableNamePattern,
       if (types.size == 0) null else types.toArray)
@@ -69,7 +69,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
 
     // work around oracle bugs
     if (conn.getClass.getName.startsWith("oracle")) {
-      def oraFix1(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+      def oraFix1(tableDefs: ListBuffer[JdbcTableDef]) =
       if (!tableDefs.exists(_.comments != null)) {
         val st = conn.prepareStatement(
           "select comments from all_tab_comments" +
@@ -85,7 +85,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         }
       } else tableDefs
 
-      def oraFix2(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+      def oraFix2(tableDefs: ListBuffer[JdbcTableDef]) =
       if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
         val st = conn.prepareStatement(
           "select column_name, comments from all_col_comments" +
@@ -109,11 +109,11 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       // XXX booleans emulated on oracle
       val emulatedBooleanEnums = Set(
         List("N", "Y"), List("Y", "N"))
-      def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
+      def isEmulatedBoolean(c: JdbcColumnDef) =
         c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
           emulatedBooleanEnums.contains(c.enum_.toList)
 
-      def oraFix3(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+      def oraFix3(tableDefs: ListBuffer[JdbcTableDef]) =
       tableDefs map { td =>
         if (td.cols.exists(isEmulatedBoolean))
           td.copy(cols = td.cols.map { c =>
@@ -168,7 +168,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     checks
   }
   def colDefs(rs: ResultSet) = {
-    val cols = ListBuffer[ColumnDef[JdbcColumnType]]()
+    val cols = ListBuffer[JdbcColumnDef]()
     while (rs.next) {
       val name = rs.getString("COLUMN_NAME")
       val jdbcTypeCode = rs.getInt("DATA_TYPE")
@@ -320,7 +320,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def toMojozTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef =
+  def toMojozTableDef(tableDef: JdbcTableDef): MojozTableDef =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
 

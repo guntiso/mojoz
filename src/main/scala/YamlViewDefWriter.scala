@@ -39,7 +39,7 @@ class YamlViewDefWriter {
       "\""
     else s
 
-  def toYaml(field: FieldDef[IoColumnType]) = {
+  def toYaml(field: IoFieldDef) = {
     import field._
     val t = type_.type_ getOrElse new Type(null, None, None, None, false)
     val joinString = Option(joinToParent) getOrElse ""
@@ -126,7 +126,7 @@ class YamlViewDefWriter {
     Option(name).filter(_ != "")
       .map(_ + cols.mkString("(", ", ", ")"))
       .getOrElse(cols.mkString(", "))
-  def toYaml(view: ViewDef[FieldDef[IoColumnType]]): String = {
+  def toYaml(view: IoViewDef): String = {
     import view._
     List(
       Some(name).map("name:     " + _),
@@ -161,7 +161,7 @@ class YamlViewDefWriter {
         .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")),
     ).flatMap(x => x).mkString("\n")
   }
-  def toYaml(views: Seq[ViewDef[FieldDef[IoColumnType]]]): String =
+  def toYaml(views: Seq[IoViewDef]): String =
     views.map(toYaml).mkString("\n\n") +
       (if (!views.isEmpty) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
