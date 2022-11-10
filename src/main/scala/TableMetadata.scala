@@ -42,20 +42,9 @@ object TableDef {
     require(expression != null && expression.trim != "",
       "Invalid expression for check constraint: " + expression)
   }
-  trait TableDefBase[+C <: ColumnDefBase[_]] { // TODO bound too tight?
-    val db: String
-    val name: String
-    val comments: String
-    val cols: Seq[C]
-    val pk: Option[DbIndex]
-    val uk: Seq[DbIndex]
-    val ck: Seq[CheckConstraint]
-    val idx: Seq[DbIndex]
-    val refs: Seq[Ref]
-  }
 }
 
-case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
+case class TableDef[+C <: ColumnDef[_]](
   db: String,
   name: String,
   comments: String,
@@ -65,7 +54,7 @@ case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
   ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
   refs: Seq[Ref],
-  extras: Map[String, Any]) extends TableDefBase[C] {
+  extras: Map[String, Any]) {
   def toLowerCase: this.type = mapTableNames(_.toLowerCase)
     .mapColumnNames(_.toLowerCase)
     .mapConstraintNames(_.toLowerCase)
@@ -96,17 +85,6 @@ case class TableDef[+C <: ColumnDefBase[_]]( // TODO bound too tight?
       refs = refs.map(r => r.copy(name = safeTransform(r.name)))).asInstanceOf[this.type]
   }
 }
-object ColumnDef {
-  trait ColumnDefBase[+T] {
-    val name: String
-    val type_ : T
-    val nullable: Boolean
-    val dbDefault: String
-    val enum_ : Seq[String]
-    val comments: String
-    def withName(name: String): this.type
-  }
-}
 case class ColumnDef[+T](
   name: String,
   type_ : T,
@@ -114,11 +92,11 @@ case class ColumnDef[+T](
   dbDefault: String,
   enum_ : Seq[String],
   comments: String,
-  extras: Map[String, Any]) extends ColumnDefBase[T] {
-  override def withName(name: String) = copy(name = name).asInstanceOf[this.type]
+  extras: Map[String, Any]) {
+  def withName(name: String) = copy(name = name).asInstanceOf[this.type]
 }
 
-class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
+class TableMetadata[+T <: MojozTableDef](
   val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
   val dbName: String => String = identity) {
   val dbToTableDefs: Map[String, Seq[T]] = tableDefs.groupBy(_.db)
@@ -153,14 +131,14 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
     md.getOrElse(db, throwDbNotFound(db))
       .getOrElse(tableName,
         sys.error(s"Table not found: ${dbAndTable(db, tableName)}"))
-  def tableDefOption(viewDef: ViewDefBase[_]): Option[T] =
+  def tableDefOption(viewDef: ViewDef[_]): Option[T] =
     md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .get(viewDef.table)
-  def tableDef(viewDef: ViewDefBase[_]): T =
+  def tableDef(viewDef: ViewDef[_]): T =
     md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .getOrElse(viewDef.table,
         sys.error(s"Table not found: ${dbAndTable(viewDef.db, viewDef.table)} (view: ${viewDef.name})"))
-  def columnDef(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]): ColumnDefBase[Type] = {
+  def columnDef(viewDef: ViewDef[_], fieldDef: FieldDef[_]): ColumnDef[Type] = {
     val f = fieldDef
     val colName = dbName(f.name)
     import viewDef.db
@@ -181,12 +159,12 @@ class TableMetadata[+T <: TableDefBase[ColumnDefBase[Type]]](
         }
       })
   }
-  def columnDefOption(viewDef: ViewDefBase[_], fieldDef: FieldDefBase[_]): Option[ColumnDefBase[Type]] =
+  def columnDefOption(viewDef: ViewDef[_], fieldDef: FieldDef[_]): Option[ColumnDef[Type]] =
     dbToColNameToCol
       .getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .get((fieldDef.table, dbName(fieldDef.name)))
 
-  def col(table: String, column: String, db: String): Option[ColumnDefBase[Type]] =
+  def col(table: String, column: String, db: String): Option[ColumnDef[Type]] =
     dbToColNameToCol
       .getOrElse(db, throwDbNotFound(db))
       .get((table, column))

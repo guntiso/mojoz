@@ -1,7 +1,6 @@
 package org.mojoz.metadata
 package in
 
-import org.mojoz.metadata.ColumnDef.ColumnDefBase
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.Load
 import scala.collection.immutable._

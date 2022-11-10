@@ -1,7 +1,6 @@
 package org.mojoz.metadata
 
 import org.mojoz.metadata.in._
-import org.mojoz.metadata.ColumnDef.ColumnDefBase
 import scala.collection.immutable._
 
 case class Type(name: String, length: Option[Int],
@@ -56,7 +55,7 @@ object TypeDef {
     val jdbcLoad: Map[String, Seq[JdbcLoadInfo]]
     val yamlLoad: Seq[YamlLoadInfo]
     val sqlWrite: Map[String, Seq[SqlWriteInfo]]
-    val defaults: ColumnDefBase[Type]
+    val defaults: ColumnDef[Type]
     val namingConventions: Seq[String]
   }
 }
@@ -68,7 +67,7 @@ case class TypeDef(
   jdbcLoad: Map[String, Seq[JdbcLoadInfo]],
   yamlLoad: Seq[YamlLoadInfo],
   sqlWrite: Map[String, Seq[SqlWriteInfo]],
-  defaults: ColumnDefBase[Type],
+  defaults: ColumnDef[Type],
   namingConventions: Seq[String],
   extras: Map[String, Any]
   ) extends TypeDefBase {

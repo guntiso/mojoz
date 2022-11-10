@@ -4,23 +4,16 @@ import org.mojoz.metadata.io.IoColumnType
 import org.mojoz.metadata.in.JdbcTableDefLoader.JdbcColumnType
 
 package object metadata {
-  type MojozFieldDef = FieldDef[Type]
-  type MojozViewDef = ViewDef[MojozFieldDef]
-
-  type MojozFieldDefBase = FieldDef.FieldDefBase[Type]
-  type MojozViewDefBase = ViewDef.ViewDefBase[MojozFieldDefBase]
-
-  type MojozColumnDefBase = ColumnDef.ColumnDefBase[Type]
-  type MojozTableDefBase = TableDef.TableDefBase[MojozColumnDefBase]
-
+  type MojozFieldDef  = FieldDef[Type]
+  type MojozViewDef   = ViewDef[MojozFieldDef]
   type MojozColumnDef = ColumnDef[Type]
-  type MojozTableDef = TableDef[MojozColumnDef]
+  type MojozTableDef  = TableDef[MojozColumnDef]
 
-  type IoFieldDef = FieldDef[IoColumnType]
-  type IoViewDef = ViewDef[IoFieldDef]
-  type IoColumnDef = ColumnDef[IoColumnType]
-  type IoTableDef = TableDef[IoColumnDef]
+  type IoFieldDef     = FieldDef[IoColumnType]
+  type IoViewDef      = ViewDef[IoFieldDef]
+  type IoColumnDef    = ColumnDef[IoColumnType]
+  type IoTableDef     = TableDef[IoColumnDef]
 
-  type JdbcColumnDef = ColumnDef[JdbcColumnType]
-  type JdbcTableDef = TableDef[JdbcColumnDef]
+  type JdbcColumnDef  = ColumnDef[JdbcColumnType]
+  type JdbcTableDef   = TableDef[JdbcColumnDef]
 }
