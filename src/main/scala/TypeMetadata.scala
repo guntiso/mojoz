@@ -55,7 +55,7 @@ object TypeDef {
     val jdbcLoad: Map[String, Seq[JdbcLoadInfo]]
     val yamlLoad: Seq[YamlLoadInfo]
     val sqlWrite: Map[String, Seq[SqlWriteInfo]]
-    val defaults: ColumnDef[Type]
+    val defaults: MojozColumnDef
     val namingConventions: Seq[String]
   }
 }
@@ -67,7 +67,7 @@ case class TypeDef(
   jdbcLoad: Map[String, Seq[JdbcLoadInfo]],
   yamlLoad: Seq[YamlLoadInfo],
   sqlWrite: Map[String, Seq[SqlWriteInfo]],
-  defaults: ColumnDef[Type],
+  defaults: MojozColumnDef,
   namingConventions: Seq[String],
   extras: Map[String, Any]
   ) extends TypeDefBase {

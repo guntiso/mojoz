@@ -21,7 +21,7 @@ import FieldDef._
 
 
 class YamlViewDefLoader(
-    tableMetadata: TableMetadata[MojozTableDef] = new TableMetadata,
+    tableMetadata: TableMetadata = new TableMetadata,
     yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     joinsParser: JoinsParser = (_, _, _) => Nil, 
     conventions: MdConventions = new SimplePatternMdConventions,
@@ -567,7 +567,7 @@ class YamlViewDefLoader(
         override_.fractionDigits orElse base.fractionDigits,
         false)
       def resolveTypeFromDbMetadata(f: MojozFieldDef) = {
-        def applyColumnAndNullable(col: ColumnDef[Type], nullable: Boolean) = f.copy(
+        def applyColumnAndNullable(col: MojozColumnDef, nullable: Boolean) = f.copy(
           nullable = nullable,
           type_ =
             if (f.type_ != null &&
@@ -653,7 +653,7 @@ object YamlViewDefLoader {
   }
   private val ViewDefKeyStrings = ViewDefKeys.values.map(_.toString)
   def apply(
-    tableMetadata: TableMetadata[MojozTableDef],
+    tableMetadata: TableMetadata,
     yamlMd: Seq[YamlMd],
     joinsParser: JoinsParser = (_, _, _) => Nil,
     conventions: MdConventions = new SimplePatternMdConventions,

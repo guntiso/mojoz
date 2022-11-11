@@ -96,10 +96,10 @@ case class ColumnDef[+T](
   def withName(name: String) = copy(name = name).asInstanceOf[this.type]
 }
 
-class TableMetadata[+T <: MojozTableDef](
-  val tableDefs: Seq[T] = (new YamlTableDefLoader()).tableDefs,
+class TableMetadata(
+  val tableDefs: Seq[MojozTableDef] = (new YamlTableDefLoader()).tableDefs,
   val dbName: String => String = identity) {
-  val dbToTableDefs: Map[String, Seq[T]] = tableDefs.groupBy(_.db)
+  val dbToTableDefs: Map[String, Seq[MojozTableDef]] = tableDefs.groupBy(_.db)
   private val md = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(e => (e.name, e)).toMap
   }
@@ -124,21 +124,21 @@ class TableMetadata[+T <: MojozTableDef](
   private def dbAndTable(db: String, table: String) =
     Option(db).map(db => s"$db:$table") getOrElse table
 
-  def tableDefOption(tableName: String, db: String): Option[T] =
+  def tableDefOption(tableName: String, db: String): Option[MojozTableDef] =
     md.getOrElse(db, throwDbNotFound(db))
       .get(tableName)
-  def tableDef(tableName: String, db: String): T =
+  def tableDef(tableName: String, db: String): MojozTableDef =
     md.getOrElse(db, throwDbNotFound(db))
       .getOrElse(tableName,
         sys.error(s"Table not found: ${dbAndTable(db, tableName)}"))
-  def tableDefOption(viewDef: ViewDef[_]): Option[T] =
+  def tableDefOption(viewDef: ViewDef[_]): Option[MojozTableDef] =
     md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .get(viewDef.table)
-  def tableDef(viewDef: ViewDef[_]): T =
+  def tableDef(viewDef: ViewDef[_]): MojozTableDef =
     md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .getOrElse(viewDef.table,
         sys.error(s"Table not found: ${dbAndTable(viewDef.db, viewDef.table)} (view: ${viewDef.name})"))
-  def columnDef(viewDef: ViewDef[_], fieldDef: FieldDef[_]): ColumnDef[Type] = {
+  def columnDef(viewDef: ViewDef[_], fieldDef: FieldDef[_]): MojozColumnDef = {
     val f = fieldDef
     val colName = dbName(f.name)
     import viewDef.db
@@ -159,12 +159,12 @@ class TableMetadata[+T <: MojozTableDef](
         }
       })
   }
-  def columnDefOption(viewDef: ViewDef[_], fieldDef: FieldDef[_]): Option[ColumnDef[Type]] =
+  def columnDefOption(viewDef: ViewDef[_], fieldDef: FieldDef[_]): Option[MojozColumnDef] =
     dbToColNameToCol
       .getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .get((fieldDef.table, dbName(fieldDef.name)))
 
-  def col(table: String, column: String, db: String): Option[ColumnDef[Type]] =
+  def col(table: String, column: String, db: String): Option[MojozColumnDef] =
     dbToColNameToCol
       .getOrElse(db, throwDbNotFound(db))
       .get((table, column))
