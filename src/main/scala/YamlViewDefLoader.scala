@@ -1,23 +1,16 @@
 package org.mojoz.metadata
 package in
 
-import java.io.File
-import java.util.ArrayList
-
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters._
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
-import scala.io.Source
 import scala.util.control.NonFatal
 
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.Load
 
-import org.mojoz.metadata.in._
 import org.mojoz.metadata.io._
-import ViewDef._
-import FieldDef._
 
 
 class YamlViewDefLoader(

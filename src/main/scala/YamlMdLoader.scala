@@ -1,11 +1,8 @@
 package org.mojoz.metadata
 package in
 
-import java.io.File
-import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters._
-import scala.io.Source
 import org.mojoz.metadata.TypeDef
 import org.mojoz.metadata.TypeMetadata
 import org.mojoz.metadata.io._

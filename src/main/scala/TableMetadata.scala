@@ -1,13 +1,9 @@
 package org.mojoz.metadata
 
-import scala.annotation.tailrec
 import scala.collection.immutable.{Map, Seq}
 
 import org.mojoz.metadata.in.YamlTableDefLoader
 import TableDef._
-import ColumnDef._
-import ViewDef._
-import FieldDef._
 
 object TableDef {
   private def validCols(cols: Seq[String]) =

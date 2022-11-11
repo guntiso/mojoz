@@ -3,9 +3,6 @@ package org.mojoz.metadata
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 
-import ViewDef._
-import FieldDef._
-
 case class ViewDef[+F](
   name: String,
   db: String,
