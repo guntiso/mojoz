@@ -101,7 +101,7 @@ class ViewDefTests extends FlatSpec with Matchers {
   "generated scala class file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "classes-out.scala")
     object ScalaBuilder extends ScalaGenerator with CamelizedNames {
-      override def scalaClassTraits(viewDef: MojozViewDef) =
+      override def scalaClassTraits(viewDef: ViewDef) =
         if (viewDef.fields.exists(f => f.name == "id" && f.type_.name == "long"))
           List("DtoWithId")
         else List("Dto")

@@ -1,7 +1,7 @@
 package org.mojoz.metadata.io
 
 import org.mojoz.metadata._
-import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.TableMetadata._
 import org.mojoz.metadata.out.SqlGenerator
 import scala.collection.immutable.Seq
 
@@ -20,14 +20,14 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
   def isTypedName(name: String) =
     isBooleanName(name) || isDateName(name) || isDateTimeName(name) ||
     isIdName(name) || isIdRefName(name)
-  def fromExternal(table: IoTableDef): MojozTableDef = {
+  def fromExternal(table: IoTableDef): TableDef = {
     val pk = fromExternalPk(table)
     table.copy(
       cols = table.cols.map(col => fromExternal(col, pk)),
       pk = pk
     )
   }
-  def fromExternalPk(tableDef: TableDef[ColumnDef[_]]) = {
+  def fromExternalPk(tableDef: TableDef_[ColumnDef_[_]]) = {
     import scala.language.existentials
     val cols = tableDef.cols.map(_.name)
     if (tableDef.pk.isDefined) tableDef.pk.filter(_ != null)
@@ -39,7 +39,7 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
       Some(DbIndex(null, cols))
     else None
   }
-  def fromExternal(col: IoColumnDef, pk: Option[DbIndex]): MojozColumnDef = {
+  def fromExternal(col: IoColumnDef, pk: Option[DbIndex]): ColumnDef = {
     val typ = typeFromExternal(col.name, col.type_.type_)
     val nullable = nullableFromExternal(col.name, col.type_.nullable, pk)
     val dbDefault = (typ.name, col.dbDefault) match {
@@ -75,7 +75,7 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
   }
   def nullableFromExternal(name: String, nullable: Option[Boolean], pk: Option[DbIndex]): Boolean =
     nullable getOrElse !pk.exists(_.cols contains name)
-  def toExternal(table: MojozTableDef): IoTableDef =
+  def toExternal(table: TableDef): IoTableDef =
     table.copy(
       cols = table.cols.map(toExternal(table, _)),
       pk = toExternalPk(table),
@@ -91,7 +91,7 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
     case idx if idx.name == defaultName => idx.copy(name = null)
     case idx => idx
   }
-  def toExternalPk(tableDef: MojozTableDef) = {
+  def toExternalPk(tableDef: TableDef) = {
     val cols = tableDef.cols.map(_.name)
     val defaultPkName = naming.pkName(tableDef.name)
     def pkNormalize(pk: Option[DbIndex]) = pk.map { pk =>
@@ -102,29 +102,29 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
       (if (tableDef.pk.isDefined) tableDef.pk.map(toExternalIdx(defaultPkName)) else Some(null)) else None)
   }
 
-  def toExternalUk(table: MojozTableDef) = {
+  def toExternalUk(table: TableDef) = {
     if (table.pk.isDefined) {
       val pkCols = toExternalIdx("")(table.pk.get).cols
       table.uk.filter(toExternalIdx("")(_).cols != pkCols)
     } else table.uk
   }.map(uk => toExternalIdx(naming.ukName(table.name, uk))(uk))
 
-  def toExternalIdx(table: MojozTableDef): Seq[DbIndex] =
+  def toExternalIdx(table: TableDef): Seq[DbIndex] =
     table.idx.map(idx => toExternalIdx(naming.idxName(table.name, idx))(idx))
 
-  def toExternalRefs(table: MojozTableDef) = table.refs
+  def toExternalRefs(table: TableDef) = table.refs
     .map(r => if (r.onDeleteAction == "no action") r.copy(onDeleteAction = null) else r)
     .map(r => if (r.onUpdateAction == "no action") r.copy(onUpdateAction = null) else r)
     .map(r => if (r.name == naming.fkName(table.name, r)) r.copy(name = null) else r)
     .filter(r => r.cols.size > 1 ||
       r.onDeleteAction != null || r.onUpdateAction != null || r.name != null)
 
-  def nullableOpt(name: String, nullable: Boolean, table: MojozTableDef) = (name, nullable) match {
+  def nullableOpt(name: String, nullable: Boolean, table: TableDef) = (name, nullable) match {
       case (name, false) if table.pk.exists(_.cols contains name) => None
       case (_, true) => None
       case (_, nullable) => Some(nullable)
   }
-  def toExternal(table: MojozTableDef, col: MojozColumnDef): IoColumnDef = {
+  def toExternal(table: TableDef, col: ColumnDef): IoColumnDef = {
     val nullOpt = nullableOpt(col.name, col.nullable, table)
     val dbDefault = (col.type_.name, col.dbDefault) match {
       case (_, null) => null
@@ -185,8 +185,8 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
         case _ => Option(type_)
       }
   }
-  def toExternal(view: MojozViewDef, tableMetadata: TableMetadata, allViews: Map[String, MojozViewDef]) = {
-    def mapField(f: MojozFieldDef) = {
+  def toExternal(view: ViewDef, tableMetadata: TableMetadata, allViews: Map[String, ViewDef]) = {
+    def mapField(f: FieldDef) = {
       import f._
       if (table == null || type_.isComplexType)
         f.copy(type_ = new IoColumnType(

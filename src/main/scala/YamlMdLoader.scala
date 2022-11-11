@@ -6,9 +6,8 @@ import scala.jdk.CollectionConverters._
 import org.mojoz.metadata.TypeDef
 import org.mojoz.metadata.TypeMetadata
 import org.mojoz.metadata.io._
-import org.mojoz.metadata.ColumnDef
 import org.mojoz.metadata.TableDef
-import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.TableMetadata._
 import org.mojoz.metadata.Type
 import org.snakeyaml.engine.v2.api.LoadSettings
 import org.snakeyaml.engine.v2.api.Load
@@ -78,18 +77,18 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   // TODO load check constraints!
   import YamlTableDefLoader._
   val sources = yamlMd.filter(YamlMd.isTableDef)
-  private def checkRawTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
+  private def checkRawTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
     val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
     if (m.size < td.size) sys.error("Duplicate table definitions: " +
       td.groupBy(t => (t.db, t.name)).filter(_._2.size > 1).map(_._1).map( dt =>
         Option(dt._1).map(_ + ":").getOrElse("") + dt._2
       ).mkString(", "))
-    def checkName(t: TableDef[_]) =
+    def checkName(t: TableDef_[_]) =
       if (t.name == null || t.name.trim == "") sys.error("Table without name")
-    def checkHasColumns(t: TableDef[_]) =
+    def checkHasColumns(t: TableDef_[_]) =
       if (t.cols == null || t.cols.size == 0) sys.error(
         "Table " + t.name + " has no columns")
-    def checkRepeatingColumnNames(t: TableDef[ColumnDef[_]]) =
+    def checkRepeatingColumnNames(t: TableDef_[ColumnDef_[_]]) =
       if (t.cols.map(_.name).toSet.size < t.cols.size) sys.error(
         "Table " + t.name + " defines multiple columns named " + t.cols
           .groupBy(_.name).filter(_._2.size > 1).map(_._1).mkString(", "))
@@ -97,8 +96,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     td foreach checkHasColumns
     td foreach checkRepeatingColumnNames
   }
-  private def checkTableDefs(td: Seq[TableDef[ColumnDef[_]]]) = {
-    def checkIndices(t: TableDef[ColumnDef[_]]): Unit = {
+  private def checkTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
+    def checkIndices(t: TableDef_[ColumnDef_[_]]): Unit = {
       val colNames = t.cols.map(_.name).toSet
       def checkIdx(indexType: String, idx: DbIndex) = {
         if (idx.cols == null || idx.cols.size == 0) sys.error(
@@ -121,7 +120,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     }
     td foreach checkIndices
   }
-  val tableDefs: Seq[MojozTableDef] = {
+  val tableDefs: Seq[TableDef] = {
     val rawTableDefs = sources map { md =>
       try yamlTypeDefToTableDef(loadYamlTableDef(md.body, md.filename, md.line)) catch {
         case e: Exception => throw new RuntimeException(
@@ -156,7 +155,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       override_.totalDigits orElse base.totalDigits,
       override_.fractionDigits orElse base.fractionDigits,
       false)
-    def baseRefChain(db: String, col: MojozColumnDef, visited: List[String]): List[String] = {
+    def baseRefChain(db: String, col: ColumnDef, visited: List[String]): List[String] = {
       def chain(ref: String) =
         if (visited contains ref)
           sys.error("Cyclic column refs: " +
@@ -168,8 +167,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       else if (col.name contains ".") chain(col.name)
       else visited
     }
-    val tableDefs: Seq[MojozTableDef] = rawTableDefs map { r =>
-      val resolvedColsAndRefs: Seq[(MojozColumnDef, Seq[Ref])] = r.cols.map { c =>
+    val tableDefs: Seq[TableDef] = rawTableDefs map { r =>
+      val resolvedColsAndRefs: Seq[(ColumnDef, Seq[Ref])] = r.cols.map { c =>
         val refChain = baseRefChain(r.db, c, Nil)
         if (refChain.size == 0) (c, Nil)
         else {
@@ -325,7 +324,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val idx = y.idx
     val refs = y.refs
     val extras = y.extras
-    val exTypeDef = TableDef(db, name, comments, cols, pk, uk, ck, idx, refs, extras)
+    val exTypeDef = IoTableDef(db, name, comments, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
@@ -346,7 +345,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val comments = yfd.comments
     val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
     val extras = yfd.extras
-    ColumnDef(name, IoColumnType(nullable, rawMojozType),
+    IoColumnDef(name, IoColumnType(nullable, rawMojozType),
       nullable getOrElse true, dbDefault, enum, comments, extras)
   }
 }

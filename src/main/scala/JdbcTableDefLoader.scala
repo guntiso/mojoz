@@ -11,10 +11,9 @@ import java.sql.Types
 import scala.collection.mutable.ListBuffer
 import scala.collection.immutable.Seq
 
-import org.mojoz.metadata.ColumnDef
 import org.mojoz.metadata.JdbcLoadInfo
 import org.mojoz.metadata.TableDef
-import org.mojoz.metadata.TableDef._
+import org.mojoz.metadata.TableMetadata._
 import org.mojoz.metadata.Type
 import org.mojoz.metadata.TypeDef
 import org.mojoz.metadata.TypeMetadata
@@ -63,7 +62,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         List(catalog, schema, tableName)
           .filter(_ != null).filter(_ != "").mkString(".")
       val extras = Map[String, Any]()
-      tableDefs += TableDef(db, tableFullName, comments, mappedCols,
+      tableDefs += JdbcTableDef(db, tableFullName, comments, mappedCols,
           pk, uk, unmappedCk, idx, refs, extras)
     }
 
@@ -190,7 +189,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val dbType =
         JdbcColumnType(dbTypeName, jdbcTypeCode, size, fractionDigits)
       val extras = Map[String, Any]()
-      cols += ColumnDef(name, dbType, nullable, dbDefault, check, comments, extras)
+      cols += JdbcColumnDef(name, dbType, nullable, dbDefault, check, comments, extras)
     }
     rs.close
     cols.toList
@@ -320,7 +319,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def toMojozTableDef(tableDef: JdbcTableDef): MojozTableDef =
+  def toMojozTableDef(tableDef: JdbcTableDef): TableDef =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
 

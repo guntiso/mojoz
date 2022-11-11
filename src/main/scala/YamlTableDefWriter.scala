@@ -87,11 +87,11 @@ class YamlTableDefWriter {
     Option(name).filter(_ != "")
       .map(_ + cols.mkString("(", ", ", ")"))
       .getOrElse(cols.mkString(", "))
-  private def toYaml(ck: TableDef.CheckConstraint): String =
+  private def toYaml(ck: TableMetadata.CheckConstraint): String =
     Option(ck.name).map(n => s"$n = ${ck.expression}") getOrElse ck.expression
-  private def toYaml(index: TableDef.DbIndex): String =
+  private def toYaml(index: TableMetadata.DbIndex): String =
     toYaml(index.name, index.cols)
-  private def toYaml(ref: TableDef.Ref): String =
+  private def toYaml(ref: TableMetadata.Ref): String =
     List(
       Some(toYaml(ref.name, ref.cols)),
       Some("->"),
@@ -142,7 +142,7 @@ class YamlTableDefWriter {
 }
 
 object YamlTableDefWriter {
-  def toYaml(tableDefs: Seq[MojozTableDef],
-    conventions: (MojozTableDef) => IoTableDef = MdConventions.toExternal) =
+  def toYaml(tableDefs: Seq[TableDef],
+    conventions: (TableDef) => IoTableDef = MdConventions.toExternal) =
     (new YamlTableDefWriter).toYaml(tableDefs.map(conventions))
 }

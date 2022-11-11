@@ -4,7 +4,8 @@ import scala.collection.immutable.Seq
 
 import org.mojoz.metadata.ColumnDef
 import org.mojoz.metadata.TableDef
-import org.mojoz.metadata.TableDef.Ref
+import org.mojoz.metadata.TableDef
+import org.mojoz.metadata.TableMetadata.Ref
 import org.mojoz.metadata.Type
 import org.mojoz.metadata.io.MdConventions
 

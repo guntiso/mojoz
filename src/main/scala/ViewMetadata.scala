@@ -3,7 +3,7 @@ package org.mojoz.metadata
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 
-case class ViewDef[+F](
+case class ViewDef_[+F](
   name: String,
   db: String,
   table: String,
@@ -20,7 +20,7 @@ case class ViewDef[+F](
   extras: Map[String, Any]) {
   private val nameToField: Map[String, F] =
     fields.map {
-      case f: FieldDef[_] => Option(f.alias).getOrElse(f.name) -> f.asInstanceOf[F]
+      case f: FieldDef_[_] => Option(f.alias).getOrElse(f.name) -> f.asInstanceOf[F]
       case f                  => (null, f)
     } .filter(_._1 != null)
       .toMap
@@ -30,7 +30,7 @@ case class ViewDef[+F](
   def fieldOpt(fieldName: String): Option[F] = nameToField.get(fieldName)
 }
 
-case class FieldDef[+T](
+case class FieldDef_[+T](
   table: String,
   tableAlias: String,
   name: String,
