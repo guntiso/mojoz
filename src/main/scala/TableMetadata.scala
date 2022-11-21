@@ -8,11 +8,41 @@ import TableMetadata._
 object TableMetadata {
   private def validCols(cols: Seq[String]) =
     cols != null && cols.size > 0 && !cols.exists(col => col == null || col.trim == "")
-  case class DbIndex(
+  private def validPartitionKeySize(cols: Seq[String], part: Int) =
+    part == 0 || part <= cols.size
+  sealed trait DbIndex {
+    def name: String
+    def cols: Seq[String]
+    def mapName(f: String => String): this.type
+    def mapCols(f: String => String): this.type
+  }
+  object DbIndex {
+    def apply(name: String, cols: Seq[String]) = Index(name, cols)
+  }
+  case class Index(
     name: String,
-    cols: Seq[String]) {
+    cols: Seq[String],
+  ) extends DbIndex {
     require(validCols(cols),
       "Invalid columns for index: " + cols)
+    override def mapName(f: String => String) =
+      copy(name = f(name)).asInstanceOf[this.type]
+    override def mapCols(f: String => String) =
+      copy(cols = cols.map(f)).asInstanceOf[this.type]
+  }
+  case class ComplexKey(
+    name: String,
+    cols: Seq[String],
+    part: Int = 0, // for cassandra - partition key column count
+  ) extends DbIndex {
+    require(validCols(cols),
+      "Invalid columns for index: " + cols)
+    require(validPartitionKeySize(cols, part),
+      s"Invalid partition key size $part for index columns: $cols")
+    override def mapName(f: String => String) =
+      copy(name = f(name)).asInstanceOf[this.type]
+    override def mapCols(f: String => String) =
+      copy(cols = cols.map(f)).asInstanceOf[this.type]
   }
   case class Ref(
     name: String,
@@ -63,16 +93,16 @@ case class TableDef_[+C <: ColumnDef_[_]](
     refs = refs.map(r => r.copy(refTable = transform(r.refTable)))).asInstanceOf[this.type]
   def mapColumnNames(transform: (String) => String): this.type = copy(
     cols = cols.map(c => c.withName(transform(c.name))),
-    pk = pk.map(x => x.copy(cols = x.cols.map(transform))),
-    uk = uk.map(x => x.copy(cols = x.cols.map(transform))),
-    idx = idx.map(x => x.copy(cols = x.cols.map(transform))),
+    pk = pk.map(_ mapCols transform),
+    uk = uk.map(_ mapCols transform),
+    idx = idx.map(_ mapCols transform),
     refs = refs.map(r => r.copy(
       cols = r.cols.map(transform),
       refCols = r.refCols.map(transform)))).asInstanceOf[this.type]
   def mapConstraintNames(transform: (String) => String): this.type = {
     def safeTransform(s: String) = if (s == null) s else transform(s)
     def idxTransform(idx: TableMetadata.DbIndex) =
-      idx.copy(name = safeTransform(idx.name))
+      if (idx.name == null) idx else idx.mapName(transform)
     copy(
       pk = pk.map(idxTransform),
       uk = uk.map(idxTransform),

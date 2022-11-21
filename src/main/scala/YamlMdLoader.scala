@@ -50,7 +50,8 @@ private[in] object YamlTableDefLoader {
   val col = s"$ident(\\s+[aA][sS][cC]|\\s+[dD][eE][sS][cC])?"
   val cols = s"$col($s\\,$s$col)*"
   val colsIdxDef = s"$s($s$cols)$s"
-  val namedIdxDef = s"$s($idxName)?$s\\($s($cols)$s\\)$s"
+  val namedIdxDef = s"$s($idxName)$s\\($s($cols)$s\\)$s"
+  val complexKeyDef = s"$s\\($s($cols)\\)(($s\\,$s$col)*)$s"
   val onDelete = "on delete (restrict|set null|cascade|no action)".replace(" ", "\\s+")
   val onUpdate = "on update (restrict|set null|cascade|no action)".replace(" ", "\\s+")
 
@@ -58,6 +59,7 @@ private[in] object YamlTableDefLoader {
 
   val ColsIdxDef = regex(colsIdxDef)
   val NamedIdxDef = regex(namedIdxDef)
+  val ComplexKeyDef = regex(complexKeyDef)
   val QualifiedIdentDef = regex(qualifiedIdent)
   val FkDef = regex( // FIXME no asc, desc for ref cols!
     s"($colsIdxDef|$namedIdxDef)->$namedIdxDef(?i)" +
@@ -213,10 +215,19 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val ThisFail = "Failed to load index definition"
     def dbIndex(name: String, cols: String) = DbIndex(name,
       Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil)
+    def complexKey(partitionCols: String, allCols: String) = {
+      ComplexKey(
+        name = null,
+        cols = Option(allCols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil,
+        part = Option(partitionCols).map(_.split("\\,").toList).getOrElse(Nil).size,
+      )
+    }
     def extractIndex(src: Any): DbIndex = src match {
       case idx: java.lang.String => idx match {
         case NamedIdxDef(name, _, cols, _, _, _) => dbIndex(name, cols)
         case ColsIdxDef(cols, _, _, _) => dbIndex(null, cols)
+        case ComplexKeyDef(partitionCols, _, _, _, clusteringCols, _, _) =>
+          complexKey(partitionCols, s"$partitionCols$clusteringCols")
         case _ => sys.error(ThisFail +
           " - unexpected format: " + idx.trim)
       }

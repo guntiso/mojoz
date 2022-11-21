@@ -30,7 +30,13 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
   def fromExternalPk(tableDef: TableDef_[ColumnDef_[_]]) = {
     import scala.language.existentials
     val cols = tableDef.cols.map(_.name)
-    if (tableDef.pk.isDefined) tableDef.pk.filter(_ != null)
+    if (tableDef.pk.isDefined)
+      tableDef.pk
+        .filter(_ != null)
+        .map {
+          case pk: ComplexKey if pk.part == 1 => DbIndex(pk.name, pk.cols)
+          case idx => idx
+        }
     else if (cols.filter(isIdName).size == 1)
       Some(DbIndex(null, cols.filter(isIdName)))
     else if (cols.filter(isCodeName).size == 1)
@@ -85,17 +91,17 @@ class MdConventions(naming: SqlGenerator.ConstraintNamingRules = new SqlGenerato
 
   private def toExternalIdx(defaultName: String)(idx: DbIndex) = {
     if (!idx.cols.exists(_.toLowerCase endsWith " asc")) idx
-    else idx.copy(cols = idx.cols.map(c =>
-      if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c))
+    else idx.mapCols(c =>
+      if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   } match {
-    case idx if idx.name == defaultName => idx.copy(name = null)
+    case idx if idx.name == defaultName => idx.mapName(_ => null)
     case idx => idx
   }
   def toExternalPk(tableDef: TableDef) = {
     val cols = tableDef.cols.map(_.name)
     val defaultPkName = naming.pkName(tableDef.name)
     def pkNormalize(pk: Option[DbIndex]) = pk.map { pk =>
-      if (pk.name == defaultPkName) pk.copy(name = null) else pk
+      if (pk.name == defaultPkName) pk.mapName(_ => null) else pk
     }
     val defaultPk = fromExternalPk(tableDef.copy(pk = None))
     (if (pkNormalize(tableDef.pk) != pkNormalize(defaultPk))

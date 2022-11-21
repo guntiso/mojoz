@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.Seq
 
 import org.mojoz.metadata._
+import org.mojoz.metadata.TableMetadata.{ComplexKey, Index}
 import org.mojoz.metadata.io._
 
 class YamlTableDefWriter {
@@ -83,14 +84,21 @@ class YamlTableDefWriter {
       wrapped(escapeYamlValue(comments), defString + " :", indent)
     }
   }
-  private def toYaml(name: String, cols: Seq[String]): String =
+  private def toYaml(cols: Seq[String], part: Int): String =
+    if  (part > 0 && part <= cols.length)
+         cols.take(part).mkString("(", ", ", ")") +
+           (if (part < cols.length) cols.drop(part).mkString(", ", ", ", "") else "")
+    else cols.mkString(", ")
+  private def toYaml(name: String, cols: Seq[String], part: Int = 0): String =
     Option(name).filter(_ != "")
-      .map(_ + cols.mkString("(", ", ", ")"))
-      .getOrElse(cols.mkString(", "))
+      .map(_ => s"$name(${toYaml(cols, part)})")
+      .getOrElse(toYaml(cols, part))
   private def toYaml(ck: TableMetadata.CheckConstraint): String =
     Option(ck.name).map(n => s"$n = ${ck.expression}") getOrElse ck.expression
-  private def toYaml(index: TableMetadata.DbIndex): String =
-    toYaml(index.name, index.cols)
+  private def toYaml(index: TableMetadata.DbIndex): String = index match {
+    case index: Index   => toYaml(index.name, index.cols)
+    case pk: ComplexKey => toYaml(pk.name, pk.cols, pk.part)
+  }
   private def toYaml(ref: TableMetadata.Ref): String =
     List(
       Some(toYaml(ref.name, ref.cols)),

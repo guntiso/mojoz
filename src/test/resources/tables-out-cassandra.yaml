@@ -1,0 +1,56 @@
+table:    cassandra_pk_test_table1
+columns:
+- id
+- name
+
+table:    cassandra_pk_test_table2
+columns:
+- id
+- name
+
+table:    cassandra_pk_test_table3
+columns:
+- id
+- name
+pk: id, name
+
+table:    cassandra_pk_test_table4
+columns:
+- id
+- name
+pk: id, name
+
+table:    cassandra_pk_test_table5
+columns:
+- id
+- name
+- surname
+pk: (id, name)
+
+table:    cassandra_pk_test_table6
+columns:
+- id
+- name
+- surname
+pk: id, name, surname
+
+table:    cassandra_pk_test_table7
+columns:
+- id
+- name
+- surname
+pk: id, name, surname
+
+table:    cassandra_pk_test_table8
+columns:
+- id
+- name
+- surname
+pk: (id, name), surname
+
+table:    cassandra_pk_test_table9
+columns:
+- id
+- name
+- surname
+pk: (id, name, surname)

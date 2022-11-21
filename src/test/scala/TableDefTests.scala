@@ -21,6 +21,13 @@ class TableDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "tables-out-produced.yaml", produced)
     expected should be(produced)
   }
+  "generated cassandra yaml file" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-cassandra.yaml")
+    val produced = YamlTableDefWriter.toYaml(cassandraTableDefs)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-cassandra-produced.yaml", produced)
+    expected should be(produced)
+  }
   "generated oracle sql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-oracle.sql")
     val produced = SqlGenerator.oracle().schema(tableDefs)
@@ -136,7 +143,7 @@ class TableDefTests extends FlatSpec with Matchers {
             val newName =
               if (idx < "SYS_IDX_".length) null
               else uk.name.substring("SYS_IDX_".length, idx)
-            uk.copy(name = newName)
+            uk.mapName(_ => newName)
           }
         },
         idx = t.idx.filter(i => idxNames.contains(i.name))))
@@ -169,6 +176,9 @@ object TableDefTests {
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in.yaml")
   val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
+  val cassandraMdDefs = YamlMd.fromFiles(
+    path = path, filter = _.getName == "tables-in-cassandra.yaml")
+  val cassandraTableDefs = new YamlTableDefLoader(cassandraMdDefs).tableDefs
   def skipSome(s: String) = {
     // h2 and hsqldb ignores 'desc' on index cols, do not compare these lines
     s.split("\\r?\\n")
