@@ -6,9 +6,9 @@ import org.mojoz.metadata._
 import org.mojoz.metadata.io._
 import org.mojoz.metadata.TableMetadata._
 import scala.collection.immutable.{ Map, Seq }
-import SqlGenerator._
+import DdlGenerator._
 
-object SqlGenerator {
+object DdlGenerator {
 
 trait ConstraintNamingRules {
   def pkName(tableName: String): String
@@ -94,24 +94,24 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
 }
 
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new StandardSqlGenerator(constraintNamingRules, typeDefs)
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new StandardSqlDdlGenerator(constraintNamingRules, typeDefs)
 def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new H2SqlGenerator(constraintNamingRules, typeDefs)
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new H2DdlGenerator(constraintNamingRules, typeDefs)
 def hsqldb(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new HsqldbSqlGenerator(constraintNamingRules, typeDefs)
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new HsqldbDdlGenerator(constraintNamingRules, typeDefs)
 def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new OracleSqlGenerator(constraintNamingRules, typeDefs)
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new OracleDdlGenerator(constraintNamingRules, typeDefs)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
-    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): SqlGenerator =
-  new PostgreSqlGenerator(constraintNamingRules, typeDefs)
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new PostgreDdlGenerator(constraintNamingRules, typeDefs)
 
 }
 
-abstract class SqlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =>
+abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRules =>
   private[out] def idxCols(cols: Seq[String]) = cols.map(c =>
     if (c.toLowerCase endsWith " asc") c.substring(0, c.length - 4) else c)
   /** Returns full sql schema string (tables, comments, keys, indices, refs)
@@ -220,29 +220,29 @@ abstract class SqlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
       max.map(_ >= value.get).getOrElse(true)
 }
 
-private[out] class HsqldbSqlGenerator(
+private[out] class HsqldbDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
+  extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "hsqldb sql"
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
     if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
 }
 
-private[out] class H2SqlGenerator(
+private[out] class H2DdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends HsqldbSqlGenerator(constraintNamingRules, typeDefs) {
+  extends HsqldbDdlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "h2 sql"
   override def explicitNotNullForColumn(t: TableDef_[_], c: ColumnDef) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
 }
 
-private[out] class OracleSqlGenerator(
+private[out] class OracleDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
+  extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "oracle sql"
   override def dbDefault(c: ColumnDef) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
@@ -264,9 +264,9 @@ private[out] class OracleSqlGenerator(
       if (r.onUpdateAction != null) r.copy(onUpdateAction = null) else r)
 }
 
-private[out] class StandardSqlGenerator(
+private[out] class StandardSqlDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
-    typeDefs: Seq[TypeDef]) extends SqlGenerator(typeDefs) with ConstraintNamingRules {
+    typeDefs: Seq[TypeDef]) extends DdlGenerator(typeDefs) with ConstraintNamingRules {
   override def pkName(tableName: String) =
     constraintNamingRules.pkName(tableName)
   override def ukName(tableName: String, uk: DbIndex) =
@@ -289,9 +289,9 @@ private[out] class StandardSqlGenerator(
   }
 }
 
-private[out] class PostgreSqlGenerator(
+private[out] class PostgreDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends StandardSqlGenerator(constraintNamingRules, typeDefs) {
+  extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "postgresql"
 }

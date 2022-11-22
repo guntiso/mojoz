@@ -9,7 +9,7 @@ import org.scalatest.matchers.should.Matchers
 import org.mojoz.metadata.in.JdbcTableDefLoader
 import org.mojoz.metadata.in.YamlMd
 import org.mojoz.metadata.in.YamlTableDefLoader
-import org.mojoz.metadata.out.SqlGenerator
+import org.mojoz.metadata.out.DdlGenerator
 import org.mojoz.metadata.out.YamlTableDefWriter
 
 class TableDefTests extends FlatSpec with Matchers {
@@ -30,28 +30,28 @@ class TableDefTests extends FlatSpec with Matchers {
   }
   "generated oracle sql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-oracle.sql")
-    val produced = SqlGenerator.oracle().schema(tableDefs)
+    val produced = DdlGenerator.oracle().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-oracle-produced.sql", produced)
     expected should be(produced)
   }
   "generated postgresql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-postgresql.sql")
-    val produced = SqlGenerator.postgresql().schema(tableDefs)
+    val produced = DdlGenerator.postgresql().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
     expected should be(produced)
   }
   "generated h2 file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-h2.sql")
-    val produced = SqlGenerator.h2().schema(tableDefs)
+    val produced = DdlGenerator.h2().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-produced.sql", produced)
     expected should be(produced)
   }
   "generated hsqldb file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-hsqldb.sql")
-    val produced = SqlGenerator.hsqldb().schema(tableDefs)
+    val produced = DdlGenerator.hsqldb().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-produced.sql", produced)
     expected should be(produced)
@@ -67,7 +67,7 @@ class TableDefTests extends FlatSpec with Matchers {
       implicit val ci = connectionInfo
       val statements =
        "create schema test_schema_1" ::
-        SqlGenerator.h2().schema(tableDefs.filter(_.db == db))
+        DdlGenerator.h2().schema(tableDefs.filter(_.db == db))
           .split(";").toList.map(_.trim).filter(_ != "")
       executeStatements(statements: _*)
       val conn = getConn
@@ -121,7 +121,7 @@ class TableDefTests extends FlatSpec with Matchers {
       implicit val ci = connectionInfo
       val statements =
        "create schema test_schema_1" ::
-       SqlGenerator.hsqldb().schema(tableDefs.filter(_.db == db))
+       DdlGenerator.hsqldb().schema(tableDefs.filter(_.db == db))
         .split(";").toList.map(_.trim).filter(_ != "")
       executeStatements(statements: _*)
       val conn = getConn
