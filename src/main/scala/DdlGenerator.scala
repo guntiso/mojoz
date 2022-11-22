@@ -187,11 +187,11 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
       Option(r.onDeleteAction).map(" on delete " + _).getOrElse("") +
       Option(r.onUpdateAction).map(" on update " + _).getOrElse("") +
       ";"
-  val sqlWriteInfoKey = "sql"
-  lazy val typeNameToSqlWriteInfoSeq: Map[String, Seq[SqlWriteInfo]] =
+  val ddlWriteInfoKey = "sql"
+  lazy val typeNameToSqlWriteInfoSeq: Map[String, Seq[DdlWriteInfo]] =
     typeDefs.map(td =>
       td.name ->
-        td.sqlWrite.get(sqlWriteInfoKey).orElse(td.sqlWrite.get("sql")).getOrElse(Nil)
+        td.ddlWrite.get(ddlWriteInfoKey).orElse(td.ddlWrite.get("sql")).getOrElse(Nil)
     ).toMap
   def dbType(c: ColumnDef): String = {
     val t = c.type_
@@ -206,7 +206,7 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
           info.targetNamePattern.replace("size", "" + size).replace("frac", "" + frac)
       }
     }.getOrElse {
-      sys.error(s"Missing sql info (key '$sqlWriteInfoKey' or 'sql') for type $t in ${c.name}")
+      sys.error(s"Missing sql info (key '$ddlWriteInfoKey' or 'sql') for type $t in ${c.name}")
     }
   }
   def colCheck(c: ColumnDef): String
@@ -224,7 +224,7 @@ private[out] class HsqldbDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
-  override val sqlWriteInfoKey = "hsqldb sql"
+  override val ddlWriteInfoKey = "hsqldb sql"
   // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
   override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
     if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
@@ -234,7 +234,7 @@ private[out] class H2DdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
   extends HsqldbDdlGenerator(constraintNamingRules, typeDefs) {
-  override val sqlWriteInfoKey = "h2 sql"
+  override val ddlWriteInfoKey = "h2 sql"
   override def explicitNotNullForColumn(t: TableDef_[_], c: ColumnDef) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
 }
@@ -243,7 +243,7 @@ private[out] class OracleDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
-  override val sqlWriteInfoKey = "oracle sql"
+  override val ddlWriteInfoKey = "oracle sql"
   override def dbDefault(c: ColumnDef) = (c.type_.name, c.dbDefault) match {
     case (_, null) => null
     case ("boolean", f) if "false" equalsIgnoreCase f => "'N'"
@@ -293,5 +293,5 @@ private[out] class PostgreDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
-  override val sqlWriteInfoKey = "postgresql"
+  override val ddlWriteInfoKey = "postgresql"
 }

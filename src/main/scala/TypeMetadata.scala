@@ -40,7 +40,7 @@ case class YamlLoadInfo(
   targetFractionDigits: Option[Integer]  // xxx Some(null) means copy from source
 )
 
-case class SqlWriteInfo(
+case class DdlWriteInfo(
   minSize:              Option[Int],
   maxSize:              Option[Int],
   minFractionDigits:    Option[Int],
@@ -54,7 +54,7 @@ object TypeDef {
     val targetNames: Map[String, String] // xsd, scala, java, ...
     val jdbcLoad: Map[String, Seq[JdbcLoadInfo]]
     val yamlLoad: Seq[YamlLoadInfo]
-    val sqlWrite: Map[String, Seq[SqlWriteInfo]]
+    val ddlWrite: Map[String, Seq[DdlWriteInfo]]
     val defaults: ColumnDef
     val namingConventions: Seq[String]
   }
@@ -66,7 +66,7 @@ case class TypeDef(
   targetNames: Map[String, String],
   jdbcLoad: Map[String, Seq[JdbcLoadInfo]],
   yamlLoad: Seq[YamlLoadInfo],
-  sqlWrite: Map[String, Seq[SqlWriteInfo]],
+  ddlWrite: Map[String, Seq[DdlWriteInfo]],
   defaults: ColumnDef,
   namingConventions: Seq[String],
   extras: Map[String, Any]
@@ -77,7 +77,7 @@ case class TypeDef(
     other.targetNames ++ targetNames,
     jdbcLoad ++ other.jdbcLoad,
     yamlLoad ++ other.yamlLoad,
-    other.sqlWrite ++ sqlWrite,
+    other.ddlWrite ++ ddlWrite,
     Option(defaults).getOrElse(other.defaults),
     Option(namingConventions).filter(_.size > 0).getOrElse(other.namingConventions), // ?
     other.extras ++ extras

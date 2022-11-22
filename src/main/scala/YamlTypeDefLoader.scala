@@ -154,7 +154,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minSize, maxSize) = toMinMax(sizeInterval)
     val fracInterval = if (typePartParts.size > 2) typePartParts(2) else ""
     val (minFrac, maxFrac) = toMinMax(fracInterval)
-    SqlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
+    DdlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
   private def loadYamlTypeDef(typeDefString: String, labelOrFilename: String = null, lineNumber: Int = 0) = {
     val loaderSettings = LoadSettings.builder()
@@ -196,22 +196,22 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       .getOrElse(Nil)
       .map(toString(_, "Failed to load yaml load definition"))
       .map(toYamlLoadInfo)
-    val sqlWrite: Map[String, Seq[SqlWriteInfo]] = TreeMap()(math.Ordering.String) ++
+    val ddlWrite: Map[String, Seq[DdlWriteInfo]] = TreeMap()(math.Ordering.String) ++
       tdMap.filter(_._1 endsWith "sql").map {
         case (k, v) =>
-        val sqlWriteInfoSeq =
+        val ddlWriteInfoSeq =
           (v match {
             case null => Nil
             case a: java.util.ArrayList[_] => a.asScala.toList
             case x => sys.error("Unexpected class: " + x.getClass)
           })
-            .map(toString(_, s"Failed to load sql write definition for $k"))
+            .map(toString(_, s"Failed to load ddl write definition for $k"))
             .map(toSqlWriteInfo)
-        (k, sqlWriteInfoSeq)
+        (k, ddlWriteInfoSeq)
       }
     val defaults = null                         // TODO
     val namingConventions: Seq[String] = Nil    // TODO
     val extras: Map[String, Any] = Map.empty    // TODO val extras = tdMap -- TypeDefKeyStrings
-    TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, sqlWrite, defaults, namingConventions, extras)
+    TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, ddlWrite, defaults, namingConventions, extras)
   }
 }
