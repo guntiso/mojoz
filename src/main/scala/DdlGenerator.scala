@@ -139,43 +139,43 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
     // pk separated from table definition to fit large data imports etc.
     (t.cols.map(column(t)) ++ tableChecks(t)) // ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
-  def primaryKey(t: TableDef_[_]) = t.pk map { pk =>
+  def primaryKey(t: TableDef) = t.pk map { pk =>
     "alter table " + t.name + " add " +
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + idxCols(pk.cols).mkString(", ") + ");"
   }
-  def uniqueIndex(t: TableDef_[_])(uk: DbIndex) =
+  def uniqueIndex(t: TableDef)(uk: DbIndex) =
     s"create unique index ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
     } on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
-  def uniqueKey(t: TableDef_[_])(uk: DbIndex) =
+  def uniqueKey(t: TableDef)(uk: DbIndex) =
     s"alter table ${t.name} add constraint ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
     } unique(${idxCols(uk.cols).mkString(", ")});"
-  def uniqueIndexes(t: TableDef_[_]) = t.uk map { uk =>
+  def uniqueIndexes(t: TableDef) = t.uk map { uk =>
     if (uk.cols.exists(_.toLowerCase endsWith " desc")) uniqueIndex(t)(uk)
     // on some dbs, unique constraint (not index) is required to add fk
     else uniqueKey(t)(uk)
   }
-  def indexes(t: TableDef_[_]) = t.idx map { idx =>
+  def indexes(t: TableDef) = t.idx map { idx =>
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
   }
   def dbDefault(c: ColumnDef) = c.dbDefault
-  private def column(t: TableDef_[_])(c: ColumnDef) = {
+  private def column(t: TableDef)(c: ColumnDef) = {
     c.name + " " + dbType(c) +
       (dbDefault(c) match { case null => "" case d => s" default $d" }) +
       (if (explicitNotNullForColumn(t, c)) " not null" else "") +
       colCheck(c)
   }
-  private[out] def explicitNotNullForColumn(t: TableDef_[_], c: ColumnDef) =
+  private[out] def explicitNotNullForColumn(t: TableDef, c: ColumnDef) =
     !c.nullable && !t.pk.exists(_.cols.contains(c.name))
-  def tableComment(t: TableDef_[_]) = Option(t.comments).map(c =>
+  def tableComment(t: TableDef) = Option(t.comments).map(c =>
     s"comment on table ${t.name} is '${c.replace("'", "''")}';")
-  def columnComments(t: TableDef_[ColumnDef_[_]]) =
+  def columnComments(t: TableDef) =
     t.cols.filter(_.comments != null).map(c =>
       s"comment on column ${t.name}.${c.name} is '${c.comments.replace("'", "''")}';")
-  def foreignKeys(tables: Seq[TableDef_[_]]) = tables.map { t =>
+  def foreignKeys(tables: Seq[TableDef]) = tables.map { t =>
     t.refs map foreignKey(t.name)
   }.flatten.mkString("\n")
   def foreignKey(tableName: String)(r: TableMetadata.Ref) =
@@ -235,7 +235,7 @@ private[out] class H2DdlGenerator(
     typeDefs: Seq[TypeDef])
   extends HsqldbDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "h2 sql"
-  override def explicitNotNullForColumn(t: TableDef_[_], c: ColumnDef) =
+  override def explicitNotNullForColumn(t: TableDef, c: ColumnDef) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
 }
 
