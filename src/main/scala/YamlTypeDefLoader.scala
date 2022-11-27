@@ -197,7 +197,10 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       .map(toString(_, "Failed to load yaml load definition"))
       .map(toYamlLoadInfo)
     val ddlWrite: Map[String, Seq[DdlWriteInfo]] = TreeMap()(math.Ordering.String) ++
-      tdMap.filter(_._1 endsWith "sql").map {
+      tdMap.filter {
+        case (k, v) =>
+          k.endsWith("sql") || k.endsWith("cql")
+      }.map {
         case (k, v) =>
         val ddlWriteInfoSeq =
           (v match {

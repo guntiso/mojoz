@@ -5,8 +5,11 @@ import scala.math.max
 import org.mojoz.metadata._
 import org.mojoz.metadata.io._
 import org.mojoz.metadata.TableMetadata._
-import scala.collection.immutable.{ Map, Seq }
+
+import scala.collection.immutable.{Map, Seq}
 import DdlGenerator._
+
+import java.text.Normalizer
 
 object DdlGenerator {
 
@@ -93,9 +96,16 @@ class OracleConstraintNamingRules extends SimpleConstraintNamingRules {
   override val maxNameLen = 30
 }
 
+class CassandraConstraintNamingRules extends SimpleConstraintNamingRules {
+  override val maxNameLen = 48
+}
+
 def apply(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
   new StandardSqlDdlGenerator(constraintNamingRules, typeDefs)
+def cassandra(constraintNamingRules: ConstraintNamingRules = new CassandraConstraintNamingRules,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
+  new CassandraDdlGenerator(constraintNamingRules, typeDefs)
 def h2(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
   new H2DdlGenerator(constraintNamingRules, typeDefs)
@@ -157,10 +167,10 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
     // on some dbs, unique constraint (not index) is required to add fk
     else uniqueKey(t)(uk)
   }
-  def indexes(t: TableDef) = t.idx map { idx =>
+  def index(t: TableDef)(idx: DbIndex) =
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
       s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
-  }
+  def indexes(t: TableDef) = t.idx map index(t)
   def dbDefault(c: ColumnDef) = c.dbDefault
   private def column(t: TableDef)(c: ColumnDef) = {
     c.name + " " + dbType(c) +
@@ -294,4 +304,103 @@ private[out] class PostgreDdlGenerator(
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "postgresql"
+}
+
+private[out] class CassandraDdlGenerator(
+  constraintNamingRules: ConstraintNamingRules,
+  typeDefs: Seq[TypeDef]
+) extends DdlGenerator(typeDefs) with ConstraintNamingRules {
+  override val ddlWriteInfoKey = "cql"
+  override def pkName (tableName: String)               = constraintNamingRules.pkName (tableName)
+  override def ukName (tableName: String, uk:  DbIndex) = constraintNamingRules.ukName (tableName, uk)
+  override def idxName(tableName: String, idx: DbIndex) = constraintNamingRules.idxName(tableName, idx)
+  override def fkName (tableName: String, ref: Ref)     = constraintNamingRules.fkName (tableName, ref)
+  override def colCheck(c: ColumnDef)                   = ""
+  override def columnComments(t: TableDef) = super.columnComments(t).map(c => s"-- $c")
+  override def tableAndComments(t: TableDef): String =
+    List[Iterable[String]](
+      Some(table(t)), columnComments(t))
+      .flatten.mkString("\n")
+  override def keysAndIndexes(t: TableDef): String =
+    List[Iterable[String]](
+      uniqueIndexes(t), indexes(t))
+      .flatten.mkString("\n")
+  private val maxNameLen = constraintNamingRules match {
+    case sn: SimpleConstraintNamingRules => sn.maxNameLen
+    case _ => (new CassandraConstraintNamingRules()).maxNameLen
+  }
+  def dbName(name: String) = {
+    Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "") match {
+      case s if s.length > maxNameLen => s.substring(0, maxNameLen)
+      case s => s
+    }
+  }
+  def clusteringCols(t: TableDef) = t.pk.map {
+    case pk: ComplexKey =>
+      import pk._
+      if (part == 0) cols.tail
+      else if (part > 0 && part <= cols.length) cols.drop(part)
+      else Nil
+    case pk => pk.cols.tail
+  }.getOrElse(Nil)
+  def tableOptions(t: TableDef) =
+    Seq(
+      Option(clusteringCols(t))
+        .filter(_.exists(_ endsWith " desc"))
+        .map { cCols =>
+          val cco = cCols.map {
+            case c if c.toLowerCase endsWith " asc"  => c
+            case c if c.toLowerCase endsWith " desc" => c
+            case c => s"$c asc"
+          }
+          s"clustering order by (${cco.mkString(", ")})"
+        },
+      tableComment(t)
+    ).filter(_.nonEmpty).map(_.get)
+  override def table(t: TableDef) =
+    (t.cols.map(column(t)) ++ primaryKey(t))
+      .mkString("create table " + dbName(t.name) + "(\n  ", ",\n  ", "\n)") +
+    Option(tableOptions(t)).filter(_.nonEmpty).map(_.mkString(" with ", "\n   and ", "")).getOrElse("") +
+    ";"
+  private[out] def pkCols(cols: Seq[String]) = cols.map {
+    case c if c.toLowerCase endsWith " asc"  => c.substring(0, c.length - 4)
+    case c if c.toLowerCase endsWith " desc" => c.substring(0, c.length - 5)
+    case c => c
+  }
+  private def toDdl(cols: Seq[String], part: Int): String =
+    if  (part > 0 && part <= cols.length)
+         cols.take(part).mkString("(", ", ", ")") +
+           (if (part < cols.length) cols.drop(part).mkString(", ", ", ", "") else "")
+    else cols.mkString(", ")
+  def pk(t: TableDef): Option[DbIndex] =
+    t.pk.orElse(t.uk.headOption).orElse(Some(Index(null, Seq(t.cols.head.name))))
+  def partitionCols(cols: Seq[String], part: Int): Seq[String] =
+    if (part > 0 && part <= cols.length) cols.take(part) else cols.take(1)
+  def partitionCols(t: TableDef): Seq[String] = pk(t).map {
+    case pk: ComplexKey => partitionCols(pk.cols, pk.part)
+    case pk: Index      => partitionCols(pk.cols, 0)
+  }.get
+  override def primaryKey(t: TableDef) =
+    pk(t) map {
+      case pk: ComplexKey => s"primary key (${toDdl(pkCols(pk.cols).map(dbName), pk.part)})"
+      case pk: Index      => s"primary key (${pkCols(pk.cols).map(dbName).mkString(", ")})"
+    }
+  override def uniqueIndex(t: TableDef)(uk: DbIndex) =
+    s"${if (uk.cols.lengthCompare(1) > 0) "-- " else ""}create index ${
+      dbName(Option(uk.name).getOrElse(ukName(t.name, uk)))
+    } on ${dbName(t.name)}(${idxCols(uk.cols).map(dbName).mkString(", ")});"
+  override def uniqueIndexes(t: TableDef) = t.uk map uniqueIndex(t)
+  def isValidIndex(t: TableDef)(idx: DbIndex) = {
+    (idx.cols.lengthCompare(1) == 0) &&
+      (pkCols(idx.cols) != pkCols(partitionCols(t))) // TODO and?
+  }
+  override def index(t: TableDef)(idx: DbIndex) = {
+    s"${if (isValidIndex(t)(idx)) "" else "-- "}${super.index(t)(idx)}"
+  }
+  private def column(t: TableDef)(c: ColumnDef) = dbName(c.name) + " " + dbType(c)
+  override def tableComment(t: TableDef) = Option(t.comments).map(c =>
+    s"comment = '${c.replace("'", "''")}'")
+  override def foreignKey(tableName: String)(r: TableMetadata.Ref) =
+    s"-- ${super.foreignKey(tableName)(r)}"
+  override def tableChecks(t: TableDef): Seq[String] = Nil
 }

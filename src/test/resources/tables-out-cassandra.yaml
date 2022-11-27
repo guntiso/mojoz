@@ -28,25 +28,26 @@ columns:
 pk: (id, name)
 
 table:    cassandra_pk_test_table6
+comments: test 6 - with clustering order-by and comments
 columns:
 - id
 - name
 - surname
-pk: id, name, surname
+pk: id, name desc, surname desc
 
 table:    cassandra_pk_test_table7
 columns:
 - id
 - name
 - surname
-pk: id, name, surname
+pk: id, name desc, surname
 
 table:    cassandra_pk_test_table8
 columns:
 - id
 - name
 - surname
-pk: (id, name), surname
+pk: (id, name desc), surname desc
 
 table:    cassandra_pk_test_table9
 columns:

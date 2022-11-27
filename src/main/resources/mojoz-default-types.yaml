@@ -43,6 +43,10 @@ oracle sql:
 - string 0..4000    -> varchar2(size char)
 - string 4001..*    -> clob
 - string            -> clob
+cql:
+- string            -> text
+- string *          -> text
+
 
 type:       date
 xsd name:   date
@@ -54,6 +58,9 @@ yaml:
 - date
 sql:
 - date
+cql:
+- date
+
 
 type:       time
 xsd name:   time
@@ -65,6 +72,9 @@ yaml:
 - time
 sql:
 - time
+cql:
+- time
+
 
 type:       dateTime
 xsd name:   dateTime
@@ -75,6 +85,8 @@ jdbc:
 yaml:
 - dateTime
 sql:
+- timestamp
+cql:
 - timestamp
 
 
@@ -90,6 +102,9 @@ yaml:
 - short *           -> size, none
 sql:
 - smallint
+cql:
+- tinyint
+
 
 type:       int
 xsd name:   int
@@ -108,6 +123,10 @@ sql:
 oracle sql:
 - int               -> numeric(9)
 - int *             -> numeric(size)
+cql:
+- int               -> int
+- int *             -> int
+
 
 type:       long
 xsd name:   long
@@ -126,6 +145,10 @@ sql:
 oracle sql:
 - long              -> numeric(18)
 - long *            -> numeric(size)
+cql:
+- long              -> bigint
+- long *            -> bigint
+
 
 type:       integer
 xsd name:   integer
@@ -140,6 +163,9 @@ yaml:
 sql:
 - integer           -> numeric
 - integer *         -> numeric(size)
+cql:
+- integer           -> varint
+- integer *         -> varint
 
 
 type:       float
@@ -149,6 +175,8 @@ scala name: java.lang.Float
 jdbc:
 - REAL
 yaml:
+- float
+cql:
 - float
 
 type:       double
@@ -162,6 +190,9 @@ yaml:
 - double
 sql:
 - double precision
+cql:
+- double
+
 
 type:       decimal
 xsd name:   decimal
@@ -179,6 +210,10 @@ sql:
 - decimal           -> numeric
 - decimal *         -> numeric(size)
 - decimal * *       -> numeric(size, frac)
+cql:
+- decimal           -> decimal
+- decimal *         -> decimal
+- decimal * *       -> decimal
 
 
 type:       boolean
@@ -196,6 +231,8 @@ postgresql:
 - bool
 oracle sql:
 - char
+cql:
+- boolean
 
 
 type:       bytes
@@ -217,6 +254,8 @@ sql:
 - blob
 postgresql:
 - bytea
+cql:
+- blob
 
 
 type:       anyType
