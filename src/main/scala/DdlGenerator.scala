@@ -117,7 +117,7 @@ def oracle(constraintNamingRules: ConstraintNamingRules = new OracleConstraintNa
   new OracleDdlGenerator(constraintNamingRules, typeDefs)
 def postgresql(constraintNamingRules: ConstraintNamingRules = new SimpleConstraintNamingRules,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs): DdlGenerator =
-  new PostgreDdlGenerator(constraintNamingRules, typeDefs)
+  new PostgreSqlDdlGenerator(constraintNamingRules, typeDefs)
 
 }
 
@@ -299,7 +299,7 @@ private[out] class StandardSqlDdlGenerator(
   }
 }
 
-private[out] class PostgreDdlGenerator(
+private[out] class PostgreSqlDdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
