@@ -158,7 +158,7 @@ create table test_table8(
 );
 
 create table test_schema_1.test_table1(
-  id bigint,
+  id bigint not null,
   name varchar(50)
 );
 
@@ -210,7 +210,7 @@ alter table test_table6 add constraint pk_test_table6 primary key (id);
 
 alter table test_table7 add constraint pk_test_table7 primary key (key1, key2);
 
-alter table test_schema_1.test_table1 add constraint pk_test_table1 primary key (id);
+alter table test_schema_1.test_table1 add constraint uk_test_table1_id unique(id);
 
 alter table test_schema_1.ts_table1 add constraint pk_ts_table1 primary key (id);
 

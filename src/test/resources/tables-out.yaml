@@ -156,8 +156,11 @@ pk:
 
 table:    test_schema_1.test_table1
 columns:
-- id
+- id                    !
 - name                    50
+pk:
+uk:
+- id
 
 table:    test_schema_1.test_table2
 columns:

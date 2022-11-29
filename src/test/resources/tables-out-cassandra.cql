@@ -257,6 +257,8 @@ create index idx_tt1_spec_col3 on test_table1(col3);
 -- create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
 -- create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
 
+create index uk_test_table1_id on test_schema_1.test_table1(id);
+
 -- alter table account add constraint fk_account_bank_id foreign key (bank_id) references bank(id);
 -- alter table account_currency add constraint fk_account_currency_account_id foreign key (account_id) references account(id);
 -- alter table account_currency add constraint fk_account_currency_currency_code foreign key (currency_code) references currency(code);

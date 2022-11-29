@@ -308,6 +308,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
     val pk_list = tdMap.get("pk") match {
       case Some(null) => List(null)
+      case Some(a: java.util.ArrayList[_]) if a.isEmpty => List(null)
       case x => toList(x).map(loadYamlIndexDef)
     }
     if (pk_list.size > 1)
