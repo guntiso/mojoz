@@ -93,6 +93,12 @@ private[in] class ResourceMdSource(val resourcePath: String,
     }))
 }
 
+private[in] class StringMdSource(defStrings: String*) extends MdSource {
+  override def defSets = defStrings.zipWithIndex.map {
+    case (s, i) => YamlMd(s"string_$i", 0, s)
+  }.toVector
+}
+
 object YamlMd {
   private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
   private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
@@ -107,11 +113,15 @@ object YamlMd {
     path: String,
     filter: (File) => Boolean = _.getName endsWith ".yaml") =
     new FilesMdSource(path, filter).defs
+  def fromResource(resourcePath: String, requireResource: Boolean = true) =
+    new ResourceMdSource(resourcePath, requireResource).defs
   def fromResources(
     indexPath: String = "/-md-files.txt",
     nameFilter: (String) => Boolean = _ endsWith ".yaml",
     nameMap: (String) => String = "/" + _) =
     new ResourcesMdSource(indexPath, nameFilter, nameMap).defs
-  def fromResource(resourcePath: String, requireResource: Boolean = true) =
-    new ResourceMdSource(resourcePath, requireResource).defs
+  def fromString(mdString: String) =
+    new StringMdSource(mdString).defs
+  def fromStrings(mdStrings: String*) =
+    new StringMdSource(mdStrings: _*).defs
 }
