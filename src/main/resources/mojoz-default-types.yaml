@@ -176,6 +176,12 @@ jdbc:
 - REAL
 yaml:
 - float
+sql:
+- float
+hsqldb sql:
+- real
+postgresql:
+- real
 cql:
 - float
 
@@ -190,6 +196,8 @@ yaml:
 - double
 sql:
 - double precision
+hsqldb sql:
+- float
 cql:
 - double
 
