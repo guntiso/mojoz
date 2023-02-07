@@ -93,7 +93,7 @@ create table test_table2(
   id bigint,
   code varchar(1),
   name varchar(1),
-  description varchar
+  description text
 );
 comment on table test_table2 is '';
 

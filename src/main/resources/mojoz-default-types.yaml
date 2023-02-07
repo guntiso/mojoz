@@ -37,7 +37,7 @@ hsqldb sql:
 - string 1073741824..*  -> clob
 - string                -> clob
 postgresql:
-- string            -> varchar
+- string            -> text
 - string *          -> varchar(size)
 oracle sql:
 - string 0..4000    -> varchar2(size char)
