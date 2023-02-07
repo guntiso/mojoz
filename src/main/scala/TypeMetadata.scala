@@ -48,19 +48,6 @@ case class DdlWriteInfo(
   targetNamePattern:    String
 )
 
-object TypeDef {
-  trait TypeDefBase {
-    val name: String
-    val targetNames: Map[String, String] // xsd, scala, java, ...
-    val jdbcLoad: Map[String, Seq[JdbcLoadInfo]]
-    val yamlLoad: Seq[YamlLoadInfo]
-    val ddlWrite: Map[String, Seq[DdlWriteInfo]]
-    val defaults: ColumnDef
-    val namingConventions: Seq[String]
-  }
-}
-
-import TypeDef.TypeDefBase
 case class TypeDef(
   name: String,
   targetNames: Map[String, String],
@@ -70,8 +57,7 @@ case class TypeDef(
   defaults: ColumnDef,
   namingConventions: Seq[String],
   extras: Map[String, Any]
-  ) extends TypeDefBase {
-
+) {
   def withFallback(other: TypeDef) = TypeDef(
     Option(name).getOrElse(other.name),
     other.targetNames ++ targetNames,
