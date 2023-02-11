@@ -280,6 +280,17 @@ case class WithNamedInlineView2 (
 case class WithNamedInlineView3 (
   singleChild: NamedInlineView3 = null
 )
+case class WithOptionalFields (
+  opt: Option[String] = None,
+  optComplex: Option[WithOptionalFieldsOptComplex] = None,
+  optComplexSeq: Option[List[WithOptionalFieldsOptComplexSeq]] = None
+)
+case class WithOptionalFieldsOptComplex (
+  name: Option[String] = None
+)
+case class WithOptionalFieldsOptComplexSeq (
+  name: Option[String] = None
+)
 case class WithSaveOptions (
   readOnly: String = null,
   insertOnly: String = null,

@@ -394,6 +394,23 @@ table:
 fields:
 - single_child            named_inline_view3
 
+name:     with_optional_fields
+table:
+fields:
+- opt                   [?]
+- opt_complex           [?] with_optional_fields_opt_complex
+- opt_complex_seq       [?] * with_optional_fields_opt_complex_seq
+
+name:     with_optional_fields_opt_complex
+table:
+fields:
+- name                  [?]
+
+name:     with_optional_fields_opt_complex_seq
+table:
+fields:
+- name                  [?]
+
 name:     with_save_options
 table:
 fields:

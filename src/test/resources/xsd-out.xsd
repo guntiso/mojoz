@@ -1076,6 +1076,28 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithOptionalFieldsType">
+    <xs:sequence>
+      <xs:element name="Opt" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+      <xs:element name="OptComplex" nillable="true" minOccurs="0" type="tns:WithOptionalFieldsOptComplexType">
+      </xs:element>
+      <xs:element name="OptComplexSeq" minOccurs="0" maxOccurs="unbounded" type="tns:WithOptionalFieldsOptComplexSeqType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithOptionalFieldsOptComplexType">
+    <xs:sequence>
+      <xs:element name="Name" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithOptionalFieldsOptComplexSeqType">
+    <xs:sequence>
+      <xs:element name="Name" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithSaveOptionsType">
     <xs:sequence>
       <xs:element name="ReadOnly" nillable="true" minOccurs="0" type="xs:string">

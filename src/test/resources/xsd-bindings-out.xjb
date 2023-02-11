@@ -176,6 +176,15 @@
     <jaxb:bindings node="//xs:complexType[@name='WithNamedInlineView3Type']">
       <jaxb:class name="WithNamedInlineView3"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithOptionalFieldsType']">
+      <jaxb:class name="WithOptionalFields"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithOptionalFieldsOptComplexType']">
+      <jaxb:class name="WithOptionalFieldsOptComplex"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithOptionalFieldsOptComplexSeqType']">
+      <jaxb:class name="WithOptionalFieldsOptComplexSeq"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithSaveOptionsType']">
       <jaxb:class name="WithSaveOptions"/>
     </jaxb:bindings>

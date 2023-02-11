@@ -37,6 +37,10 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
   def scalaClassName(name: String) = name
   def scalaFieldName(name: String) = name
   def scalaFieldTypeName(field: FieldDef) = {
+    val typeNameNoOpt = scalaFieldTypeNameNoOpt(field)
+    if (field.options != null && field.options.contains('?')) s"Option[$typeNameNoOpt]" else typeNameNoOpt
+  }
+  def scalaFieldTypeNameNoOpt(field: FieldDef) = {
     val itemTypeName = scalaTypeName(field.type_)
     if (field.isCollection) scalaCollectionTypeName(itemTypeName)
     else itemTypeName
@@ -55,6 +59,8 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))
   def scalaComplexTypeName(t: Type) = scalaClassName(t.name)
   def initialValueString(field: FieldDef) =
+    if (field.options != null && field.options.contains('?')) "None" else initialValueStringNoOpt(field)
+  def initialValueStringNoOpt(field: FieldDef) =
     if (field.isCollection) "Nil" else "null"
   def scalaFieldString(fieldName: String, field: FieldDef) =
     s"var ${nonStickName(scalaNameString(scalaFieldName(fieldName)))}: ${scalaFieldTypeName(field)} = ${initialValueString(field)}"

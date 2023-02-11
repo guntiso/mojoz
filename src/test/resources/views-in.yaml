@@ -292,6 +292,19 @@ fields:
     - id
     - code
 
+name: with_optional_fields
+table:
+fields:
+- opt              [?]
+- opt_complex      [?]:
+    table:
+    fields:
+    - name [?]
+- opt_complex_seq  [?] *:
+    table:
+    fields:
+    - name [?]
+
 name: resolver_test_1
 table: person
 fields:

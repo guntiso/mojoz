@@ -255,6 +255,17 @@ class WithNamedInlineView2 extends Dto {
 class WithNamedInlineView3 extends Dto {
   var singleChild: NamedInlineView3 = null
 }
+class WithOptionalFields extends Dto {
+  var opt: Option[String] = None
+  var optComplex: Option[WithOptionalFieldsOptComplex] = None
+  var optComplexSeq: Option[List[WithOptionalFieldsOptComplexSeq]] = None
+}
+class WithOptionalFieldsOptComplex extends Dto {
+  var name: Option[String] = None
+}
+class WithOptionalFieldsOptComplexSeq extends Dto {
+  var name: Option[String] = None
+}
 class WithSaveOptions extends Dto {
   var readOnly: String = null
   var insertOnly: String = null
