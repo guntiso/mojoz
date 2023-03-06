@@ -29,7 +29,7 @@ class YamlViewDefLoader(
   private val MojozIsOuterJoined       = "mojoz.internal.is-outer-joined"
   private val parseJoins = joinsParser
   val sources = yamlMd.filter(YamlMd.isViewDef)
-  private val rawViewDefs = transformRawViewDefs(sources.map { md: YamlMd =>
+  private val rawViewDefs = transformRawViewDefs(sources.map { md =>
     try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
         s"Failed to load view definition from ${md.filename}, line ${md.line}", e)
@@ -289,7 +289,7 @@ class YamlViewDefLoader(
       val isForcedEnum = yfd.enum_ != null
       val isForcedType = yfd.typeName != null || yfd.length.isDefined || yfd.fraction.isDefined
       val joinToParent = yfd.joinToParent
-      val `enum` = yfd.enum_
+      val enm = yfd.enum_
       val orderBy = yfd.orderBy
       val comments = yfd.comments
       val extras =
@@ -319,7 +319,7 @@ class YamlViewDefLoader(
 
       FieldDef(table, tableAlias, name, alias, options, isOverride, isCollection,
         isExpression, expression, saveTo, resolver, nullable,
-        mojozType, enum, joinToParent, orderBy, comments, extras)
+        mojozType, enm, joinToParent, orderBy, comments, extras)
     }
     def isViewDef(m: Map[String, Any]) =
       m != null && !m.contains("columns") && (m.contains("fields") || m.contains("extends"))

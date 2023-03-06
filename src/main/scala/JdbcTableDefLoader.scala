@@ -54,8 +54,8 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val unmappedCk = ck.filterNot(enumCk.contains)
       val colToEnum = checkColEnum.map(cce => (cce._2, cce._3)).toMap
       val mappedCols = cols map {c =>
-        val `enum` = colToEnum.get(c)
-        if (enum.isDefined) c.copy(enum_ = enum.get) else c
+        val enm = colToEnum.get(c)
+        if (enm.isDefined) c.copy(enum_ = enm.get) else c
       }
       val db = null // TODO db?
       val tableFullName =
@@ -449,13 +449,13 @@ private[in] object CkParser {
   val ident = "[_\\p{IsLatin}\\\\][_\\p{IsLatin}0-9\\\\]*"
   val qi = s"$ident(\\.$ident)*"
   val in = "[iI][nN]"
-  val `enum` = """\(?U?&?'?[\+\-_\p{IsLatin}0-9\.\s\\]+'?\)?"""
+  val enm = """\(?U?&?'?[\+\-_\p{IsLatin}0-9\.\s\\]+'?\)?"""
   val cast = """::[\w\.\s]+"""
   val qiQuotQi = s"""$qi|U?&?"$qi""""
-  val checkIn0 = s"""_(($qiQuotQi))_ = $enum"""
-  val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enum( , $enum)*))_"""
-  val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = (_($enum($cast)?)_ ($cast)?))_"""
-  val checkIn3 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enum($cast)?)_ ($cast)?( , $enum($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
+  val checkIn0 = s"""_(($qiQuotQi))_ = $enm"""
+  val checkIn1 = s"""_(($qiQuotQi))_ $in _(($enm( , $enm)*))_"""
+  val checkIn2 = s"""_(($qiQuotQi))_ ($cast)? = (_($enm($cast)?)_ ($cast)?))_"""
+  val checkIn3 = s"""_(($qiQuotQi))_ ($cast)? = ANY_(ARRAY_[(_($enm($cast)?)_ ($cast)?( , $enm($cast)?)_ ($cast)?)*)]_)_ ($cast)?(_[]_)?)_"""
   val checkNotNull = s"$s($qiQuotQi)(?i) is not null$s".replace(" ", "\\s+")
   val castR = """::\w+""".r
   private def regex(pattern: String) =

@@ -59,7 +59,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val targetPart =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
       else null
-    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array()
+    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array[String]()
     val jdbcPartParts = jdbcPart.split("\\s+", 3)
     val jdbcNameOrCode = jdbcPartParts(0)
     val jdbcCode =
@@ -106,7 +106,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val targetPart =
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
       else null
-    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array()
+    val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array[String]()
     val yamlPartParts = yamlPart.split("\\s+", 3)
     val yamlName = Option(yamlPartParts(0)).filter(_ != "null")
     val sizeInterval = if (yamlPartParts.size > 1) yamlPartParts(1) else ""

@@ -50,7 +50,7 @@ private[in] class FilesMdSource(
   val filter: (File) => Boolean) extends MdSource {
   require(path != null)
   private def recursiveListFiles(relativePath: String, f: File): Array[(String, File)] = {
-    val these = Option(f.listFiles) getOrElse Array()
+    val these = Option(f.listFiles) getOrElse Array[File]()
     these.filter(!_.isDirectory)
       .filter(filter)
       .map(f => (relativePath + f.getName, f)) ++

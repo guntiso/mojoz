@@ -349,7 +349,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       case x =>
         sys.error("Unexpected cardinality for table column: " + x)
     }
-    val `enum` = yfd.enum_
+    val enm = yfd.enum_
     if (yfd.joinToParent != null)
       sys.error("joinToParent not supported for table columns")
     if (yfd.orderBy != null)
@@ -358,7 +358,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
     val extras = yfd.extras
     IoColumnDef(name, IoColumnType(nullable, rawMojozType),
-      nullable getOrElse true, dbDefault, enum, comments, extras)
+      nullable getOrElse true, dbDefault, enm, comments, extras)
   }
 }
 
@@ -374,7 +374,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     val options = "\\[[\\+\\-\\=\\/\\!\\?]+\\]"
     val join = "\\[.*?\\]"
     val order = "\\~?#(\\s*\\(.*?\\))?"
-    val `enum` = "\\(.*?\\)"
+    val enm = "\\(.*?\\)"
     val typ = qualifiedIdent
     val len = int
     val frac = int
@@ -384,7 +384,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     val pattern =
         (s"($name)( $options)?( $quant)?( $join)?( $typ)?" + 
           s"( $len)?( $frac)?" +
-          s"( $order)?( $enum)?($endArrow|(( =|$midArrow)($expr)?))?").replace(" ", s)
+          s"( $order)?( $enm)?($endArrow|(( =|$midArrow)($expr)?))?").replace(" ", s)
 
     ("^" + pattern + "$").r
   }
@@ -393,11 +393,11 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     def colDef(nameEtc: String, comments: String,
         child: Map[String, Any]) = nameEtc match {
       case FieldPattern(name, _, options, quant, _, _, _, _, joinToParent, typ, _,
-        len, frac, order, _, enum,
+        len, frac, order, _, enm,
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
-        def e(`enum` : String) = Option(enum)
+        def e(enm : String) = Option(enm)
           .map { e =>
             // TODO parse enums properly? Allow whitespace etc. when (single/double) quoted, allow escapes
             if (e contains '\'')
@@ -423,7 +423,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
         val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
         YamlFieldDef(name, t(options), cardinality, t(typ), i(len), i(frac),
-          isExpr, expr, isResolvable, saveTo, resolver, e(enum), t(joinToParent), t(order), comments,
+          isExpr, expr, isResolvable, saveTo, resolver, e(enm), t(joinToParent), t(order), comments,
           child)
       case _ => sys.error(ThisFail +
         " - unexpected format: " + nameEtc.trim)

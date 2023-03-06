@@ -83,7 +83,7 @@ class XsdGenerator(viewDefs: Seq[ViewDef],
             .filter(_ != "").map("\n" + indentString * 5 + _.trim) getOrElse ""}
         </xs:element>
         """)
-      case (minL, maxL, totD, frcD, intD, enum) =>
+      case (minL, maxL, totD, frcD, intD, enm) =>
         indent(level, s"""
         <xs:element ${attribs("name nillable minOccurs maxOccurs",
             elName, nillable, minOccurs, maxOccurs)}>${
@@ -98,7 +98,7 @@ class XsdGenerator(viewDefs: Seq[ViewDef],
               totD.map(n => s"""<xs:totalDigits value="${ n.toString }"/>""").orNull,
               intD.map(n => s"""<xs:maxExclusive value="${("1" :: List.fill(n)("0")).mkString}"/>""").orNull,
               frcD.map(n => s"""<xs:fractionDigits value="${ n.toString }"/>""").orNull,
-              enum.getOrElse(Nil).map(op => s"""<xs:enumeration value="${ escAttr(op) }"/>""").mkString("\n"))
+              enm.getOrElse(Nil).map(op => s"""<xs:enumeration value="${ escAttr(op) }"/>""").mkString("\n"))
               .filter(_ != null)
               .mkString("\n")
               ).trim}
