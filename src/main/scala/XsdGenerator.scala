@@ -115,7 +115,7 @@ class XsdGenerator(viewDefs: Seq[ViewDef],
       indent(level, s"""
       <xs:sequence>
         ${viewDef.fields.filterNot(_.isOverride).map(f =>
-          createElement(xsdName(Option(f.alias) getOrElse f.name), f, 4))
+          createElement(xsdName(f.fieldName), f, 4))
           .map(_.trim).mkString("\n" + indentString * 4)
         }
       </xs:sequence>

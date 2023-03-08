@@ -20,7 +20,7 @@ case class ViewDef_[+F](
   extras: Map[String, Any]) {
   private val nameToField: Map[String, F] =
     fields.map {
-      case f: FieldDef_[_] => Option(f.alias).getOrElse(f.name) -> f.asInstanceOf[F]
+      case f: FieldDef_[_] => f.fieldName -> f.asInstanceOf[F]
       case f                  => (null, f)
     } .filter(_._1 != null)
       .toMap

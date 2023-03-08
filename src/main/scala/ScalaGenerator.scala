@@ -82,7 +82,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
       }.orNull
     }
     viewDef.fields.exists(f =>
-      f.type_.isComplexType && f.isOverride && f.type_ != fieldType(viewDef.extends_, Option(f.alias).getOrElse(f.name)))
+      f.type_.isComplexType && f.isOverride && f.type_ != fieldType(viewDef.extends_, f.fieldName))
   }
   def scalaClassTraits(viewDef: ViewDef): Seq[String] = Seq()
   def scalaFieldsIndent = "  "
@@ -92,9 +92,9 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     def fieldsStrings(viewDef: ViewDef, overrided: Set[String]) =
       viewDef.fields
         .map(f =>
-          (if (overrided.nonEmpty && overrided.contains(Option(f.alias) getOrElse f.name)) "// "
+          (if (overrided.nonEmpty && overrided.contains(f.fieldName)) "// "
            else if (f.isOverride) (if (xtndsDisabled) "/* override */ " else "// override ") else "") +
-          scalaFieldStringWithHandler(Option(f.alias) getOrElse f.name, f))
+          scalaFieldStringWithHandler(f.fieldName, f))
     def fieldsStringsWithBase(viewDef: ViewDef, overrided: Set[String]): Seq[String] = {
       val baseFields =
         if (viewDef.extends_ == null) Nil
@@ -103,7 +103,7 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
             sys.error(
               s"Failed to include scala fields into ${viewDef.name} from ${viewDef.extends_} because it is not found")
           }
-          fieldsStringsWithBase(baseView, overrided ++ viewDef.fields.map(f => Option(f.alias) getOrElse f.name))
+          fieldsStringsWithBase(baseView, overrided ++ viewDef.fields.map(f => f.fieldName))
         }
       baseFields ++ (
         s"// --- ${scalaNameString(scalaClassName(viewDef.name))}" +:
