@@ -22,7 +22,7 @@ lazy val commonSettings = Seq(
   organization := "org.mojoz",
   scalaVersion := scalaV,
   crossScalaVersions := Seq(
-    "3.3.0-RC3",
+    "3.3.0-RC4",
     scalaV,
     "2.12.17",
   ),
