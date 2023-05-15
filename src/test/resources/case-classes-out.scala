@@ -58,11 +58,11 @@ case class NoFieldsExtendedWithFields /* extends NoFields */ (
 case class NoTable (
   someId: java.lang.Long = null,
   someName: String = null,
-  someDate: java.sql.Date = null,
-  someDateTime: java.sql.Timestamp = null,
+  someDate: java.time.LocalDate = null,
+  someDateTime: java.time.LocalDateTime = null,
   isBoolean: java.lang.Boolean = null,
   isBooleanExpr: java.lang.Boolean = null,
-  isNotBoolean: java.sql.Date = null
+  isNotBoolean: java.time.LocalDate = null
 )
 case class OneFielder (
   theOne: String = null
@@ -150,7 +150,7 @@ case class SchemaTest3 (
 )
 case class TypeOverrideTest (
   bank: java.lang.Long = null,
-  lastModified: java.sql.Date = null
+  lastModified: java.time.LocalDate = null
 )
 case class TypeOverrideTest2 (
   intColAsString: String = null,

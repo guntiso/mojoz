@@ -51,7 +51,8 @@ cql:
 type:       date
 xsd name:   date
 json name:  string
-scala name: java.sql.Date
+#scala name:java.sql.Date
+scala name: java.time.LocalDate
 jdbc:
 - DATE
 yaml:
@@ -65,7 +66,8 @@ cql:
 type:       time
 xsd name:   time
 json name:  string
-scala name: java.sql.Time
+#scala name:java.sql.Time
+scala name: java.time.LocalTime
 jdbc:
 - TIME
 yaml:
@@ -79,7 +81,8 @@ cql:
 type:       dateTime
 xsd name:   dateTime
 json name:  string
-scala name: java.sql.Timestamp
+#scala name:java.sql.Timestamp
+scala name: java.time.LocalDateTime
 jdbc:
 - TIMESTAMP
 yaml:

@@ -48,11 +48,11 @@ class NoFieldsExtendedWithFields extends NoFields with DtoWithId {
 class NoTable extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null
-  var someDate: java.sql.Date = null
-  var someDateTime: java.sql.Timestamp = null
+  var someDate: java.time.LocalDate = null
+  var someDateTime: java.time.LocalDateTime = null
   var isBoolean: java.lang.Boolean = null
   var isBooleanExpr: java.lang.Boolean = null
-  var isNotBoolean: java.sql.Date = null
+  var isNotBoolean: java.time.LocalDate = null
 }
 class OneFielder extends Dto {
   var theOne: String = null
@@ -140,7 +140,7 @@ class SchemaTest3 extends DtoWithId {
 }
 class TypeOverrideTest extends Dto {
   var bank: java.lang.Long = null
-  var lastModified: java.sql.Date = null
+  var lastModified: java.time.LocalDate = null
 }
 class TypeOverrideTest2 extends Dto {
   var intColAsString: String = null
