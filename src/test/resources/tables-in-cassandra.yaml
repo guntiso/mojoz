@@ -51,9 +51,25 @@ columns:
 - surname
 pk: (id, name desc), surname desc
 
+table:    cassandra_pk_test_table8b
+columns:
+- id
+- name
+- surname
+pk:
+- (id, name desc), surname desc
+
 table:    cassandra_pk_test_table9
 columns:
 - id
 - name
 - surname
 pk: (id, name, surname)
+
+table:    cassandra_pk_test_table9b
+columns:
+- id
+- name
+- surname
+pk:
+- (id, name, surname)

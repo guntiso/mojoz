@@ -51,7 +51,21 @@ create table cassandra_pk_test_table8(
   primary key ((id, name), surname)
 ) with clustering order by (surname desc);
 
+create table cassandra_pk_test_table8b(
+  id bigint,
+  name text,
+  surname text,
+  primary key ((id, name), surname)
+) with clustering order by (surname desc);
+
 create table cassandra_pk_test_table9(
+  id bigint,
+  name text,
+  surname text,
+  primary key ((id, name, surname))
+);
+
+create table cassandra_pk_test_table9b(
   id bigint,
   name text,
   surname text,
