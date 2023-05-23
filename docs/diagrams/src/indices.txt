@@ -16,6 +16,23 @@ Diagram(
         ), 'skip'),
       ), ','),
       ')'
+    ),
+    Sequence(
+      '(',
+      OneOrMore(Sequence(
+        NonTerminal('column-name'),
+        Optional(Sequence(
+          Choice(0, 'asc', 'desc'),
+        ), 'skip'),
+      ), ','),
+      ')',
+      OneOrMore(Sequence(
+        ',',
+        NonTerminal('column-name'),
+        Optional(Sequence(
+          Choice(0, 'asc', 'desc'),
+        ), 'skip'),
+      )),
     )
   ),
 )
