@@ -99,6 +99,12 @@ private[in] class StringMdSource(defStrings: String*) extends MdSource {
   }.toVector
 }
 
+private[in] class NamedStringMdSource(nameAndMdStringPairs: (String, String)*) extends MdSource {
+  override def defSets = nameAndMdStringPairs.map {
+    case (n, s) => YamlMd(n, 0, s)
+  }.toVector
+}
+
 object YamlMd {
   private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
   private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
@@ -124,4 +130,8 @@ object YamlMd {
     new StringMdSource(mdString).defs
   def fromStrings(mdStrings: String*) =
     new StringMdSource(mdStrings: _*).defs
+  def fromNamedString(name: String, mdString: String) =
+    new NamedStringMdSource((name, mdString)).defs
+  def fromNamedStrings(nameAndMdStringPairs: (String, String)*) =
+    new NamedStringMdSource(nameAndMdStringPairs: _*).defs
 }
