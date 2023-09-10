@@ -2,7 +2,7 @@ lazy val dependencies = Seq(
   "org.snakeyaml"  % "snakeyaml-engine" % "2.7",
   // test
   "org.hsqldb"     % "hsqldb"     % "2.7.1"  %    "test" classifier "jdk8",
-  "com.h2database" % "h2"         % "2.1.214"%    "test",
+  "com.h2database" % "h2"         % "2.2.222"%    "test",
   "com.typesafe"   % "config"     % "1.4.2"  % "it,test",           // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "42.6.0" % "it,test",           // XXX POM fix - not in test scope
   "org.scalatest" %% "scalatest"  % "3.2.16" % "it,test"
