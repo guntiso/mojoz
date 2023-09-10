@@ -5,7 +5,7 @@ lazy val dependencies = Seq(
   "com.h2database" % "h2"         % "2.2.222"%    "test",
   "com.typesafe"   % "config"     % "1.4.2"  % "it,test",           // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "42.6.0" % "it,test",           // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest"  % "3.2.16" % "it,test"
+  "org.scalatest" %% "scalatest"  % "3.2.17" % "it,test"
 )
 
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
