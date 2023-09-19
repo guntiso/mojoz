@@ -124,7 +124,8 @@ case class ColumnDef_[+T](
 
 class TableMetadata(
   val tableDefs: Seq[TableDef] = (new YamlTableDefLoader()).tableDefs,
-  val dbName: String => String = identity) {
+  val dbName: String => String = identity,
+) {
   val dbToTableDefs: Map[String, Seq[TableDef]] = tableDefs.groupBy(_.db)
   private val md = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(e => (e.name, e)).toMap
