@@ -331,7 +331,11 @@ private[out] class CassandraDdlGenerator(
   }
   def dbName(name: String) = {
     Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "") match {
-      case s if s.length > maxNameLen => s.substring(0, maxNameLen)
+      case s if s.length > maxNameLen =>
+        if (s.indexOf(".") > 0)
+          s.split("\\.").toSeq.map(p => if (p.length > maxNameLen) p.substring(0, maxNameLen) else p).mkString(".")
+        else
+          s.substring(0, maxNameLen)
       case s => s
     }
   }
