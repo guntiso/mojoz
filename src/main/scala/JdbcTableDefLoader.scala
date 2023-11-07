@@ -449,7 +449,7 @@ private[in] object CkParser {
   val ident = "[_\\p{IsLatin}\\\\][_\\p{IsLatin}0-9\\\\]*"
   val qi = s"$ident(\\.$ident)*"
   val in = "[iI][nN]"
-  val enm = """\(?U?&?'?[\+\-_\p{IsLatin}0-9\.\s\\]+'?\)?"""
+  val enm = """\(?U?&?'?['"\+\-_\p{IsLatin}0-9\.\s\\]+'?\)?"""
   val cast = """::[\w\.\s]+"""
   val qiQuotQi = s"""$qi|U?&?"$qi""""
   val checkIn0 = s"""_(($qiQuotQi))_ = $enm"""
@@ -476,10 +476,14 @@ private[in] object CkParser {
          decodeUnicodeStringSQL(s.substring(2), '\\')
     else s
   }
+  def unquote(s: String) =
+    if  (s != null && s.length > 1 && s.startsWith("'") && s.endsWith("'"))
+         s.substring(1, s.length - 1).replace("''", "'")
+    else s
   private def toColEnum(col: String, values: String) =
     (maybeDecode(col).replace(""""""", ""),
       values.split("[\\(,\\)]+").toList
-        .map(_.trim).map(maybeDecode).map(_.replace("'", "")).filter(_.trim != ""))
+        .map(_.trim).map(maybeDecode).map(unquote).filter(_.trim != ""))
   def colAndEnum(ck: String) = ck match {
     case CheckIn0(col, value) =>
       Some(toColEnum(col, value))

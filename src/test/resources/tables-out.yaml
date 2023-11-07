@@ -134,6 +134,7 @@ columns:
 - enum_spešal_diacritics  6           (bladāc)
 - enum                    5           (list1, list2)
 - enum_ws                 6           ('list 1', 'list 2')
+- enum_special_chars      6           (''apos', '"dquote')
 refs:
 - bank_id -> bank(id) on delete cascade
 

@@ -214,6 +214,7 @@ create table test_table5(
   enum_spesal_diacritics text,
   enum text,
   enum_ws text,
+  enum_special_chars text,
   primary key (bank_id)
 ) with comment = 'Alternative multiline comments
 with line 2';

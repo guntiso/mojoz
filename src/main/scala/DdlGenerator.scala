@@ -289,7 +289,7 @@ private[out] class StandardSqlDdlGenerator(
     val xt = c.type_
     xt.name match {
       case "string" if c.enum_ != null =>
-        c.enum_.map("'" + _ + "'")
+        c.enum_.map(s"'" + _.replace("'", "''") + "'")
           .mkString(" check (" + c.name + " in (", ", ", "))")
       case _ if c.enum_ != null =>
         c.enum_

@@ -137,7 +137,8 @@ create table test_table5(
   enum_with_diacritics varchar2(6 char) check (enum_with_diacritics in ('rūķīši', 'darbā', 'vai', 'mājās')),
   enum_spešal_diacritics varchar2(6 char) check (enum_spešal_diacritics in ('bladāc')),
   enum varchar2(5 char) check (enum in ('list1', 'list2')),
-  enum_ws varchar2(6 char) check (enum_ws in ('list 1', 'list 2'))
+  enum_ws varchar2(6 char) check (enum_ws in ('list 1', 'list 2')),
+  enum_special_chars varchar2(6 char) check (enum_special_chars in ('''apos', '"dquote'))
 );
 comment on table test_table5 is 'Alternative multiline comments
 with line 2';

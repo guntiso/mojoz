@@ -397,13 +397,13 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
-        def e(enm : String) = Option(enm)
+        def e(enm : String) = Option(enm).map(_.trim)
           .map { e =>
             // TODO parse enums properly? Allow whitespace etc. when (single/double) quoted, allow escapes
             if (e contains '\'')
-              e.replace("(", "").replace(")", "").trim.split("',\\s*").map(_.replace("'", ""))
+              e.substring(1, e.length - 1).trim.replaceAll("'$", "',").split("',\\s*").map(_.replaceAll("^'", ""))
             else
-              e.split("[\\(\\)\\s,]+")
+              e.substring(1, e.length - 1).split("[\\s,]+")
           }
           .map(_.toList.filter(_ != ""))
           .filter(_.size > 0).orNull
