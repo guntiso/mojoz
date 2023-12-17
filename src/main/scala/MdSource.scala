@@ -106,13 +106,17 @@ private[in] class NamedStringMdSource(nameAndMdStringPairs: (String, String)*) e
 }
 
 object YamlMd {
-  private val customTypeDefPattern = "(^|\\n)\\s*type\\s*:".r    // XXX
-  private val tableDefPattern      = "(^|\\n)\\s*columns\\s*:".r // XXX
+  private val customTypeDefPattern = "(^|\\n)type\\s*:".r    // XXX
+  private val tableDefPattern      = "(^|\\n)columns\\s*:".r // XXX
+  private val hasFieldsPattern     = "(^|\\n)fields\\s*:".r  // XXX
+  private val hasExtendsPattern    = "(^|\\n)extends\\s*:".r // XXX
   private[in] def isCustomTypeDef(d: YamlMd) =
     customTypeDefPattern.findFirstIn(d.body).isDefined
   private[in] def isTableDef(d: YamlMd) =
     tableDefPattern.findFirstIn(d.body).isDefined
-  private[in] def isViewDef(d: YamlMd) = !isTableDef(d) && !isCustomTypeDef(d)
+  private[in] def isViewDef(d: YamlMd) = !isTableDef(d) && !isCustomTypeDef(d) &&
+    (hasFieldsPattern.findFirstIn(d.body).isDefined ||
+     hasExtendsPattern.findFirstIn(d.body).isDefined)
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(

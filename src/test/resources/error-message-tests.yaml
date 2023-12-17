@@ -73,6 +73,7 @@ fields:
 expected-error-message: Table "unknown_table" referenced from view "test_table_not_found" is not found
 name:       test_table_not_found
 table:      unknown_table
+fields:
 
 
 expected-error-message: View "unknown_view" extended or modified by view "test_view_not_found" is not found
@@ -131,3 +132,4 @@ expected-error-message: Table metadata for database unknown_db not found
 name:       unknown_db_view
 db:         unknown_db
 table:      person
+fields:
