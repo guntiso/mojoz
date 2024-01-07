@@ -37,4 +37,4 @@ jobs:
     - name: Configure integration tests
       run:  cp src/it/resources/application.conf.ci src/it/resources/application.conf
     - name: Compile and test and check version policy
-      run:  sbt clean update +compile +test +it:test +versionPolicyCheck
+      run:  sbt clean update +compile +test +it/test +versionPolicyCheck

@@ -1,11 +1,14 @@
 lazy val dependencies = Seq(
   "org.snakeyaml"  % "snakeyaml-engine" % "2.7",
   // test
-  "org.hsqldb"     % "hsqldb"     % "2.7.2"  %    "test" classifier "jdk8",
-  "com.h2database" % "h2"         % "2.2.224"%    "test",
-  "com.typesafe"   % "config"     % "1.4.3"  % "it,test",           // XXX POM fix - not in test scope
-  "org.postgresql" % "postgresql" % "42.7.1" % "it,test",           // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest"  % "3.2.17" % "it,test"
+  "org.hsqldb"     % "hsqldb"     % "2.7.2"  %      Test classifier "jdk8",
+  "com.h2database" % "h2"         % "2.2.224"%      Test,
+  "org.scalatest" %% "scalatest"  % "3.2.17" %      Test
+)
+
+lazy val integrationTestDependencies = Seq(
+  "com.typesafe"   % "config"     % "1.4.3"  %      Test,
+  "org.postgresql" % "postgresql" % "42.7.1" %      Test,
 )
 
 javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
@@ -37,9 +40,7 @@ ThisBuild / sbt.Keys.versionScheme := Some("semver-spec")
 ThisBuild / versionPolicyIntention := Compatibility.BinaryCompatible
 
 lazy val mojoz = (project in file("."))
-  .configs(IntegrationTest)
   .settings(commonSettings: _*)
-  .settings(Defaults.itSettings: _*)
   .settings(
     Compile / unmanagedSourceDirectories ++= {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "compat"
@@ -47,6 +48,16 @@ lazy val mojoz = (project in file("."))
         Seq(sharedSourceDir / "scala-2.12")
       else Nil
     },
+  )
+
+lazy val it = (project in file("src/it"))
+  .dependsOn(mojoz % "compile -> compile; test -> test")
+  .settings(commonSettings: _*)
+  .settings(
+    publish / skip := true,
+    libraryDependencies ++= integrationTestDependencies,
+    Test / scalaSource := baseDirectory.value / "scala",
+    Test / resourceDirectory := baseDirectory.value / "resources",
   )
 
 autoAPIMappings := true
