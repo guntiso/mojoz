@@ -3,7 +3,7 @@ lazy val dependencies = Seq(
   // test
   "org.hsqldb"     % "hsqldb"     % "2.7.2"  %    "test" classifier "jdk8",
   "com.h2database" % "h2"         % "2.2.224"%    "test",
-  "com.typesafe"   % "config"     % "1.4.2"  % "it,test",           // XXX POM fix - not in test scope
+  "com.typesafe"   % "config"     % "1.4.3"  % "it,test",           // XXX POM fix - not in test scope
   "org.postgresql" % "postgresql" % "42.6.0" % "it,test",           // XXX POM fix - not in test scope
   "org.scalatest" %% "scalatest"  % "3.2.17" % "it,test"
 )
