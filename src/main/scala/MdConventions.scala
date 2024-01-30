@@ -3,6 +3,8 @@ package org.mojoz.metadata.io
 import org.mojoz.metadata._
 import org.mojoz.metadata.TableMetadata._
 import org.mojoz.metadata.out.DdlGenerator
+
+import java.io.InputStream
 import scala.collection.immutable.Seq
 
 case class IoColumnType(nullable: Option[Boolean], type_ : Option[Type])
@@ -239,7 +241,11 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
 
   /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
   def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String]): Seq[String] = {
-    Option(getClass.getResourceAsStream(resourceName)).map(scala.io.Source.fromInputStream)
+    namePatternsFromResource(resourceName, defaultPatterns, getClass.getResourceAsStream _)
+  }
+  /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
+  def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String], resourceLoader: String => InputStream): Seq[String] = {
+    Option(resourceLoader(resourceName)).map(scala.io.Source.fromInputStream)
       .map {s => val patterns = splitNamePatternString(s.mkString); s.close; patterns }
       .getOrElse(defaultPatterns)
   }
@@ -250,6 +256,9 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
   }
   def namePatternsFromResource(patternSource: PatternSource): Seq[String] =
     namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns)
+
+  def namePatternsFromResource(patternSource: PatternSource, resourceLoader: String => InputStream): Seq[String] =
+    namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns, resourceLoader)
 
   sealed trait Pattern
   case class Equals(pattern: String) extends Pattern
