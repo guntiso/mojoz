@@ -285,6 +285,12 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
         namePatternsFromResource(defaultDateTimeNamePatternSource)
     ) extends MdConventions {
 
+    def this(resourceLoader: String => InputStream) = this(
+      booleanNamePatternStrings  = namePatternsFromResource(defaultBooleanNamePatternSource,  resourceLoader),
+      dateNamePatternStrings     = namePatternsFromResource(defaultDateNamePatternSource,     resourceLoader),
+      dateTimeNamePatternStrings = namePatternsFromResource(defaultDateTimeNamePatternSource, resourceLoader),
+    )
+
     val booleanNamePatterns = booleanNamePatternStrings.map(pattern).toSeq
     val dateNamePatterns = dateNamePatternStrings.map(pattern).toSeq
     val dateTimeNamePatterns = dateTimeNamePatternStrings.map(pattern).toSeq
