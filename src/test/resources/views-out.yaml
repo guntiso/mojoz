@@ -277,6 +277,35 @@ fields:
 - extra                                 =
 - bank                  * [true] with_child_extends_bank
 
+name:     with_child_no_indent_1
+table:
+fields:
+- code
+- name
+- bank                  * with_child_no_indent_1_bank
+
+name:     with_child_no_indent_1_bank
+table:
+fields:
+- id
+- code
+- name
+
+name:     with_child_no_indent_2
+table:
+fields:
+- code
+- name
+- bank                  * with_child_no_indent_2_bank : My banks
+
+name:     with_child_no_indent_2_bank
+table:
+comments: My banks structure
+fields:
+- id
+- code
+- name
+
 name:     with_child_order_by_asc
 table:    country
 fields:

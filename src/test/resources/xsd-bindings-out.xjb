@@ -128,6 +128,18 @@
     <jaxb:bindings node="//xs:complexType[@name='WithChildExtendsCrud3Type']">
       <jaxb:class name="WithChildExtendsCrud3"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildNoIndent1Type']">
+      <jaxb:class name="WithChildNoIndent1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildNoIndent1BankType']">
+      <jaxb:class name="WithChildNoIndent1Bank"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildNoIndent2Type']">
+      <jaxb:class name="WithChildNoIndent2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithChildNoIndent2BankType']">
+      <jaxb:class name="WithChildNoIndent2Bank"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithChildOrderByAscType']">
       <jaxb:class name="WithChildOrderByAsc"/>
     </jaxb:bindings>

@@ -216,6 +216,26 @@ case class WithChildExtendsCrud3 /* extends WithChildExtends */ (
   extra: String = null,
   /* override */ bank: List[WithChildExtendsBank] = Nil
 )
+case class WithChildNoIndent1 (
+  code: String = null,
+  name: String = null,
+  bank: List[WithChildNoIndent1Bank] = Nil
+)
+case class WithChildNoIndent1Bank (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+)
+case class WithChildNoIndent2 (
+  code: String = null,
+  name: String = null,
+  bank: List[WithChildNoIndent2Bank] = Nil
+)
+case class WithChildNoIndent2Bank (
+  id: java.lang.Long = null,
+  code: String = null,
+  name: String = null
+)
 case class WithChildOrderByAsc (
   code: String = null,
   bank: List[WithChildOrderByAscBank] = Nil

@@ -1,6 +1,7 @@
 package org.mojoz.metadata
 package in
 
+import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.jdk.CollectionConverters._
 import org.mojoz.metadata.TypeDef
@@ -432,32 +433,40 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
       case nameEtc: java.lang.String =>
         colDef(nameEtc.toString, null, null)
       case m: java.util.Map[_, _] =>
-        if (m.size == 1) {
+        if (m.size > 0) {
           val entry = m.entrySet.asScala.toList(0)
           val nameEtc = entry.getKey
+          def thisAsChildOrEmpty = if (m.size > 1) m.asScala.tail.toMap.asInstanceOf[Map[String, _]] else Map.empty
+          def thisAsChildOrNull  = if (m.size > 1) m.asScala.tail.toMap.asInstanceOf[Map[String, _]] else null
           val (comments, child) = entry.getValue match {
-            case s: String => (s, null)
+            case s: String => (s, thisAsChildOrNull)
             case m: java.util.Map[String @unchecked, _] =>
-              (null, m.asScala.toMap)
+              (null, m.asScala.toMap ++ thisAsChildOrEmpty)
             case a: java.util.ArrayList[_] =>
               val l = a.asScala.toList
               val strings =
                 l.collect { case s: java.lang.String => s }
-              val child =
+              val child = ({
                 l.collect { case m: java.util.Map[String @unchecked, _] => m.asScala }
                   .foldLeft(Map[String, Any]())(_ ++ _)
+              } ++ thisAsChildOrEmpty).toMap
+              l.foreach {
+                case s: java.lang.String =>
+                case m: java.util.Map[String @unchecked, _] =>
+                case x => sys.error(ThisFail +
+                  " - unexpected child definition class: " + x.getClass
+                  + "\nvalue: " + x.toString)
+              }
               val comments = strings.headOption.getOrElse(child.get("comments").orNull)
-              // TODO handle (raise error for?) other cases
               (comments, child ++ strings.drop(1).map(s => s -> s).toMap)
-            case null => (null, null)
+            case null => (null, thisAsChildOrNull)
             case x => sys.error(ThisFail +
               " - unexpected child definition class: " + x.getClass
               + "\nvalue: " + x.toString)
           }
           colDef(nameEtc.toString, Option(comments).map(_.toString).orNull, child)
         } else sys.error(ThisFail +
-          // TODO do not throw, allow decomposed or with custom extras instead
-          " - more than one entry for column: " + m.asScala.toMap.toString())
+          " - unexpected empty mapping")
       case x => sys.error(ThisFail +
         " - unexpected field definition class: " + x.getClass
         + "\nentry: " + x.toString)

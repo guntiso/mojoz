@@ -191,6 +191,26 @@ class WithChildExtendsCrud3 extends WithChildExtends with Dto {
   var extra: String = null
   // override var bank: List[WithChildExtendsBank] = Nil
 }
+class WithChildNoIndent1 extends Dto {
+  var code: String = null
+  var name: String = null
+  var bank: List[WithChildNoIndent1Bank] = Nil
+}
+class WithChildNoIndent1Bank extends DtoWithId {
+  var id: java.lang.Long = null
+  var code: String = null
+  var name: String = null
+}
+class WithChildNoIndent2 extends Dto {
+  var code: String = null
+  var name: String = null
+  var bank: List[WithChildNoIndent2Bank] = Nil
+}
+class WithChildNoIndent2Bank extends DtoWithId {
+  var id: java.lang.Long = null
+  var code: String = null
+  var name: String = null
+}
 class WithChildOrderByAsc extends Dto {
   var code: String = null
   var bank: List[WithChildOrderByAscBank] = Nil
