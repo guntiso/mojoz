@@ -54,6 +54,10 @@ class ScalaGenerator(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
     typeDefs
       .map(td => td.name -> td.targetNames.get("scala").orNull)
       .filter(_._2 != null)
+      .map {
+        case (typeName, "java.lang.String") => (typeName, "String")
+        case x => x
+      }
       .toMap
   def scalaSimpleTypeName(t: Type) =
     typeNameToScalaTypeName.get(t.name).getOrElse(sys.error("Unexpected type: " + t))

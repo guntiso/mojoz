@@ -1,7 +1,7 @@
 type:       string
 xsd name:   string
 json name:  string
-scala name: String
+scala name: java.lang.String
 jdbc:
 - LONGNVARCHAR 0
 - LONGNVARCHAR 1..* -> size
