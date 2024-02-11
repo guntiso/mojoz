@@ -74,10 +74,11 @@ object TypeMetadata {
   def mergeTypeDefs(typeDefs: Seq[TypeDef], fallbackTypeDefs: Seq[TypeDef]): Seq[TypeDef] = {
     val nameToTypeDef = typeDefs.map(t => t.name -> t).toMap
     val nameToFallbackTypeDef = fallbackTypeDefs.map(t => t.name -> t).toMap
+    fallbackTypeDefs.filterNot(nameToTypeDef contains _.name) ++
     typeDefs.map { td =>
       val fallbackTypeDefOpt = nameToFallbackTypeDef.get(td.name)
       if (fallbackTypeDefOpt.isDefined) td.withFallback(fallbackTypeDefOpt.get) else td
-    } ++ fallbackTypeDefs.filterNot(ftd => nameToTypeDef.contains(ftd.name))
+    }
   }
   lazy val defaultTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-default-types.yaml")).typeDefs
   lazy val customTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-custom-types.yaml", false)).typeDefs
