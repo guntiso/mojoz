@@ -427,15 +427,15 @@ object JdbcTableDefLoader {
     "OTHER" -> Types.OTHER,
     "REAL" -> Types.REAL,
     "REF" -> Types.REF,
-    "REF_CURSOR" -> 2012, // Types.REF_CURSOR - since java 8
+    "REF_CURSOR" -> Types.REF_CURSOR, // since java 8
     "ROWID" -> Types.ROWID,
     "SMALLINT" -> Types.SMALLINT,
     "SQLXML" -> Types.SQLXML,
     "STRUCT" -> Types.STRUCT,
     "TIME" -> Types.TIME,
-    "TIME_WITH_TIMEZONE" -> 2013, // Types.TIME_WITH_TIMEZONE - since java 8
+    "TIME_WITH_TIMEZONE" -> Types.TIME_WITH_TIMEZONE, // since java 8
     "TIMESTAMP" -> Types.TIMESTAMP,
-    "TIMESTAMP_WITH_TIMEZONE" -> 2014, // Types.TIMESTAMP_WITH_TIMEZONE - since java 8,
+    "TIMESTAMP_WITH_TIMEZONE" -> Types.TIMESTAMP_WITH_TIMEZONE, // since java 8,
     "TINYINT" -> Types.TINYINT,
     "VARBINARY" -> Types.VARBINARY,
     "VARCHAR" -> Types.VARCHAR

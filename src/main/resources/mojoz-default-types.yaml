@@ -15,6 +15,7 @@ jdbc:
 - VARCHAR *..2147483646 -> size
 - VARCHAR 2147483647..*
 - REF               -> size
+- REF_CURSOR        -> size
 - ROWID             -> size
 - SQLXML
 - CHAR              -> size
@@ -70,6 +71,7 @@ json name:  string
 scala name: java.time.LocalTime
 jdbc:
 - TIME
+- TIME_WITH_TIMEZONE
 yaml:
 - time
 sql:
@@ -85,6 +87,7 @@ json name:  string
 scala name: java.time.LocalDateTime
 jdbc:
 - TIMESTAMP
+- TIMESTAMP_WITH_TIMEZONE
 yaml:
 - dateTime
 sql:
