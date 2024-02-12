@@ -61,11 +61,11 @@ case class TypeDef(
   def withFallback(other: TypeDef) = TypeDef(
     Option(name).getOrElse(other.name),
     other.targetNames ++ targetNames,
-    jdbcLoad ++ other.jdbcLoad,
-    yamlLoad ++ other.yamlLoad,
+    other.jdbcLoad ++ jdbcLoad,
+    Option(yamlLoad).filter(_.nonEmpty) getOrElse other.yamlLoad,
     other.ddlWrite ++ ddlWrite,
     Option(defaults).getOrElse(other.defaults),
-    Option(namingConventions).filter(_.size > 0).getOrElse(other.namingConventions), // ?
+    Option(namingConventions).filter(_.nonEmpty).getOrElse(other.namingConventions),
     other.extras ++ extras
   )
 }
