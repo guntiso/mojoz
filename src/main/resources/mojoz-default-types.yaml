@@ -272,8 +272,8 @@ cql:
 - blob
 
 
-type:       anyType
+type:       any
 xsd name:   anyType
 scala name: Any
 yaml:
-- anyType
+- any
