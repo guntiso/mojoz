@@ -142,7 +142,7 @@ Example:
 ```yaml
 type:       euro
 xsd name:   decimal
-scala name: BigDecimal
+scala name: scala.math.BigDecimal
 yaml:
 - euro
 sql:
