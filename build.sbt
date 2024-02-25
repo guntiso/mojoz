@@ -3,7 +3,7 @@ lazy val dependencies = Seq(
   // test
   "org.hsqldb"     % "hsqldb"     % "2.7.2"  %      Test classifier "jdk8",
   "com.h2database" % "h2"         % "2.2.224"%      Test,
-  "org.scalatest" %% "scalatest"  % "3.2.17" %      Test
+  "org.scalatest" %% "scalatest"  % "3.2.18" %      Test
 )
 
 lazy val integrationTestDependencies = Seq(
