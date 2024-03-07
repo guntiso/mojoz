@@ -127,7 +127,7 @@ fields:
 - full_name
 
 
-expected-error-message: Table metadata for database unknown_db not found
+expected-error-message: Table metadata for database or alias 'unknown_db' not found
 name:       unknown_db_view
 db:         unknown_db
 table:      person

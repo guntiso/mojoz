@@ -125,29 +125,38 @@ case class ColumnDef_[+T](
 class TableMetadata(
   val tableDefs: Seq[TableDef] = (new YamlTableDefLoader()).tableDefs,
   val dbName: String => String = identity,
+  val aliasToDb: Map[String, String] = Map.empty,
 ) {
+  def this(tableDefs: Seq[TableDef], dbName: String => String) = this(tableDefs, dbName, Map.empty)
   val dbToTableDefs: Map[String, Seq[TableDef]] = tableDefs.groupBy(_.db)
+  private val dbToAlias: Map[String, Set[String]] =
+    (dbToTableDefs.keySet.map(db => (db, db)) ++ aliasToDb)
+      .groupBy(_._2)
+      .transform { case (_, set) => set.map(_._1) }
+  private def withDbAlias[T](dbAndValue: (String, T)): Set[(String, T)] = dbAndValue match {
+    case (db, value) => dbToAlias(db).map(alias => (alias, value))
+  }
   private val md = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(e => (e.name, e)).toMap
-  }
+  }.flatMap(withDbAlias)
   private val dbToRefTableAliasToRef = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(t => t.refs
             .filter(_.defaultRefTableAlias != null)
             .map(r => ((t.name, r.defaultRefTableAlias), r)))
             .flatMap(x => x)
             .toMap
-  }
+  }.flatMap(withDbAlias)
   private val dbToRefTableOrAliasToRef = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(t => t.refs
             .map(r => ((t.name, Option(r.defaultRefTableAlias).getOrElse(r.refTable)), r)))
             .flatMap(x => x)
             .toMap
-  }
+  }.flatMap(withDbAlias)
   private val dbToColNameToCol = dbToTableDefs.map { case (db, tableDefs) =>
     db -> tableDefs.map(t => t.cols.map(c => ((t.name, c.name), c))).flatten.toMap
-  }
+  }.flatMap(withDbAlias)
   private def throwDbNotFound(db: String) =
-    sys.error(s"Table metadata for database $db not found")
+    sys.error(s"Table metadata for database or alias '$db' not found")
   private def dbAndTable(db: String, table: String) =
     Option(db).map(db => s"$db:$table") getOrElse table
 
