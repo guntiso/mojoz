@@ -28,6 +28,10 @@ case class CardinalityOverideTest (
   name: String = null,
   surname: String = null
 )
+case class ExpressionTest1 (
+  id: java.lang.Long = null,
+  bank: String = null
+)
 case class NamedInlineView (
   childId: java.lang.Long = null,
   childName: String = null

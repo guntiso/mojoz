@@ -363,7 +363,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
 }
 
-private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
+private[in] object YamlMdLoader {
   val FieldPattern = {
     val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
     val qualifiedIdent = s"$ident(\\.$ident)*"
@@ -389,6 +389,9 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
 
     ("^" + pattern + "$").r
   }
+}
+private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
+  import YamlMdLoader.FieldPattern
   def loadYamlFieldDef(src: Any) = {
     val ThisFail = "Failed to load column definition"
     def colDef(nameEtc: String, comments: String,
@@ -413,7 +416,8 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
         val isResolvable =
           exprOrResolverWithDelimiter != null &&
           s"$exprOrResolverWithDelimiter ".indexOf(" -> ") >= 0
-        val exprOrResolverParts = Option(t(exprOrResolver)).map(_.split("\\s*->\\s*", 2)) getOrElse Array[String]()
+        val exprOrResolverParts =
+          Option(t(exprOrResolver)).map(_.split("""^->$|^->\s+|\s+->\s+|\s+->$""", 2)) getOrElse Array[String]()
         val expr = if (isExpr && exprOrResolverParts.size > 0) t(exprOrResolverParts(0)) else null
         val saveAndResolverString =
           if (isExpr && exprOrResolverParts.size > 1) exprOrResolverParts(1)
@@ -431,7 +435,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     }
     src match {
       case nameEtc: java.lang.String =>
-        colDef(nameEtc.toString, null, null)
+        colDef(nameEtc, null, null)
       case m: java.util.Map[_, _] =>
         if (m.size > 0) {
           val entry = m.entrySet.asScala.toList(0)

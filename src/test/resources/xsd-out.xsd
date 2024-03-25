@@ -146,6 +146,20 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ExpressionTest1Type">
+    <xs:annotation>
+      <xs:documentation>Klienta norēķina konts</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>Ieraksta identifikators.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Bank" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="NamedInlineViewType">
     <xs:sequence>
       <xs:element name="ChildId" nillable="true" minOccurs="0" type="xs:long">

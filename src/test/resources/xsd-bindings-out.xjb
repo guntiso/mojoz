@@ -17,6 +17,9 @@
     <jaxb:bindings node="//xs:complexType[@name='CardinalityOverideTestType']">
       <jaxb:class name="CardinalityOverideTest"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ExpressionTest1Type']">
+      <jaxb:class name="ExpressionTest1"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NamedInlineViewType']">
       <jaxb:class name="NamedInlineView"/>
     </jaxb:bindings>

@@ -174,6 +174,12 @@ class ResolverParsingTests extends FlatSpec with Matchers {
     field(t9, "father").expression should be("father.name || ' ' || father.surname")
     field(t9, "father").saveTo should be("father_id")
     field(t9, "father").resolver should be(null)
+
+    val tx1 = xViewDefs("expression_test_1")
+    field(tx1, "bank").name should be("bank")
+    field(tx1, "bank").alias should be(null)
+    field(tx1, "bank").expression should be("`(bank.name ->> 'subject')`::text")
+    field(tx1, "bank").resolver should be(null)
   }
   def field(v: ViewDef, n: String) =
     v.field(n)

@@ -22,6 +22,10 @@ class CardinalityOverideTest extends Dto {
   var name: String = null
   var surname: String = null
 }
+class ExpressionTest1 extends DtoWithId {
+  var id: java.lang.Long = null
+  var bank: String = null
+}
 class NamedInlineView extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null

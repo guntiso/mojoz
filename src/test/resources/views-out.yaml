@@ -28,6 +28,12 @@ fields:
 - name                  ?
 - surname               !
 
+name:     expression_test_1
+table:    account
+fields:
+- id
+- bank                                  = `(bank.name ->> 'subject')`::text
+
 name:     named_inline_view
 table:
 fields:
