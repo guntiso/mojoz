@@ -19,9 +19,9 @@ initialize := {
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.13.2",
+  scalaVersion := "2.13.13",
   crossScalaVersions := Seq(
-    "2.13.2",
+    "2.13.13",
     "2.12.19",
     "2.11.12",
     "2.10.7"
