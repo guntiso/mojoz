@@ -236,15 +236,8 @@ private[out] class H2SqlGenerator(
     typeDefs: Seq[TypeDef])
   extends HsqldbSqlGenerator(constraintNamingRules, typeDefs) {
   override val sqlWriteInfoKey = "h2 sql"
-  // for index name jdbc roundtrip
-  override def uniqueIndexes(t: TableDefBase[_]) = t.uk.map(uniqueIndex(t))
-  // how to retrieve column check constraint for h2? add to table instead 
-  override def colCheck(c: MojozColumnDefBase): String = ""
   override def explicitNotNullForColumn(t: TableDefBase[_], c: MojozColumnDefBase) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))
-  override def tableChecks(t: MojozTableDefBase): Seq[String] = t.cols.map { c =>
-    super.colCheck(c).trim
-  }.filter(_ != "") ++ super.tableChecks(t)
 }
 
 private[out] class OracleSqlGenerator(

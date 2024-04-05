@@ -1,20 +1,28 @@
 lazy val dependencies = Seq(
-  "org.yaml" % "snakeyaml" % "1.27",
+  "org.yaml" % "snakeyaml" % "2.2",
   // test
-  "org.hsqldb" % "hsqldb" % "2.5.0" % "test",
-  "com.h2database" % "h2" % "1.4.200" % "test",
-  "com.typesafe" % "config" % "1.2.0" % "it,test",                 // XXX POM fix - not in test scope
-  "org.postgresql" % "postgresql" % "9.4.1212.jre7" % "it,test",   // XXX POM fix - not in test scope
-  "org.scalatest" %% "scalatest" % "3.1.1" % "it,test"
+ ("org.hsqldb" % "hsqldb" % "2.7.2"   % "test").classifier("jdk8"),
+  "com.h2database" % "h2" % "2.2.224" % "test",
+  "com.typesafe" % "config" % "1.4.3" % "it,test",                 // XXX POM fix - not in test scope
+  "org.postgresql" % "postgresql" % "42.7.3" % "it,test",          // XXX POM fix - not in test scope
+  "org.scalatest" %% "scalatest" % "3.2.18" % "it,test"
 )
+
+javacOptions ++= Seq("-source", "1.8", "-target", "1.8", "-Xlint")
+initialize := {
+  val _ = initialize.value
+  val javaVersion = sys.props("java.specification.version")
+  if (javaVersion != "1.8")
+    sys.error("Java 1.8 is required for this project. Found " + javaVersion + " instead")
+}
 
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
-  scalaVersion := "2.13.4",
+  scalaVersion := "2.13.13",
   crossScalaVersions := Seq(
-    "2.13.4",
-    "2.12.12",
+    "2.13.13",
+    "2.12.19",
     "2.11.12",
     "2.10.7"
   ),
@@ -25,7 +33,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= dependencies,
 )
 
-ThisBuild / sbt.Keys.versionScheme := Some("semver-spec")
+ThisBuild / sbt.Keys.versionScheme := Some("pvp") // no semver here because of snakeyaml upgrade
 
 lazy val mojoz = (project in file("."))
   .configs(IntegrationTest)
