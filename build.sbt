@@ -22,7 +22,7 @@ lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
   crossScalaVersions := Seq(
     "2.13.2",
-    "2.12.11",
+    "2.12.19",
     "2.11.12",
     "2.10.7"
   ),
