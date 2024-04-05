@@ -129,7 +129,7 @@ class YamlViewDefLoader(
     })
     .map(t => (t.name, t)).toMap
   protected def loadRawViewDefs(defs: String): List[MojozViewDef] = {
-    Option((new Yaml).load(defs))
+    Option((new Yaml).load[java.util.Map[String, Any]](defs))
       .map {
         case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
         case x => throw new RuntimeException(
