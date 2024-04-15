@@ -11,6 +11,19 @@ class AccountDetails extends Account with Dto {
   var bankName: String = null
   // override var billingAccount: String = null
 }
+class ArrayTestView1 extends Dto {
+  var intCol: List[java.lang.Integer] = Nil
+  var int6Col: List[java.lang.Integer] = Nil
+  var integer36Col: List[scala.math.BigInt] = Nil
+  var longCol: List[java.lang.Long] = Nil
+  var long16Col: List[java.lang.Long] = Nil
+  var decimal266Col: List[scala.math.BigDecimal] = Nil
+  var dateCol: List[java.time.LocalDate] = Nil
+  var datetimeCol: List[java.time.LocalDateTime] = Nil
+  var string60Col: List[String] = Nil
+  var string6kCol: List[String] = Nil
+  var booleanCol: List[java.lang.Boolean] = Nil
+}
 class BankListRow extends DtoWithId {
   var id: java.lang.Long = null
   var code: String = null

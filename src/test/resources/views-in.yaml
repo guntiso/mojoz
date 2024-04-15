@@ -13,6 +13,21 @@ fields:
 - bank.name
 - billing_account 64 = 'Account = ' || billing_account
 
+name:     array_test_view1
+table:    array_test_table1
+fields:
+- int_col
+- int6_col
+- integer36_col
+- long_col
+- long16_col
+- decimal266_col
+- date_col
+- datetime_col
+- string60_col
+- string6k_col
+- boolean_col
+
 name:    type_override_test
 table:   account
 fields:

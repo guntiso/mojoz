@@ -562,10 +562,13 @@ class YamlViewDefLoader(
       def resolveTypeFromDbMetadata(f: FieldDef) = {
         def applyColumnAndNullable(col: ColumnDef, nullable: Boolean) = f.copy(
           nullable = nullable,
+          isCollection = f.isCollection || col.type_ != null && col.type_.isArray,
           type_ =
             if (f.type_ != null &&
                 (f.alias == null || f.extras != null && f.extras.get(MojozExplicitType) == Some(true)))
                  overrideSimpleType(col.type_, f.type_)
+            else if (col.type_ != null && col.type_.isArray)
+                 col.type_.copy(name = col.type_.elementType)
             else col.type_,
           enum_ = Option(f.enum_) getOrElse col.enum_,
           comments = Option(f.comments) getOrElse col.comments,

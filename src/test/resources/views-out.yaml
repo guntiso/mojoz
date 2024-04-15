@@ -13,6 +13,21 @@ fields:
 - bank.name
 - billing_account         64            = 'Account = ' || billing_account
 
+name:     array_test_view1
+table:    array_test_table1
+fields:
+- int_col               * int
+- int6_col              * int 6
+- integer36_col         * integer 36
+- long_col              * long
+- long16_col            * long 16
+- decimal266_col        * decimal 26 6
+- date_col              * date
+- datetime_col          * dateTime
+- string60_col          * string 60
+- string6k_col          * string 6000
+- boolean_col           * boolean
+
 name:     bank_list_row
 table:    bank
 fields:

@@ -17,6 +17,19 @@ case class AccountDetails /* extends Account */ (
   bankName: String = null,
   /* override */ billingAccount: String = null
 )
+case class ArrayTestView1 (
+  intCol: List[java.lang.Integer] = Nil,
+  int6Col: List[java.lang.Integer] = Nil,
+  integer36Col: List[scala.math.BigInt] = Nil,
+  longCol: List[java.lang.Long] = Nil,
+  long16Col: List[java.lang.Long] = Nil,
+  decimal266Col: List[scala.math.BigDecimal] = Nil,
+  dateCol: List[java.time.LocalDate] = Nil,
+  datetimeCol: List[java.time.LocalDateTime] = Nil,
+  string60Col: List[String] = Nil,
+  string6kCol: List[String] = Nil,
+  booleanCol: List[java.lang.Boolean] = Nil
+)
 case class BankListRow (
   id: java.lang.Long = null,
   code: String = null,
