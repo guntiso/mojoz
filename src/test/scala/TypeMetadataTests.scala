@@ -74,7 +74,7 @@ jdbc:
     ddlWriteForB("oracle sql").head.targetNamePattern shouldBe "numeric(1)"
 
     val jdbcInfoForB  = nameToType("boolean").jdbcLoad
-    jdbcInfoForB.size shouldBe 1
+    jdbcInfoForB.size shouldBe 2
     jdbcInfoForB("jdbc").size shouldBe 2
     jdbcInfoForB("jdbc").head.jdbcTypeCode shouldBe Types.BIT
     jdbcInfoForB("jdbc").head.jdbcTypeNameOrCode shouldBe "BIT"

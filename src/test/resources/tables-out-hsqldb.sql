@@ -18,6 +18,20 @@ comment on table account_currency is 'Kontam pieejamās norēķinu valūtas - si
 comment on column account_currency.account_id is 'Konta identifikators.';
 comment on column account_currency.currency_code is 'Valūtas kods.';
 
+create table array_test_table1(
+  int_col integer array,
+  int6_col numeric(6) array,
+  integer36_col numeric(36) array,
+  long_col bigint array,
+  long16_col numeric(16) array,
+  decimal266_col numeric(26, 6) array,
+  date_col date array,
+  datetime_col timestamp array,
+  string60_col varchar(60) array,
+  string6k_col varchar(6000) array,
+  boolean_col boolean array
+);
+
 create table bank(
   id bigint,
   code varchar(16) not null,

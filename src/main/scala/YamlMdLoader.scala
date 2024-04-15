@@ -343,10 +343,13 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   private def yamlFieldDefToExFieldDef(yfd: YamlFieldDef) = {
     val name = yfd.name
     val dbDefault = yfd.expression
-    val nullable = yfd.cardinality match {
-      case null => None
-      case "?" => Some(true)
-      case "!" => Some(false)
+    val (nullable, isArray) = yfd.cardinality match {
+      case null => (None,        false)
+      case "?"  => (Some(true),  false)
+      case "!"  => (Some(false), false)
+      case "*"  => (Some(true),  true)
+      case "+"  => (Some(false), true)
+      // TODO extract array max length!   
       case x =>
         sys.error("Unexpected cardinality for table column: " + x)
     }
@@ -356,7 +359,9 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     if (yfd.orderBy != null)
       sys.error("orderBy not supported for table columns")
     val comments = yfd.comments
-    val rawMojozType = Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
+    val rawMojozType =
+      Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
+        .map(t => if (isArray) t.copy(name = s"${Option(t.name).filter(_ != null).getOrElse("")}[]") else t)
     val extras = yfd.extras
     IoColumnDef(name, IoColumnType(nullable, rawMojozType),
       nullable getOrElse true, dbDefault, enm, comments, extras)

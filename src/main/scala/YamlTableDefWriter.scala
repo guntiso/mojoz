@@ -33,7 +33,7 @@ class YamlTableDefWriter {
     import colDef._
     val t = colDef.type_.type_ getOrElse new Type(null, None, None, None, false)
     val typeString = List(
-      Option(t.name),
+      Option(t.elementType),
       t.length,
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
@@ -50,9 +50,10 @@ class YamlTableDefWriter {
 
     val hasDefault = (dbDefault != null && dbDefault != "")
     val default = if (hasDefault) " = " + dbDefault else ""
+    val isArray = t.isArray
     val defString = List(
       (name, 22),
-      (colDef.type_.nullable map (b => if (b) "?" else "!") getOrElse " ", 2),
+      (colDef.type_.nullable map (b => if (b) if (isArray) "*" else "?" else if (isArray) "+" else "!") getOrElse " ", 2),
       (typeString, 12),
       (enumString, 2))
       .foldLeft(("", 0))((r, t) => (

@@ -27,6 +27,9 @@ hsqldb jdbc:
 - VARCHAR 1073741824..*
 - CLOB    *..1073741823 -> size
 - CLOB    1073741824..*
+h2 jdbc:
+- (CHARACTER VARYING *..2147483646 -> size)
+- (CHARACTER VARYING 2147483647..*)
 yaml:
 - string
 - string *          -> size
@@ -120,6 +123,8 @@ jdbc:
 - DECIMAL *..9 0    -> size, none
 - NUMERIC *..9 0    -> size, none
 - INTEGER
+postgresql jdbc:
+- (INT4     10 0    -> none)
 yaml:
 - int
 - int *             -> size, none
@@ -142,6 +147,9 @@ jdbc:
 - DECIMAL 10..18 0  -> size, none
 - NUMERIC 10..18 0  -> size, none
 - BIGINT
+postgresql jdbc:
+- (INT4   10..18 0  -> size, none)
+- (INT8   19     0  -> none)
 yaml:
 - long
 - long *            -> size, none
@@ -237,6 +245,8 @@ scala name: java.lang.Boolean
 jdbc:
 - BIT
 - BOOLEAN
+postgresql jdbc:
+- (BOOL)
 yaml:
 - boolean
 sql:
@@ -253,7 +263,6 @@ type:       bytes
 xsd name:   base64Binary
 scala name: Array[Byte]
 jdbc:
-- ARRAY
 - BINARY
 - BLOB
 - JAVA_OBJECT

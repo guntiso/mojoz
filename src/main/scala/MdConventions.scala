@@ -68,6 +68,7 @@ class MdConventions(naming: DdlGenerator.ConstraintNamingRules = new DdlGenerato
     def defaultType(defaultName: String) =
       type_ map { x =>
         if (x.name == null) x.copy(name = defaultName)
+        else if (x.name == "[]") x.copy(name = s"$defaultName[]")
         else x
       } getOrElse new Type(defaultName)
     (name, type_) match {
@@ -133,7 +134,11 @@ class MdConventions(naming: DdlGenerator.ConstraintNamingRules = new DdlGenerato
       case (_, nullable) => Some(nullable)
   }
   def toExternal(table: TableDef, col: ColumnDef): IoColumnDef = {
-    val nullOpt = nullableOpt(col.name, col.nullable, table)
+    val nullOpt =
+      if (col.type_.isArray)
+        Some(col.nullable)
+      else
+        nullableOpt(col.name, col.nullable, table)
     val dbDefault = (col.type_.name, col.dbDefault) match {
       case (_, null) => null
       case ("string", d) =>
@@ -189,7 +194,9 @@ class MdConventions(naming: DdlGenerator.ConstraintNamingRules = new DdlGenerato
         case (name, "date", _) if isDateName(name) => None
         case (name, "dateTime", _) if isDateTimeName(name) => None
         case (name, "string", None) if !isTypedName(name) => None
+        case (name, "string[]", None) if !isTypedName(name) => Some(new Type("[]"))
         case (name, "string", Some(len)) if !isTypedName(name) => Some(new Type(null: String, len))
+        case (name, "string[]", Some(len)) if !isTypedName(name) => Some(new Type("[]": String, len))
         case _ => Option(type_)
       }
   }

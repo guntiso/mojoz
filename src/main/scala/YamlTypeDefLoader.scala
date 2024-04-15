@@ -50,7 +50,14 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       (min, max)
     }
   }
-  private def toJdbcLoadInfo(s: String) = {
+  private lazy val NOT_JDBC_TYPE = 42  // XXX refactor, get rid of this
+  private lazy val ident         =  "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
+  private lazy val PlainTypeDesc = s"^(\\d+|$ident|$ident +$ident)$$".r
+  private lazy val SizedTypeDesc = s"^(\\d+|$ident|$ident +$ident) +([*\\.\\d]+)$$".r
+  private lazy val FracTypeDesc  = s"^(\\d+|$ident|$ident +$ident) +([*\\.\\d]+) +([*\\.\\d]+)$$".r
+  private def toJdbcLoadInfo(str: String) = {
+    val isJdbcType = !str.startsWith("(")
+    val s = str.stripPrefix("(").stripSuffix(")").trim
     val sParts = s.split("->", 2)
     val jdbcPart = Option(sParts(0)).map(_.trim).filter(_ != "").orNull
     if (jdbcPart == null)
@@ -60,15 +67,22 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
       if (sParts.size > 1) Option(sParts(1)).map(_.trim).filter(_ != "").orNull
       else null
     val targetPartParts = Option(targetPart).map(_.split(",\\s*")) getOrElse Array[String]()
-    val jdbcPartParts = jdbcPart.split("\\s+", 3)
-    val jdbcNameOrCode = jdbcPartParts(0)
+    val (jdbcNameOrCode, sizeInterval, fracInterval) = try jdbcPart match {
+      case FracTypeDesc (n, s, f) => (n, s, f)
+      case SizedTypeDesc(n, s)    => (n, s, "")
+      case PlainTypeDesc(n)       => (n, "", "")
+      case n                      => (n, "", "")
+    } catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException(s"Failed to extract name and intervals from jdbcPart '$jdbcPart'", ex)
+    }
     val jdbcCode =
+     if (isJdbcType)
       Try(jdbcNameOrCode.toInt).toOption
         .getOrElse(JdbcTableDefLoader.jdbcTypeNameToCode.get(jdbcNameOrCode)
           .getOrElse(sys.error("Unexpected jdbc type name: " + jdbcNameOrCode)))
-    val sizeInterval = if (jdbcPartParts.size > 1) jdbcPartParts(1) else ""
+     else NOT_JDBC_TYPE
     val (minSize, maxSize) = toMinMax(sizeInterval)
-    val fracInterval = if (jdbcPartParts.size > 2) jdbcPartParts(2) else ""
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     val targetLength:         Option[Integer] =
       if (targetPartParts.size == 1)

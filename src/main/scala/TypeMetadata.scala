@@ -13,7 +13,15 @@ case class Type(name: String, length: Option[Int],
   def this(name: String, totalDigits: Int, fractionDigits: Int) =
     this(name, None, Some(totalDigits), Some(fractionDigits), false)
 
-  def intDigits = totalDigits.map(n => n - fractionDigits.getOrElse(0))
+  def intDigits:   Option[Int] = totalDigits.map(n => n - fractionDigits.getOrElse(0))
+  def isArray:     Boolean     = name != null && name.endsWith("]")
+  def elementType: String      = name match {
+    case null => null
+    case "[]" => null
+    case _    => if (isArray) name.substring(0, name.indexOf('[')) else name
+  }
+  def arrayLengthString: Option[String] =
+    Option(name).map(n => n.substring(n.indexOf('[') + 1, n.length - 1)).filter(_ != "")
 }
 
 case class JdbcLoadInfo(

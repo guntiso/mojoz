@@ -203,9 +203,9 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
       td.name ->
         td.ddlWrite.get(ddlWriteInfoKey).orElse(td.ddlWrite.get("sql")).getOrElse(Nil)
     ).toMap
-  def dbType(c: ColumnDef): String = {
+  def dbElementType(c: ColumnDef): String = {
     val t = c.type_
-    typeNameToSqlWriteInfoSeq.get(t.name).getOrElse(Nil).find { info =>
+    typeNameToSqlWriteInfoSeq.get(t.elementType).getOrElse(Nil).find { info =>
       sizeOptionMatch(info.minSize, info.maxSize, t.length.orElse(t.totalDigits)) &&
       sizeOptionMatch(info.minFractionDigits, info.maxFractionDigits, t.fractionDigits)
     }.map { info =>
@@ -216,9 +216,13 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
           info.targetNamePattern.replace("size", "" + size).replace("frac", "" + frac)
       }
     }.getOrElse {
-      sys.error(s"Missing sql info (key '$ddlWriteInfoKey' or 'sql') for type $t in ${c.name}")
+      sys.error(s"Missing sql info (key '$ddlWriteInfoKey' or 'sql') for type $t (element type ${t.elementType}) in ${c.name}")
     }
   }
+  def dbAraryType(c: ColumnDef) =
+    c.type_.arrayLengthString.map(len => s"${dbElementType(c)} array[$len]").getOrElse(s"${dbElementType(c)} array")
+  def dbType(c: ColumnDef): String =
+    if (c.type_.isArray) dbAraryType(c) else dbElementType(c)
   def colCheck(c: ColumnDef): String
   def tableChecks(t: TableDef): Seq[String] =
     t.ck.map(ck =>
@@ -304,6 +308,8 @@ private[out] class PostgreSqlDdlGenerator(
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "postgresql"
+  override def dbAraryType(c: ColumnDef) =
+    s"${dbElementType(c)}[${c.type_.arrayLengthString.getOrElse("")}]"
 }
 
 private[out] class CassandraDdlGenerator(
@@ -406,5 +412,7 @@ private[out] class CassandraDdlGenerator(
     s"comment = '${c.replace("'", "''")}'")
   override def foreignKey(tableName: String)(r: TableMetadata.Ref) =
     s"-- ${super.foreignKey(tableName)(r)}"
+  override def dbAraryType(c: ColumnDef) =
+    s"list<${dbElementType(c)}>"
   override def tableChecks(t: TableDef): Seq[String] = Nil
 }

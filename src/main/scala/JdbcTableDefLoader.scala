@@ -317,8 +317,51 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         s"Failed to convert jdbc type (code: $jdbcTypeCode, name: $jdbcTypeName, size: $size, fractionDigits: $frac)" +
           " to mojoz type - mo match found")
     }
-  def toMojozType(jdbcColumnType: JdbcColumnType): Type =
+
+  def dbTypeNameToMojozType(dbTypeName: String, size: Int, frac: Int) =
+    jdbcLoadInfoToTypeDef.find { case (jl, td) =>
+      jl.jdbcTypeNameOrCode == dbTypeName &&
+      jl.minSize.map(_ <= size).getOrElse(true) &&
+      jl.maxSize.map(_ >= size).getOrElse(true) &&
+      jl.minFractionDigits.map(_ <= frac).getOrElse(true) &&
+      jl.maxFractionDigits.map(_ >= frac).getOrElse(true)
+    }.map { case (jl, td) =>
+      val length = jl.targetLength match {
+        case Some(null) => Some(size) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val totalDigits = jl.targetTotalDigits match {
+        case Some(null) => Some(size) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val fractionDigits = jl.targetFractionDigits match {
+        case Some(null) => Some(frac) // xxx Some(null) means copy from source
+        case x => x.map(_.intValue)
+      }
+      val isComplexType = false
+      Type(td.name, length, totalDigits, fractionDigits, isComplexType)
+    }.getOrElse {
+      sys.error(
+        s"Failed to convert db type (name: $dbTypeName, size: $size, fractionDigits: $frac)" +
+          " to mojoz type - mo match found")
+    }
+
+  private val ident         =  "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
+  private val PlainTypeName = s"^($ident|$ident +$ident) ARRAY$$".r
+  private val SizedTypeName = s"^($ident|$ident +$ident)\\((\\d+)\\) ARRAY$$".r
+  private val FracTypeName  = s"^($ident|$ident +$ident)\\((\\d+), *(\\d+)\\) ARRAY$$".r
+  def toMojozElementType(jdbcColumnType: JdbcColumnType): Type = jdbcColumnType.dbTypeName match {
+    case PlainTypeName(dbTypeName)             => dbTypeNameToMojozType(dbTypeName, 0, 0)
+    case SizedTypeName(dbTypeName, size)       => dbTypeNameToMojozType(dbTypeName, size.toInt, 0)
+    case FracTypeName (dbTypeName, size, frac) => dbTypeNameToMojozType(dbTypeName, size.toInt, frac.toInt)
+  }
+  def toMojozType(jdbcColumnType: JdbcColumnType): Type = jdbcColumnType.jdbcTypeCode match {
+   case Types.ARRAY =>
+    val elementType = toMojozElementType(jdbcColumnType)
+    elementType.copy(name = Option(elementType.name).map(n => s"$n[]").getOrElse("[]"))
+   case _ =>
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
+  }
   def toMojozTableDef(tableDef: JdbcTableDef): TableDef =
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
 }
@@ -373,6 +416,11 @@ object JdbcTableDefLoader {
     override def checkConstraints(conn: Connection,
       catalog: String, schemaPattern: String, tableNamePattern: String) =
       standardCheckConstraints(conn, catalog, schemaPattern, tableNamePattern)
+    override def toMojozElementType(jdbcColumnType: JdbcColumnType): Type =
+      dbTypeNameToMojozType(
+        jdbcColumnType.dbTypeName.stripPrefix("_").toUpperCase,
+        jdbcColumnType.size,
+        jdbcColumnType.fractionDigits)
   }
   private[in] class Other(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override def checkConstraints(conn: Connection,

@@ -92,6 +92,21 @@ create table account_currency(
 -- comment on column account_currency.account_id is 'Konta identifikators.';
 -- comment on column account_currency.currency_code is 'Valūtas kods.';
 
+create table array_test_table1(
+  int_col list<int>,
+  int6_col list<int>,
+  integer36_col list<varint>,
+  long_col list<bigint>,
+  long16_col list<bigint>,
+  decimal266_col list<decimal>,
+  date_col list<date>,
+  datetime_col list<timestamp>,
+  string60_col list<text>,
+  string6k_col list<text>,
+  boolean_col list<boolean>,
+  primary key (int_col)
+);
+
 create table bank(
   id bigint,
   code text,
