@@ -274,11 +274,14 @@ yaml:
 - bytes
 - bytes *           -> size
 sql:
-- blob
+- bytes             -> blob
+- bytes *           -> varbinary(size)
 postgresql:
-- bytea
+- bytes             -> bytea
+- bytes *           -> bytea
 cql:
-- blob
+- bytes             -> blob
+- bytes *           -> blob
 
 
 type:       any
