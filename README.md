@@ -16,8 +16,18 @@ Table metadata can also be extracted from
 using JDBC connection and saved to yaml files for later use
 (see [JdbcTableDefLoader](https://static.javadoc.io/org.mojoz/mojoz_3/5.1.0/org/mojoz/metadata/in/JdbcTableDefLoader$.html)).
 
-[Yaml 1.2](https://yaml.org/spec/1.2/) syntax is used for table metadata, but some keys and values are further parsed by mojoz and empty line is used as delimiter.
-Key names are:
+[Yaml 1.2](https://yaml.org/spec/1.2/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
+
+If file does not start with '%' (yaml [directives](https://yaml.org/spec/1.2.2/#68-directives))
+or '-' (yaml [collections](https://yaml.org/spec/1.2.2/#21-collections)
+or yaml [directives end marker](https://yaml.org/spec/1.2.2/#912-document-markers)) then empty lines are used as delimiters
+and resulting parts are parsed separately. Otherwise file, which can contain multiple definitions, is parsed as a whole -
+see [tables-in-as-multidoc.yaml](src/test/resources/tables-in-as-multidoc.yaml).
+To share nodes between definitions using yaml [anchors](https://yaml.org/spec/1.2.2/#692-node-anchors)
+and [aliases](https://yaml.org/spec/1.2.2/#71-alias-nodes), definitions can be put in collection -
+see [tables-in-as-array.yaml](src/test/resources/tables-in-as-array.yaml).
+
+Key names for table definitions are:
 
 * **db** - database name
 * **table** - table name

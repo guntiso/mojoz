@@ -9,9 +9,15 @@ import scala.io.Source
 case class YamlMd(
   filename: String,
   line: Int,
-  body: String)
+  body: String) {
+  def startsWithDirectiveOrDash =
+    body.startsWith("%") ||  // yaml directive
+    body.startsWith("-")     // yaml array or yaml directives end
+}
 
 private[in] trait MdSource {
+  def noSplit(mdDef: YamlMd) = // do not split if not bare documents
+    mdDef.startsWithDirectiveOrDash
   def split(mdDefs: Seq[YamlMd]) = {
     def shouldSplitAt(line: String) =
       (line == "")         ||  // empty line or
@@ -20,6 +26,9 @@ private[in] trait MdSource {
       val linesBuffer = Buffer[String]()
       val mdBuffer    = Buffer[YamlMd]()
       var lineNr = 0
+      if (noSplit(d))
+        mdBuffer += d
+      else
       (d.body + "\n\n").linesIterator foreach { line =>
         lineNr += 1
         if (shouldSplitAt(line)) {

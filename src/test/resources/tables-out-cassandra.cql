@@ -1,3 +1,27 @@
+create table table_a1(
+  id bigint,
+  name text,
+  primary key (id)
+);
+
+create table table_a2(
+  id bigint,
+  name text,
+  primary key (id)
+);
+
+create table multidoc1(
+  id bigint,
+  name text,
+  primary key (id)
+);
+
+create table multidoc2(
+  id bigint,
+  name text,
+  primary key (id)
+);
+
 create table cassandra_pk_test_table1(
   id bigint,
   name text,

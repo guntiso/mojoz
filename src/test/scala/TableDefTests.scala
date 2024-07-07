@@ -28,6 +28,20 @@ class TableDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "tables-out-cassandra-produced.yaml", produced)
     expected should be(produced)
   }
+  "generated yaml file from multidoc input" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-from-multidoc.yaml")
+    val produced = YamlTableDefWriter.toYaml(multidocTableDefs)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-from-multidoc-produced.yaml", produced)
+    expected should be(produced)
+  }
+  "generated yaml file from array input" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-from-array.yaml")
+    val produced = YamlTableDefWriter.toYaml(arrayTableDefs)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-from-array-produced.yaml", produced)
+    expected should be(produced)
+  }
   "generated cassandra cql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-cassandra.cql")
     val produced = DdlGenerator.cassandra().schema(allTableDefs.filter(_.db == null))
@@ -186,6 +200,12 @@ object TableDefTests {
   val cassandraMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-cassandra.yaml")
   val cassandraTableDefs = new YamlTableDefLoader(cassandraMdDefs).tableDefs
+  val multidocMdDefs = YamlMd.fromFiles(
+    path = path, filter = _.getName == "tables-in-as-multidoc.yaml")
+  val multidocTableDefs = new YamlTableDefLoader(multidocMdDefs).tableDefs
+  val arrayMdDefs = YamlMd.fromFiles(
+    path = path, filter = _.getName == "tables-in-as-array.yaml")
+  val arrayTableDefs = new YamlTableDefLoader(arrayMdDefs).tableDefs
   val allMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName startsWith "tables-in")
   val allTableDefs = new YamlTableDefLoader(allMdDefs).tableDefs

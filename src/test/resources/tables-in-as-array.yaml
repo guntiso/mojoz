@@ -1,0 +1,8 @@
+-
+  table:    table_a1
+  columns:  &a1_cols
+  - id
+  - name
+-
+  table:    table_a2
+  columns:  *a1_cols

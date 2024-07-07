@@ -79,7 +79,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
 
   // TODO load check constraints!
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(YamlMd.isTableDef)
+  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isTableDef(md))
   private def checkRawTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
     val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
     if (m.size < td.size) sys.error("Duplicate table definitions: " +
@@ -124,10 +124,15 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     td foreach checkIndices
   }
   val tableDefs: Seq[TableDef] = {
-    val rawTableDefs = sources map { md =>
-      try yamlTypeDefToTableDef(loadYamlTableDef(md.body, md.filename, md.line)) catch {
+    val rawTableDefs = sources.flatMap { md =>
+      try loadYamlTableDefs(md.body, md.filename, md.line).map(md -> _) catch {
         case e: Exception => throw new RuntimeException(
-          s"Failed to load table definition from ${md.filename}, line ${md.line}", e)
+          s"Failed to load table definitions from ${md.filename}, line ${md.line}", e)
+      }
+    }.map { case (md, rawTableDef) =>
+      try yamlTypeDefToTableDef(rawTableDef) catch {
+        case e: Exception => throw new RuntimeException(
+          s"Failed to process table definitions from ${md.filename}, line ${md.line}", e)
       }
     }
     checkRawTableDefs(rawTableDefs)
@@ -280,50 +285,57 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       })
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
-  private def loadYamlTableDef(tableDefString: String, labelOrFilename: String = null, lineNumber: Int = 0) = {
+  private def loadYamlTableDefs(tableDefString: String, labelOrFilename: String = null, lineNumber: Int = 0): Seq[YamlTableDef] = {
     val loaderSettings = LoadSettings.builder()
       .setLabel(Option(labelOrFilename) getOrElse "mojoz table metadata")
       .setAllowDuplicateKeys(false)
       .build();
     val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    val tdMap =
-      (new Load(loaderSettings)).loadFromString(lineNumberCorrection + tableDefString) match {
-        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+    val tdMaps =
+      (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + tableDefString).iterator.asScala.toList.flatMap {
+        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
+        case a: java.util.ArrayList[_] => a.asScala.map {
+          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+          case x => sys.error(
+            "Unexpected class: " + Option(x).map(_.getClass).orNull)
+        }
         case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
-    val db    = tdMap.get("db"   ).filter(_ != null).map(_.toString).filter(_ != "").orNull
-    val table = tdMap.get("table").filter(_ != null).map(_.toString).filter(_ != "")
-      .getOrElse(sys.error("Missing table name"))
-    val comments = toList(tdMap.get("comments")) match {
-      case Nil => null
-      case x => x.map(_.toString).mkString("\n")
-    }
-    val colSrc = tdMap.get("columns")
-      .map {
-        case null => Nil
-        case a: java.util.ArrayList[_] => a.asScala.toList
-        case x => sys.error("Unexpected class: " + x.getClass)
+    tdMaps.filter(_.get("columns").nonEmpty).map { tdMap =>
+      val db    = tdMap.get("db"   ).filter(_ != null).map(_.toString).filter(_ != "").orNull
+      val table = tdMap.get("table").filter(_ != null).map(_.toString).filter(_ != "")
+        .getOrElse(sys.error("Missing table name"))
+      val comments = toList(tdMap.get("comments")) match {
+        case Nil => null
+        case x => x.map(_.toString).mkString("\n")
       }
-      .getOrElse(Nil)
-    val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
-    val pk_list = tdMap.get("pk") match {
-      case Some(null) => List(null)
-      case Some(a: java.util.ArrayList[_]) if a.isEmpty => List(null)
-      case x => toList(x).map(loadYamlIndexDef)
+      val colSrc = tdMap.get("columns")
+        .map {
+          case null => Nil
+          case a: java.util.ArrayList[_] => a.asScala.toList
+          case x => sys.error("Unexpected class: " + x.getClass)
+        }
+        .getOrElse(Nil)
+      val colDefs = colSrc map YamlMdLoader.loadYamlFieldDef
+      val pk_list = tdMap.get("pk") match {
+        case Some(null) => List(null)
+        case Some(a: java.util.ArrayList[_]) if a.isEmpty => List(null)
+        case x => toList(x).map(loadYamlIndexDef)
+      }
+      if (pk_list.size > 1)
+        sys.error(
+          "Multiple primary keys are not allowed, composite key columns should be comma-separated")
+      val pk = pk_list.headOption
+      val uk = toList(tdMap.get("uk"))
+        .map(loadYamlIndexDef)
+      val idx = toList(tdMap.get("idx"))
+        .map(loadYamlIndexDef)
+      val refs = toList(tdMap.get("refs"))
+        .map(loadYamlRefDef)
+      val extras = tdMap -- TableDefKeyStrings
+      YamlTableDef(db, table, comments, colDefs, pk, uk, idx, refs, extras)
     }
-    if (pk_list.size > 1)
-      sys.error(
-        "Multiple primary keys are not allowed, composite key columns should be comma-separated")
-    val pk = pk_list.headOption
-    val uk = toList(tdMap.get("uk"))
-      .map(loadYamlIndexDef)
-    val idx = toList(tdMap.get("idx"))
-      .map(loadYamlIndexDef)
-    val refs = toList(tdMap.get("refs"))
-      .map(loadYamlRefDef)
-    val extras = tdMap -- TableDefKeyStrings
-    YamlTableDef(db, table, comments, colDefs, pk, uk, idx, refs, extras)
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
     // TODO cleanup?
