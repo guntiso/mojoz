@@ -10,9 +10,16 @@ case class YamlMd(
   filename: String,
   line: Int,
   body: String) {
-  def startsWithDirectiveOrDash =
-    body.startsWith("%") ||  // yaml directive
-    body.startsWith("-")     // yaml array or yaml directives end
+  lazy val startsWithDirectiveOrDash = {
+    val it = // .nextOption() not available on scala 2.12
+      body.linesIterator
+        .filterNot(_ startsWith "#")// skip comments
+    if (it.hasNext) {
+      val line = it.next()
+      line.startsWith("%") ||       // yaml directive
+      line.startsWith("-")          // yaml array or yaml directives end
+    } else false
+  }
 }
 
 private[in] trait MdSource {

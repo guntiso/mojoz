@@ -1,3 +1,6 @@
+# **********************************************************************
+# *** collection format allows yaml node sharing between definitions ***
+# **********************************************************************
 -
   table:    table_a1
   columns:  &a1_cols
