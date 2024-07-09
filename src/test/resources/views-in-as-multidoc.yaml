@@ -1,0 +1,12 @@
+---
+name:    v_multidoc1
+table:
+fields:
+- id
+- name
+---
+name:    v_multidoc2
+table:
+fields:
+- id
+- name

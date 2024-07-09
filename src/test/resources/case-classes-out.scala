@@ -173,6 +173,22 @@ case class TypeOverrideTest2 (
   intColAsString: String = null,
   decimal266ColMod: scala.math.BigDecimal = null
 )
+case class VArr1 (
+  id: java.lang.Long = null,
+  name: String = null
+)
+case class VArr2 (
+  id: java.lang.Long = null,
+  name: String = null
+)
+case class VMultidoc1 (
+  id: java.lang.Long = null,
+  name: String = null
+)
+case class VMultidoc2 (
+  id: java.lang.Long = null,
+  name: String = null
+)
 case class WithAnonymousInlineView (
   someId: java.lang.Long = null,
   someName: String = null,

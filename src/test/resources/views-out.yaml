@@ -239,6 +239,30 @@ fields:
 - int_col_as_string       string 10     = int_col
 - decimal266_col_mod      decimal 8 2   = decimal266_col8
 
+name:     v_arr1
+table:
+fields:
+- id
+- name
+
+name:     v_arr2
+table:
+fields:
+- id
+- name
+
+name:     v_multidoc1
+table:
+fields:
+- id
+- name
+
+name:     v_multidoc2
+table:
+fields:
+- id
+- name
+
 name:     with_anonymous_inline_view
 table:
 fields:

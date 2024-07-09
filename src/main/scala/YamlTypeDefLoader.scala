@@ -9,12 +9,12 @@ import scala.util.Try
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(YamlMd.isCustomTypeDef)
+  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isCustomTypeDef(md))
   val typeDefs = {
-    val rawTypeDefs = sources map { td =>
-      try loadYamlTypeDef(td.body, td.filename, td.line) catch {
+    val rawTypeDefs = sources flatMap { td =>
+      try loadYamlTypeDefs(td.body, td.filename, td.line) catch {
         case e: Exception => throw new RuntimeException(
-          s"Failed to load type definition from ${td.filename}, line ${td.line}", e)
+          s"Failed to load type definitions from ${td.filename}, line ${td.line}", e)
       }
     }
     val nameToTableDef = {
@@ -170,65 +170,72 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     DdlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
-  private def loadYamlTypeDef(typeDefString: String, labelOrFilename: String = null, lineNumber: Int = 0) = {
+  private def loadYamlTypeDefs(typeDefString: String, labelOrFilename: String = null, lineNumber: Int = 0): Seq[TypeDef] = {
     val loaderSettings = LoadSettings.builder()
       .setLabel(Option(labelOrFilename) getOrElse "mojoz type metadata")
       .setAllowDuplicateKeys(false)
       .build();
     val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    val tdMap =
-      (new Load(loaderSettings)).loadFromString(lineNumberCorrection + typeDefString) match {
-        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+    val tdMaps =
+      (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + typeDefString).iterator.asScala.toList.flatMap {
+        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
+        case a: java.util.ArrayList[_] => a.asScala.map {
+          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+          case x => sys.error(
+            "Unexpected class: " + Option(x).map(_.getClass).orNull)
+        }
         case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
       }
-    val typeName = tdMap.get("type").map(_.toString)
-      .getOrElse(sys.error("Missing type name"))
-    val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++
-      tdMap.filter(_._1 endsWith " name").map {
-        case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
-      }
-    val jdbcLoad: Map[String, Seq[JdbcLoadInfo]] = TreeMap()(math.Ordering.String) ++
-      tdMap.filter(_._1 endsWith "jdbc").map {
-        case (k, v) =>
-        val jdbcLoadInfoSeq =
-          (v match {
-            case null => Nil
-            case a: java.util.ArrayList[_] => a.asScala.toList
-            case x => sys.error("Unexpected class: " + x.getClass)
-          })
-            .map(toString(_, s"Failed to load jdbc load definition for $k"))
-            .map(toJdbcLoadInfo)
-        (k, jdbcLoadInfoSeq)
-      }
-    val yamlLoad = tdMap.get("yaml")
-      .map {
-        case null => Nil
-        case a: java.util.ArrayList[_] => a.asScala.toList
-        case x => sys.error("Unexpected class: " + x.getClass)
-      }
-      .getOrElse(Nil)
-      .map(toString(_, "Failed to load yaml load definition"))
-      .map(toYamlLoadInfo)
-    val ddlWrite: Map[String, Seq[DdlWriteInfo]] = TreeMap()(math.Ordering.String) ++
-      tdMap.filter {
-        case (k, v) =>
-          k.endsWith("sql") || k.endsWith("cql")
-      }.map {
-        case (k, v) =>
-        val ddlWriteInfoSeq =
-          (v match {
-            case null => Nil
-            case a: java.util.ArrayList[_] => a.asScala.toList
-            case x => sys.error("Unexpected class: " + x.getClass)
-          })
-            .map(toString(_, s"Failed to load ddl write definition for $k"))
-            .map(toSqlWriteInfo)
-        (k, ddlWriteInfoSeq)
-      }
-    val defaults = null                         // TODO
-    val namingConventions: Seq[String] = Nil    // TODO
-    val extras: Map[String, Any] = Map.empty    // TODO val extras = tdMap -- TypeDefKeyStrings
-    TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, ddlWrite, defaults, namingConventions, extras)
+    tdMaps.filter(_.get("type").nonEmpty).map { tdMap =>
+      val typeName = tdMap.get("type").map(_.toString)
+        .getOrElse(sys.error("Missing type name"))
+      val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++
+        tdMap.filter(_._1 endsWith " name").map {
+          case (k, v) => (k.substring(0, k.length - "name".length - 1).trim, "" + v)
+        }
+      val jdbcLoad: Map[String, Seq[JdbcLoadInfo]] = TreeMap()(math.Ordering.String) ++
+        tdMap.filter(_._1 endsWith "jdbc").map {
+          case (k, v) =>
+          val jdbcLoadInfoSeq =
+            (v match {
+              case null => Nil
+              case a: java.util.ArrayList[_] => a.asScala.toList
+              case x => sys.error("Unexpected class: " + x.getClass)
+            })
+              .map(toString(_, s"Failed to load jdbc load definition for $k"))
+              .map(toJdbcLoadInfo)
+          (k, jdbcLoadInfoSeq)
+        }
+      val yamlLoad = tdMap.get("yaml")
+        .map {
+          case null => Nil
+          case a: java.util.ArrayList[_] => a.asScala.toList
+          case x => sys.error("Unexpected class: " + x.getClass)
+        }
+        .getOrElse(Nil)
+        .map(toString(_, "Failed to load yaml load definition"))
+        .map(toYamlLoadInfo)
+      val ddlWrite: Map[String, Seq[DdlWriteInfo]] = TreeMap()(math.Ordering.String) ++
+        tdMap.filter {
+          case (k, v) =>
+            k.endsWith("sql") || k.endsWith("cql")
+        }.map {
+          case (k, v) =>
+          val ddlWriteInfoSeq =
+            (v match {
+              case null => Nil
+              case a: java.util.ArrayList[_] => a.asScala.toList
+              case x => sys.error("Unexpected class: " + x.getClass)
+            })
+              .map(toString(_, s"Failed to load ddl write definition for $k"))
+              .map(toSqlWriteInfo)
+          (k, ddlWriteInfoSeq)
+        }
+      val defaults = null                         // TODO
+      val namingConventions: Seq[String] = Nil    // TODO
+      val extras: Map[String, Any] = Map.empty    // TODO val extras = tdMap -- TypeDefKeyStrings
+      TypeDef(typeName, targetNames, jdbcLoad, yamlLoad, ddlWrite, defaults, namingConventions, extras)
+    }
   }
 }

@@ -107,6 +107,18 @@
     <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTest2Type']">
       <jaxb:class name="TypeOverrideTest2"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='VArr1Type']">
+      <jaxb:class name="VArr1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='VArr2Type']">
+      <jaxb:class name="VArr2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='VMultidoc1Type']">
+      <jaxb:class name="VMultidoc1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='VMultidoc2Type']">
+      <jaxb:class name="VMultidoc2"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithAnonymousInlineViewType']">
       <jaxb:class name="WithAnonymousInlineView"/>
     </jaxb:bindings>

@@ -27,7 +27,7 @@ columns:
 - id
 
 
-expected-error-message: Failed to load type definition from error-message-tests.yaml, line 30
+expected-error-message: Failed to load type definitions from error-message-tests.yaml, line 30
 expected-error-message: duplicate key sql
 expected-error-message: in error-message-tests.yaml, line 39
 type:       bad_euro

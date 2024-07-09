@@ -163,6 +163,22 @@ class TypeOverrideTest2 extends Dto {
   var intColAsString: String = null
   var decimal266ColMod: scala.math.BigDecimal = null
 }
+class VArr1 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
+class VArr2 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
+class VMultidoc1 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
+class VMultidoc2 extends DtoWithId {
+  var id: java.lang.Long = null
+  var name: String = null
+}
 class WithAnonymousInlineView extends Dto {
   var someId: java.lang.Long = null
   var someName: String = null

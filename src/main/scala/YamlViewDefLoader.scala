@@ -28,7 +28,7 @@ class YamlViewDefLoader(
   private val MojozExplicitType        = "mojoz.explicit.type"
   private val MojozIsOuterJoined       = "mojoz.internal.is-outer-joined"
   private val parseJoins = joinsParser
-  val sources = yamlMd.filter(YamlMd.isViewDef)
+  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isViewDef(md))
   private val rawViewDefs = transformRawViewDefs(sources.map { md =>
     try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
@@ -183,20 +183,30 @@ class YamlViewDefLoader(
   val nameToViewDef: Map[String, ViewDef] =
     plainViewDefs.map(plainViewDefToViewDef(_, Nil))
       .map(t => (t.name, t)).toMap
+  private[in] def isViewDef(m: Map[String, _]) = { // TODO contains "view" instead?
+    !m.contains("columns") && !m.contains("type") &&
+    (m.contains("extends") ||
+     m.contains("fields")  ||
+     m.contains("name") &&
+     m.contains("table"))
+  }
   protected def loadRawViewDefs(defs: String, labelOrFilename: String = null, lineNumber: Int = 0): List[ViewDef] = {
     val loaderSettings = LoadSettings.builder()
       .setLabel(Option(labelOrFilename) getOrElse "mojoz view metadata")
       .setAllowDuplicateKeys(false)
       .build();
     val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    Option((new Load(loaderSettings)).loadFromString(lineNumberCorrection + defs))
-      .map {
-        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+    (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + defs).iterator.asScala.toList.flatMap {
+        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
+        case a: java.util.ArrayList[_] => a.asScala.map {
+          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+          case x => sys.error(
+            "Unexpected class: " + Option(x).map(_.getClass).orNull)
+        }
         case x => sys.error(
           "Unexpected class: " + Option(x).map(_.getClass).orNull)
-      }
-      .map(loadRawViewDefs)
-      .getOrElse(Nil)
+      } .filter(isViewDef)
+        .flatMap(loadRawViewDefs)
   }
   protected def loadRawViewDefs(tdMap: Map[String, Any]): List[ViewDef] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {

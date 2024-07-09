@@ -28,6 +28,46 @@ class TypeMetadataTests extends FlatSpec with Matchers {
     )
   }
 
+  "type metadata" should "load types" in {
+    // load from multidoc
+    val tm = new YamlTypeDefLoader(YamlMd.fromString("""
+---
+type:       boolean
+scala name: MyBoolean
+yaml:
+- bool
+oracle sql:
+- numeric(1)
+---
+type:       float
+scala name: java.lang.Double
+jdbc:
+- FLOAT
+""".trim)).typeDefs
+
+    // load from collection
+    val tc = new YamlTypeDefLoader(YamlMd.fromString("""
+-
+  type:       boolean
+  scala name: MyBoolean
+  yaml:
+  - bool
+  oracle sql:
+  - numeric(1)
+-
+  type:       float
+  scala name: java.lang.Double
+  jdbc:
+  - FLOAT
+""".trim)).typeDefs
+
+    // check
+    tm.size shouldBe 2
+    tc.size shouldBe 2
+    tm shouldBe tc
+  }
+
+
   "type metadata" should "merge types" in {
     val customTypes = new YamlTypeDefLoader(YamlMd.fromString("""
 type:       boolean
