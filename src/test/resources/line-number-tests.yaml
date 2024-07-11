@@ -1,0 +1,13 @@
+name:     account
+extends:  account
+fields:
+- id
+
+
+
+
+
+name:     account
+table:    account
+fields:
+- id

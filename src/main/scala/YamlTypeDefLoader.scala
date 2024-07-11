@@ -1,18 +1,16 @@
 package org.mojoz.metadata
 package in
 
-import org.snakeyaml.engine.v2.api.LoadSettings
-import org.snakeyaml.engine.v2.api.Load
 import scala.collection.immutable._
 import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isCustomTypeDef(md))
+  val sources = yamlMd.filter(_.parsed.exists(_ contains "type")) // XXX for binary compatibility TODO remove   
   val typeDefs = {
     val rawTypeDefs = sources flatMap { td =>
-      try loadYamlTypeDefs(td.body, td.filename, td.line) catch {
+      try loadYamlTypeDefs(td) catch {
         case e: Exception => throw new RuntimeException(
           s"Failed to load type definitions from ${td.filename}, line ${td.line}", e)
       }
@@ -170,24 +168,8 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     val (minFrac, maxFrac) = toMinMax(fracInterval)
     DdlWriteInfo(minSize, maxSize, minFrac, maxFrac, targetPattern)
   }
-  private def loadYamlTypeDefs(typeDefString: String, labelOrFilename: String = null, lineNumber: Int = 0): Seq[TypeDef] = {
-    val loaderSettings = LoadSettings.builder()
-      .setLabel(Option(labelOrFilename) getOrElse "mojoz type metadata")
-      .setAllowDuplicateKeys(false)
-      .build();
-    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    val tdMaps =
-      (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + typeDefString).iterator.asScala.toList.flatMap {
-        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
-        case a: java.util.ArrayList[_] => a.asScala.map {
-          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-          case x => sys.error(
-            "Unexpected class: " + Option(x).map(_.getClass).orNull)
-        }
-        case x => sys.error(
-          "Unexpected class: " + Option(x).map(_.getClass).orNull)
-      }
-    tdMaps.filter(_.get("type").nonEmpty).map { tdMap =>
+  private def loadYamlTypeDefs(md: YamlMd): Seq[TypeDef] = {
+    md.parsed.filter(_ contains "type").map { tdMap =>
       val typeName = tdMap.get("type").map(_.toString)
         .getOrElse(sys.error("Missing type name"))
       val targetNames: Map[String, String] = TreeMap()(math.Ordering.String) ++

@@ -1,16 +1,21 @@
 package org.mojoz.metadata.in
 
+import org.snakeyaml.engine.v2.api.Load
+import org.snakeyaml.engine.v2.api.LoadSettings
+
 import java.io.File
-import scala.collection.immutable.Seq
+import scala.collection.immutable.{Map, Seq}
 import scala.collection.mutable.Buffer
 import scala.io.Codec
 import scala.io.Source
+import scala.jdk.CollectionConverters._
+
 
 case class YamlMd(
   filename: String,
   line: Int,
   body: String) {
-  lazy val startsWithDirectiveOrDash = {
+  private[in] lazy val startsWithDirectiveOrDash = {
     val it = // .nextOption() not available on scala 2.12
       body.linesIterator
         .filterNot(_ startsWith "#")// skip comments
@@ -19,6 +24,27 @@ case class YamlMd(
       line.startsWith("%") ||       // yaml directive
       line.startsWith("-")          // yaml array or yaml directives end
     } else false
+  }
+
+  lazy val parsed: Seq[Map[String, Any]] = try {
+    val loaderSettings = LoadSettings.builder()
+      .setLabel(Option(filename) getOrElse "mojoz metadata")
+      .setAllowDuplicateKeys(false)
+      .build()
+    val lineNumberCorrection = if (line > 1) "\n" * (line - 1) else ""
+    (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + body).iterator.asScala.toList.flatMap {
+      case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
+      case a: java.util.ArrayList[_] => a.asScala.map {
+        case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
+        case x => sys.error(
+          "Unexpected class: " + Option(x).map(_.getClass).orNull)
+      }
+      case x => sys.error(
+        "Unexpected class: " + Option(x).map(_.getClass).orNull)
+    }
+  } catch {
+    case e: Exception => throw new RuntimeException(
+      s"Failed to parse yaml metadata from $filename, line $line: ${e.getMessage}", e)
   }
 }
 
@@ -53,7 +79,11 @@ private[in] trait MdSource {
     }
   }
   def defSets: Seq[YamlMd]
-  def defs = split(defSets)
+  def defs = {
+    val md = split(defSets)
+    md.foreach(_.parsed)
+    md
+  }
 }
 
 private[in] class FileMdSource(file: File) extends MdSource {
@@ -122,21 +152,9 @@ private[in] class NamedStringMdSource(nameAndMdStringPairs: (String, String)*) e
 }
 
 object YamlMd {
-  private val customTypeDefPattern = "(^|\\n)type\\s*:".r    // XXX
-  private val tableDefPattern      = "(^|\\n)columns\\s*:".r // XXX
-  private val hasExtendsPattern    = "(^|\\n)extends\\s*:".r // XXX
-  private val hasFieldsPattern     = "(^|\\n)fields\\s*:".r  // XXX
-  private val hasNamePattern       = "(^|\\n)name\\s*:".r    // XXX
-  private val hasTablePattern      = "(^|\\n)table\\s*:".r   // XXX
-  private[in] def isCustomTypeDef(d: YamlMd) =
-    customTypeDefPattern.findFirstIn(d.body).isDefined
-  private[in] def isTableDef(d: YamlMd) =
-    tableDefPattern.findFirstIn(d.body).isDefined
-  private[in] def isViewDef(d: YamlMd) = !isTableDef(d) && !isCustomTypeDef(d) &&
-    (hasExtendsPattern.findFirstIn(d.body).isDefined ||
-     hasFieldsPattern.findFirstIn(d.body).isDefined  ||
-     hasNamePattern.findFirstIn(d.body).isDefined    &&
-     hasTablePattern.findFirstIn(d.body).isDefined)
+  private[in] def isCustomTypeDef(d: YamlMd): Boolean = ??? // XXX for binary compatibility TODO remove   
+  private[in] def isTableDef(d: YamlMd): Boolean      = ??? // XXX for binary compatibility TODO remove   
+  private[in] def isViewDef(d: YamlMd): Boolean       = ??? // XXX for binary compatibility TODO remove   
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(

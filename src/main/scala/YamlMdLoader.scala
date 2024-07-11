@@ -10,8 +10,6 @@ import org.mojoz.metadata.io._
 import org.mojoz.metadata.TableDef
 import org.mojoz.metadata.TableMetadata._
 import org.mojoz.metadata.Type
-import org.snakeyaml.engine.v2.api.LoadSettings
-import org.snakeyaml.engine.v2.api.Load
 
 // TODO remove yaml table def
 private[in] case class YamlTableDef(
@@ -79,7 +77,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
 
   // TODO load check constraints!
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isTableDef(md))
+  val sources = yamlMd.filter(_.parsed.exists(_ contains "columns"))
   private def checkRawTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
     val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
     if (m.size < td.size) sys.error("Duplicate table definitions: " +
@@ -125,7 +123,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
   val tableDefs: Seq[TableDef] = {
     val rawTableDefs = sources.flatMap { md =>
-      try loadYamlTableDefs(md.body, md.filename, md.line).map(md -> _) catch {
+      try loadYamlTableDefs(md).map(md -> _) catch {
         case e: Exception => throw new RuntimeException(
           s"Failed to load table definitions from ${md.filename}, line ${md.line}", e)
       }
@@ -285,24 +283,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       })
       .getOrElse(Nil)
   lazy val YamlMdLoader = new YamlMdLoader(typeDefs)
-  private def loadYamlTableDefs(tableDefString: String, labelOrFilename: String = null, lineNumber: Int = 0): Seq[YamlTableDef] = {
-    val loaderSettings = LoadSettings.builder()
-      .setLabel(Option(labelOrFilename) getOrElse "mojoz table metadata")
-      .setAllowDuplicateKeys(false)
-      .build();
-    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    val tdMaps =
-      (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + tableDefString).iterator.asScala.toList.flatMap {
-        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
-        case a: java.util.ArrayList[_] => a.asScala.map {
-          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-          case x => sys.error(
-            "Unexpected class: " + Option(x).map(_.getClass).orNull)
-        }
-        case x => sys.error(
-          "Unexpected class: " + Option(x).map(_.getClass).orNull)
-      }
-    tdMaps.filter(_.get("columns").nonEmpty).map { tdMap =>
+  private def loadYamlTableDefs(md: YamlMd): Seq[YamlTableDef] = {
+    md.parsed.filter(_ contains "columns").map { tdMap =>
       val db    = tdMap.get("db"   ).filter(_ != null).map(_.toString).filter(_ != "").orNull
       val table = tdMap.get("table").filter(_ != null).map(_.toString).filter(_ != "")
         .getOrElse(sys.error("Missing table name"))

@@ -7,7 +7,7 @@ fields:
 - id
 
 
-expected-error-message: Failed to load view definition from error-message-tests.yaml, line 10
+expected-error-message: Failed to parse yaml metadata from error-message-tests.yaml, line 10
 expected-error-message: duplicate key name
 expected-error-message: in error-message-tests.yaml, line 17
 name: account
@@ -17,7 +17,7 @@ fields:
 name: not-account
 
 
-expected-error-message: Failed to load table definitions from error-message-tests.yaml, line 20
+expected-error-message: Failed to parse yaml metadata from error-message-tests.yaml, line 20
 expected-error-message: duplicate key columns
 expected-error-message: in error-message-tests.yaml, line 26
 name: account
@@ -27,7 +27,7 @@ columns:
 - id
 
 
-expected-error-message: Failed to load type definitions from error-message-tests.yaml, line 30
+expected-error-message: Failed to parse yaml metadata from error-message-tests.yaml, line 30
 expected-error-message: duplicate key sql
 expected-error-message: in error-message-tests.yaml, line 39
 type:       bad_euro

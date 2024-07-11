@@ -7,9 +7,6 @@ import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.util.control.NonFatal
 
-import org.snakeyaml.engine.v2.api.LoadSettings
-import org.snakeyaml.engine.v2.api.Load
-
 import org.mojoz.metadata.io._
 
 
@@ -28,7 +25,7 @@ class YamlViewDefLoader(
   private val MojozExplicitType        = "mojoz.explicit.type"
   private val MojozIsOuterJoined       = "mojoz.internal.is-outer-joined"
   private val parseJoins = joinsParser
-  val sources = yamlMd.filter(md => md.startsWithDirectiveOrDash || YamlMd.isViewDef(md))
+  val sources = yamlMd.filter(_.parsed.exists(isViewDef)) // XXX for binary compatibility TODO remove   
   private val rawViewDefs = transformRawViewDefs(sources.map { md =>
     try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
@@ -190,24 +187,15 @@ class YamlViewDefLoader(
      m.contains("name") &&
      m.contains("table"))
   }
-  protected def loadRawViewDefs(defs: String, labelOrFilename: String = null, lineNumber: Int = 0): List[ViewDef] = {
-    val loaderSettings = LoadSettings.builder()
-      .setLabel(Option(labelOrFilename) getOrElse "mojoz view metadata")
-      .setAllowDuplicateKeys(false)
-      .build();
-    val lineNumberCorrection = if (lineNumber > 1) "\n" * (lineNumber - 1) else ""
-    (new Load(loaderSettings)).loadAllFromString(lineNumberCorrection + defs).iterator.asScala.toList.flatMap {
-        case m: java.util.Map[String @unchecked, _] => Seq(m.asScala.toMap)
-        case a: java.util.ArrayList[_] => a.asScala.map {
-          case m: java.util.Map[String @unchecked, _] => m.asScala.toMap
-          case x => sys.error(
-            "Unexpected class: " + Option(x).map(_.getClass).orNull)
-        }
-        case x => sys.error(
-          "Unexpected class: " + Option(x).map(_.getClass).orNull)
-      } .filter(isViewDef)
-        .flatMap(loadRawViewDefs)
-  }
+  private lazy val mdBodyToMd = // XXX for binary compatibility TODO remove   
+    sources.map(s => s.body -> s).toMap
+  protected def loadRawViewDefs(defs: String, labelOrFilename: String = null, lineNumber: Int = 0): List[ViewDef] =
+    loadRawViewDefs(mdBodyToMd.getOrElse(defs, YamlMd(labelOrFilename, lineNumber, defs)))
+  protected def loadRawViewDefs(md: YamlMd): List[ViewDef] =
+    md.parsed
+      .filter(isViewDef)
+      .flatMap(loadRawViewDefs)
+      .toList
   protected def loadRawViewDefs(tdMap: Map[String, Any]): List[ViewDef] = {
     def get(name: ViewDefKeys.ViewDefKeys) = getStringSeq(name) match {
       case null => null

@@ -6,7 +6,7 @@ import java.io.File
 import scala.io.Source
 
 class YamlMdTests extends FlatSpec with Matchers {
-  val filename = "error-message-tests.yaml"
+  val filename = "line-number-tests.yaml"
   val filter: File => Boolean = _.getName endsWith filename
 
   "yaml metadata from files" should "provide line numbers" in {
