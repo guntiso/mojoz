@@ -284,6 +284,21 @@ cql:
 - bytes *           -> blob
 
 
+type:       json
+xsd name:   string
+scala name: java.lang.String
+yaml:
+- json
+sql:
+- text
+hsqldb sql:
+- string -> varchar(1073741823)
+postgresql:
+- jsonb
+cql:
+- text
+
+
 type:       any
 xsd name:   anyType
 scala name: Any

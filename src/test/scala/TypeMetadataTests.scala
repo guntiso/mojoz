@@ -23,6 +23,7 @@ class TypeMetadataTests extends FlatSpec with Matchers {
       "decimal",
       "boolean",
       "bytes",
+      "json",
       "any",
       "dateTime",
     )
