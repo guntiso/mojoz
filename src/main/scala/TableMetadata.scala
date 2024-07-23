@@ -157,6 +157,8 @@ class TableMetadata(
   }.flatMap(withDbAlias)
   private def throwDbNotFound(db: String) =
     sys.error(s"Table metadata for database or alias '$db' not found")
+  private def throwDbNotFound(viewDef: ViewDef_[_]) =
+    sys.error(s"Table metadata for database or alias '${viewDef.db}' not found (view: ${viewDef.name})")
   private def dbAndTable(db: String, table: String) =
     Option(db).map(db => s"$db:$table") getOrElse table
 
@@ -168,10 +170,10 @@ class TableMetadata(
       .getOrElse(tableName,
         sys.error(s"Table not found: ${dbAndTable(db, tableName)}"))
   def tableDefOption(viewDef: ViewDef_[_]): Option[TableDef] =
-    md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
+    md.getOrElse(viewDef.db, throwDbNotFound(viewDef))
       .get(viewDef.table)
   def tableDef(viewDef: ViewDef_[_]): TableDef =
-    md.getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
+    md.getOrElse(viewDef.db, throwDbNotFound(viewDef))
       .getOrElse(viewDef.table,
         sys.error(s"Table not found: ${dbAndTable(viewDef.db, viewDef.table)} (view: ${viewDef.name})"))
   def columnDef(viewDef: ViewDef_[_], fieldDef: FieldDef_[_]): ColumnDef = {

@@ -363,10 +363,10 @@ class YamlViewDefLoader(
         if (f.type_ == null)
           sys.error(
             "Unexpected null type for field " + t.name + "." + f.name)
-        else if (f.type_.isComplexType)
+        if (f.type_.isComplexType)
           m.get(f.type_.name) getOrElse sys.error(
-            s"""Type "${f.type_.name}" referenced from field "${t.name}.${f.name}" is not found""")
-        else if (f.table != null)
+            s"""Type "${f.type_.name}" referenced from field "${t.name}.${f.fieldName}" is not found""")
+        if (f.table != null)
           tableMetadata.columnDef(t, f)
       }
     }
@@ -405,11 +405,10 @@ class YamlViewDefLoader(
 
     def inheritTableComments[T](t: ViewDef_[T]) =
       if (t.table == null || t.comments != null) t
-      else tableMetadata.tableDefOption(t.table, t.db).map(_.comments match {
+      else tableMetadata.tableDef(t).comments match {
         case null => t
         case tableComments => t.copy(comments = tableComments)
-      })
-      .getOrElse(sys.error(s"""Table "${t.table}" referenced from view "${t.name}" is not found"""))
+      }
 
     def mergeStringSeqs(s1: Seq[String], s2: Seq[String]) = (s1, s2) match {
       case (null, null) => null
@@ -443,13 +442,13 @@ class YamlViewDefLoader(
       t.copy(table = table, tableAlias = tableAlias)
     }
 
-    def resolveFieldNamesAndTypes(t: ViewDef) =
-      try resolveFieldNamesAndTypes_(t) catch {
+    def resolveFieldNamesAndTypes(t: ViewDef, nameToStage1ViewDef: Map[String, ViewDef]) =
+      try resolveFieldNamesAndTypes_(t, nameToStage1ViewDef) catch {
         case NonFatal(ex) =>
           throw new RuntimeException("Failed to resolve field names and types for " + t.name, ex)
       }
 
-    def resolveFieldNamesAndTypes_(t: ViewDef) = {
+    def resolveFieldNamesAndTypes_(t: ViewDef, nameToStage1ViewDef: Map[String, ViewDef]) = {
       def tailists[B](l: List[B]): List[List[B]] =
         if (l.isEmpty) Nil else l :: tailists(l.tail)
       lazy val joins = parseJoins(
@@ -575,7 +574,24 @@ class YamlViewDefLoader(
                  Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
             else f.extras
         )
-        if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType)) f
+        if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType))
+          tableMetadata.columnDefOption(t, f) match {
+            case Some(col) => f
+            case None      =>
+              def childViewOpt =
+                if (f.type_ != null && f.type_.isComplexType)
+                  nameToStage1ViewDef.get(f.type_.name)
+                else None
+              if (f.alias == null && (
+                    f.joinToParent != null ||
+                    childViewOpt.exists(c => c.table != null || c.joins != null && c.joins.nonEmpty)
+                 ))
+                f.copy(
+                  table       = null,
+                  tableAlias  = null,
+                )
+              else f
+          }
         else if (f.table == null && Option(f.type_).map(_.name).orNull == null)
           f.copy(type_ = conventions.typeFromExternal(f.name, Option(f.type_)))
         else if (f.table == null) f
@@ -624,13 +640,15 @@ class YamlViewDefLoader(
         .map(resolveTypeFromDbMetadata)
         .map(cleanExtras))
     }
-    val result = rawViewDefs.toList
+    val stage1 = rawViewDefs.toList
       .filter(checkExtends(_, rawTypesMap, Nil)) // may throw
       .map(inheritTable)
       .map(inheritSeqs)
       .map(resolveBaseTableAlias)
-      .map(resolveFieldNamesAndTypes)
       .map(inheritTableComments)
+    val nameToStage1ViewDef = stage1.map(v => (v.name, v)).toMap
+    val result = stage1
+      .map(resolveFieldNamesAndTypes(_, nameToStage1ViewDef))
     checkViewDefs(result)
     checkTypedefMapping(result)
     markOverrides(result)
