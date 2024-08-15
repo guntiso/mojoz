@@ -19,7 +19,7 @@ initialize := {
     sys.error("Java 1.8 is required for this project. Found " + javaVersion + " instead")
 }
 
-val scalaV = "2.13.13"
+val scalaV = "2.13.14"
 lazy val commonSettings = Seq(
   name := "mojoz",
   organization := "org.mojoz",
