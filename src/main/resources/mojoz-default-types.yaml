@@ -292,7 +292,7 @@ yaml:
 sql:
 - text
 hsqldb sql:
-- string -> varchar(1073741823)
+- longvarchar
 postgresql:
 - jsonb
 cql:
