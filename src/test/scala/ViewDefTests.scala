@@ -133,4 +133,21 @@ class ViewDefTests extends FlatSpec with Matchers {
     val out = new PrintWriter(filename, "UTF-8")
     try out.print(message) finally out.close
   }
+  "view loader" should "load views without table metadata" in {
+    new YamlViewDefLoader(
+      new TableMetadata(Nil),
+      YamlMd.fromString("""
+name: test1
+table:
+fields:
+- id
+- name *
+---
+name: test2
+table:
+fields:
+- id
+- name =
+""".trim)).nameToViewDef.size shouldBe 2
+  }
 }
