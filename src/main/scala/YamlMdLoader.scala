@@ -373,7 +373,8 @@ private[in] object YamlMdLoader {
     val quant = "([\\?\\!]|([\\*\\+](\\.\\.(\\d*[1-9]\\d*))?))"
     val options = "\\[[\\+\\-\\=\\/\\!\\?]+\\]"
     val join = "\\[.*?\\]"
-    val order = "\\~?#(\\s*\\(.*?\\))?"
+    //  supports balanced parens max 5 levels deep in order-by expressions
+    val order = """#\(((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\((?:[^)(]|\([^)(]*\))*\))*\))*\))*\))*)\)"""
     val enm = "\\(.*?\\)"
     val typ = qualifiedIdent
     val len = int
@@ -396,7 +397,7 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
     def colDef(nameEtc: String, comments: String,
         child: Map[String, Any]) = nameEtc match {
       case FieldPattern(name, _, options, quant, _, _, _, _, joinToParent, typ, _,
-        len, frac, order, _, enm,
+        len, frac, order, orderExpr, enm,
         exprOrResolverWithDelimiter, _, exprOrResolverDelimiter, exprOrResolver) =>
         def t(s: String) = Option(s).map(_.trim).filter(_ != "").orNull
         def i(s: String) = Option(s).map(_.trim.toInt)
@@ -426,8 +427,9 @@ private[in] class YamlMdLoader(typeDefs: Seq[TypeDef]) {
           Option(saveAndResolverString).map(_.split("\\s*=\\s*", 2)) getOrElse Array[String]()
         val saveTo = if (saveAndResolverParts.size > 0) t(saveAndResolverParts(0)) else null
         val resolver = if (saveAndResolverParts.size > 1) t(saveAndResolverParts(1)) else null
+        val ordX = if (t(order) == null) null else Option(t(orderExpr)).getOrElse("")
         YamlFieldDef(name, t(options), cardinality, t(typ), i(len), i(frac),
-          isExpr, expr, isResolvable, saveTo, resolver, e(enm), t(joinToParent), t(order), comments,
+          isExpr, expr, isResolvable, saveTo, resolver, e(enm), t(joinToParent), ordX, comments,
           child)
       case _ => sys.error(ThisFail +
         " - unexpected format: " + nameEtc.trim)

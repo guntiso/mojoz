@@ -1107,6 +1107,72 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="WithFieldOrderByEmptyType">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Code">
+        <xs:annotation>
+          <xs:documentation>ISO 3166-1 divu burtu valsts kods</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="2"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="TO"/>
+            <xs:enumeration value="LT"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithFieldOrderByExprType">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Code">
+        <xs:annotation>
+          <xs:documentation>ISO 3166-1 divu burtu valsts kods</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="2"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="TO"/>
+            <xs:enumeration value="LT"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="WithFieldOrderByMultiType">
+    <xs:annotation>
+      <xs:documentation>Valstu klasifikators</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Code">
+        <xs:annotation>
+          <xs:documentation>ISO 3166-1 divu burtu valsts kods</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="2"/>
+            <xs:enumeration value="LV"/>
+            <xs:enumeration value="TO"/>
+            <xs:enumeration value="LT"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="WithJoinToParentType">
     <xs:sequence>
       <xs:element name="Id" type="xs:long">

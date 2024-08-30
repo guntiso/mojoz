@@ -48,7 +48,7 @@ class YamlViewDefWriter {
       t.length,
       t.totalDigits,
       t.fractionDigits).flatMap(x => x) mkString " "
-    val orderByString = Option(orderBy) getOrElse ""
+    val orderByString = Option(orderBy).map { o => s"#($o)"} getOrElse ""
     val enumString = Option(enum_)
       .filter(_ != null)
       .filter(_ != Nil)

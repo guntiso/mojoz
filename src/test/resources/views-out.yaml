@@ -366,7 +366,7 @@ name:     with_child_order_by_desc
 table:    country
 fields:
 - code                                (LV, TO, LT)
-- bank                  * with_child_order_by_desc_bank ~#(name)
+- "bank                  * with_child_order_by_desc_bank #(~name)"
 
 name:     with_child_order_by_desc_bank
 table:    bank
@@ -400,6 +400,21 @@ table:
 save-to:
 fields:
 - child_name
+
+name:     with_field_order_by_empty
+table:    country
+fields:
+- "code                                #() (LV, TO, LT)"
+
+name:     with_field_order_by_expr
+table:    country
+fields:
+- "code                                #(trim(split_part(code, '-', (((1)))))::int) (LV, TO, LT)"
+
+name:     with_field_order_by_multi
+table:    country
+fields:
+- "code                                #(major, minor, fix) (LV, TO, LT)"
 
 name:     with_join_to_parent
 table:    person c

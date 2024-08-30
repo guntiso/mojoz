@@ -182,6 +182,15 @@
     <jaxb:bindings node="//xs:complexType[@name='WithEmptyChildSaveToSingleChildType']">
       <jaxb:class name="WithEmptyChildSaveToSingleChild"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithFieldOrderByEmptyType']">
+      <jaxb:class name="WithFieldOrderByEmpty"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithFieldOrderByExprType']">
+      <jaxb:class name="WithFieldOrderByExpr"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='WithFieldOrderByMultiType']">
+      <jaxb:class name="WithFieldOrderByMulti"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='WithJoinToParentType']">
       <jaxb:class name="WithJoinToParent"/>
     </jaxb:bindings>

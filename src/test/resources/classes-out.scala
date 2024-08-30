@@ -274,6 +274,15 @@ class WithEmptyChildSaveTo extends Dto {
 class WithEmptyChildSaveToSingleChild extends Dto {
   var childName: String = null
 }
+class WithFieldOrderByEmpty extends Dto {
+  var code: String = null
+}
+class WithFieldOrderByExpr extends Dto {
+  var code: String = null
+}
+class WithFieldOrderByMulti extends Dto {
+  var code: String = null
+}
 class WithJoinToParent extends DtoWithId {
   var id: java.lang.Long = null
   var name: String = null

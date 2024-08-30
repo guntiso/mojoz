@@ -299,6 +299,15 @@ case class WithEmptyChildSaveTo (
 case class WithEmptyChildSaveToSingleChild (
   childName: String = null
 )
+case class WithFieldOrderByEmpty (
+  code: String = null
+)
+case class WithFieldOrderByExpr (
+  code: String = null
+)
+case class WithFieldOrderByMulti (
+  code: String = null
+)
 case class WithJoinToParent (
   id: java.lang.Long = null,
   name: String = null,

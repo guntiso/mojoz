@@ -196,10 +196,25 @@ name: with_child_order_by_desc
 table:  country
 fields:
 - code
-- bank * ~#(name) :
+- bank *#(~name) :
     table: bank
     fields:
     - name
+
+name: with_field_order_by_empty
+table:  country
+fields:
+- "code #()"
+
+name: with_field_order_by_expr
+table:  country
+fields:
+- "code #(trim(split_part(code, '-', (((1)))))::int)"
+
+name: with_field_order_by_multi
+table:  country
+fields:
+- "code #(major, minor, fix)"
 
 name: with_anonymous_inline_view
 table:
