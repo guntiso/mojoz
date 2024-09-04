@@ -49,6 +49,49 @@ fields:
 - id
 - bank                                  = `(bank.name ->> 'subject')`::text
 
+name:     multi_db_test_1
+db:       other_db
+table:    person
+fields:
+- id
+- full_name
+- children                multi_db_test_1_children
+
+name:     multi_db_test_1_children
+db:       other_db
+table:    person
+fields:
+- id
+- full_name
+
+name:     multi_db_test_2
+db:       other_db
+table:    person
+fields:
+- id
+- full_name
+- children                multi_db_test_2_children
+
+name:     multi_db_test_2_children
+table:    person
+fields:
+- id
+- surname
+
+name:     multi_db_test_3
+table:    person
+fields:
+- id
+- surname
+- children                multi_db_test_3_children
+
+name:     multi_db_test_3_children
+db:       other_db
+table:    person
+fields:
+- id
+- full_name
+
 name:     named_inline_view
 table:
 fields:

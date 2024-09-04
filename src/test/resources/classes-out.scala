@@ -39,6 +39,33 @@ class ExpressionTest1 extends DtoWithId {
   var id: java.lang.Long = null
   var bank: String = null
 }
+class MultiDbTest1 extends DtoWithId {
+  var id: java.lang.Long = null
+  var fullName: String = null
+  var children: MultiDbTest1Children = null
+}
+class MultiDbTest1Children extends DtoWithId {
+  var id: java.lang.Long = null
+  var fullName: String = null
+}
+class MultiDbTest2 extends DtoWithId {
+  var id: java.lang.Long = null
+  var fullName: String = null
+  var children: MultiDbTest2Children = null
+}
+class MultiDbTest2Children extends DtoWithId {
+  var id: java.lang.Long = null
+  var surname: String = null
+}
+class MultiDbTest3 extends DtoWithId {
+  var id: java.lang.Long = null
+  var surname: String = null
+  var children: MultiDbTest3Children = null
+}
+class MultiDbTest3Children extends DtoWithId {
+  var id: java.lang.Long = null
+  var fullName: String = null
+}
 class NamedInlineView extends Dto {
   var childId: java.lang.Long = null
   var childName: String = null

@@ -221,6 +221,98 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="MultiDbTest1Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="FullName">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="128"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Children" nillable="true" minOccurs="0" type="tns:MultiDbTest1ChildrenType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="MultiDbTest1ChildrenType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="FullName">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="128"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="MultiDbTest2Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="FullName">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="128"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Children" nillable="true" minOccurs="0" type="tns:MultiDbTest2ChildrenType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="MultiDbTest2ChildrenType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Surname" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="52"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="MultiDbTest3Type">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="Surname" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="52"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Children" nillable="true" minOccurs="0" type="tns:MultiDbTest3ChildrenType">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="MultiDbTest3ChildrenType">
+    <xs:sequence>
+      <xs:element name="Id" type="xs:long">
+      </xs:element>
+      <xs:element name="FullName">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:minLength value="1"/>
+            <xs:pattern value="[\s\S]*[\S][\s\S]*"/>
+            <xs:maxLength value="128"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="NamedInlineViewType">
     <xs:sequence>
       <xs:element name="ChildId" nillable="true" minOccurs="0" type="xs:long">

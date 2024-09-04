@@ -23,6 +23,24 @@
     <jaxb:bindings node="//xs:complexType[@name='ExpressionTest1Type']">
       <jaxb:class name="ExpressionTest1"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest1Type']">
+      <jaxb:class name="MultiDbTest1"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest1ChildrenType']">
+      <jaxb:class name="MultiDbTest1Children"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest2Type']">
+      <jaxb:class name="MultiDbTest2"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest2ChildrenType']">
+      <jaxb:class name="MultiDbTest2Children"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest3Type']">
+      <jaxb:class name="MultiDbTest3"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='MultiDbTest3ChildrenType']">
+      <jaxb:class name="MultiDbTest3Children"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='NamedInlineViewType']">
       <jaxb:class name="NamedInlineView"/>
     </jaxb:bindings>

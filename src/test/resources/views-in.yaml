@@ -470,3 +470,40 @@ table:  person
 fields:
 - id
 - full_name
+
+name:   multi_db_test_1
+db:     other_db
+table:  person
+fields:
+- id
+- full_name
+- children:
+    table: person
+    fields:
+    - id
+    - full_name
+
+name:   multi_db_test_2
+db:     other_db
+table:  person
+fields:
+- id
+- full_name
+- children:
+    table: person
+    db:
+    fields:
+    - id
+    - surname
+
+name:   multi_db_test_3
+table:  person
+fields:
+- id
+- surname
+- children:
+    table: person
+    db: other_db
+    fields:
+    - id
+    - full_name

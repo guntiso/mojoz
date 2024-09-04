@@ -220,7 +220,10 @@ class YamlViewDefLoader(
     }
     val k = ViewDefKeys
     val rawName = get(k.name)
-    val db = get(k.db)
+    val db = get(k.db) match {
+      case "" => null
+      case  x => x
+    }
     val rawTable = get(k.table)
     val joins = getStringSeq(k.joins)
     val filter = getStringSeq(k.filter)
@@ -337,6 +340,7 @@ class YamlViewDefLoader(
       .zip(fieldDefs)
       .filter(f => isViewDef(f._1))
       .map(f => f._1 + (("name", f._2.type_.name)))
+      .map(v => if (v contains k.db.toString) v else v + ("db" -> db)) // inherit db from parent view
       .map(loadRawViewDefs)
       .flatten
   }

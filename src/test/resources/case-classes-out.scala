@@ -45,6 +45,33 @@ case class ExpressionTest1 (
   id: java.lang.Long = null,
   bank: String = null
 )
+case class MultiDbTest1 (
+  id: java.lang.Long = null,
+  fullName: String = null,
+  children: MultiDbTest1Children = null
+)
+case class MultiDbTest1Children (
+  id: java.lang.Long = null,
+  fullName: String = null
+)
+case class MultiDbTest2 (
+  id: java.lang.Long = null,
+  fullName: String = null,
+  children: MultiDbTest2Children = null
+)
+case class MultiDbTest2Children (
+  id: java.lang.Long = null,
+  surname: String = null
+)
+case class MultiDbTest3 (
+  id: java.lang.Long = null,
+  surname: String = null,
+  children: MultiDbTest3Children = null
+)
+case class MultiDbTest3Children (
+  id: java.lang.Long = null,
+  fullName: String = null
+)
 case class NamedInlineView (
   childId: java.lang.Long = null,
   childName: String = null
