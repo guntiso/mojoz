@@ -1,5 +1,5 @@
 lazy val dependencies = Seq(
-  "org.snakeyaml"  % "snakeyaml-engine" % "2.7",
+  "org.snakeyaml"  % "snakeyaml-engine" % "2.8",
   // test
   "org.hsqldb"     % "hsqldb"     % "2.7.3"  %      Test classifier "jdk8",
   "com.h2database" % "h2"         % "2.2.224"%      Test,
