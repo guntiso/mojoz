@@ -99,7 +99,7 @@ class YamlTableDefWriter {
       .map(_ => s"$name(${toYaml(cols, part)})")
       .getOrElse(toYaml(cols, part))
   private def toYaml(ck: TableMetadata.CheckConstraint): String =
-    Option(ck.name).map(n => s"$n = ${ck.expression}") getOrElse ck.expression
+    Option(ck.name).map(n => s"$n (${ck.expression})") getOrElse ck.expression
   private def toYaml(index: TableMetadata.DbIndex): String = index match {
     case index: Index   => toYaml(index.name, index.cols)
     case pk: ComplexKey => toYaml(pk.name, pk.cols, pk.part)

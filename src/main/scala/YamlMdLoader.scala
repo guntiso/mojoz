@@ -46,10 +46,12 @@ private[in] object YamlTableDefLoader {
   val qualifiedIdent = s"$ident(\\.$ident)*"
   val s = "\\s*"
   val idxName = qualifiedIdent
+  val constraintName = qualifiedIdent
   val col = s"$ident(\\s+[aA][sS][cC]|\\s+[dD][eE][sS][cC])?"
   val cols = s"$col($s\\,$s$col)*"
   val colsIdxDef = s"$s($s$cols)$s"
   val namedIdxDef = s"$s($idxName)$s\\($s($cols)$s\\)$s"
+  val namedCkDef = s"$s($constraintName)$s\\($s(.*)$s\\)$s"
   val complexKeyDef = s"$s\\($s($cols)\\)(($s\\,$s$col)*)$s"
   val onDelete = "on delete (restrict|set null|cascade|no action)".replace(" ", "\\s+")
   val onUpdate = "on update (restrict|set null|cascade|no action)".replace(" ", "\\s+")
@@ -57,6 +59,7 @@ private[in] object YamlTableDefLoader {
   private def regex(pattern: String) = ("^" + pattern + "$").r
 
   val ColsIdxDef = regex(colsIdxDef)
+  val NamedCkDef = regex(namedCkDef)
   val NamedIdxDef = regex(namedIdxDef)
   val ComplexKeyDef = regex(complexKeyDef)
   val QualifiedIdentDef = regex(qualifiedIdent)
@@ -215,6 +218,21 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     checkTableDefs(tableDefs)
     tableDefs
   }
+  private def loadYamlCheckConstraint(src: Any) = {
+    val ThisFail = "Failed to load check constraint"
+    def extractCheckConstraint(src: Any): CheckConstraint = src match {
+      case ck: java.lang.String => ck match {
+        case NamedCkDef(name, _, expression) => CheckConstraint(name, expression)
+        case expression                      => CheckConstraint(null, expression)
+      }
+      case arr: java.util.ArrayList[_] =>
+        extractCheckConstraint(arr.asScala.mkString(", "))
+      case x => sys.error(ThisFail +
+        " - unexpected check constraint definition class: " + x.getClass
+        + "\nentry: " + x.toString)
+    }
+    extractCheckConstraint(src)
+  }
   private def loadYamlIndexDef(src: Any) = {
     val ThisFail = "Failed to load index definition"
     def dbIndex(name: String, cols: String) = DbIndex(name,
@@ -308,6 +326,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       if (pk_list.size > 1)
         sys.error(
           "Multiple primary keys are not allowed, composite key columns should be comma-separated")
+      val cks = toList(tdMap.get("ck"))
+        .map(loadYamlCheckConstraint)
       val pk = pk_list.headOption
       val uk = toList(tdMap.get("uk"))
         .map(loadYamlIndexDef)
@@ -315,7 +335,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         .map(loadYamlIndexDef)
       val refs = toList(tdMap.get("refs"))
         .map(loadYamlRefDef)
-      val extras = tdMap -- TableDefKeyStrings
+      val extras = tdMap + ("ck" -> cks) -- TableDefKeyStrings  // TODO refactor ck load!
       YamlTableDef(db, table, comments, colDefs, pk, uk, idx, refs, extras)
     }
   }
@@ -327,10 +347,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = y.pk
     val uk = y.uk
-    val ck = Nil // FIXME ck!
+    val ck = y.extras.get("ck").map(_.asInstanceOf[List[CheckConstraint @ unchecked]]).getOrElse(Nil) // TODO refactor ck load!
     val idx = y.idx
     val refs = y.refs
-    val extras = y.extras
+    val extras = y.extras - "ck" // TODO refactor ck load!
     val exTypeDef = IoTableDef(db, name, comments, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }

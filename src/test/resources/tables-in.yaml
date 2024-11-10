@@ -156,6 +156,9 @@ columns:
 - enum_special_chars     6 (''apos', '"dquote')
 refs:
 - bank_id -> bank(id) on delete cascade
+ck:
+- ck_test_table5_enum_for_int_lt_5 (enum_for_int < 5)
+- ck_test_table5_enum_for_int_lt_7 (enum_for_int < 7)
 
 table:    test_table6
 columns:

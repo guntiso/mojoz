@@ -152,7 +152,9 @@ create table test_table5(
   enum_spešal_diacritics varchar(6) check (enum_spešal_diacritics in ('bladāc')),
   enum varchar(5) check (enum in ('list1', 'list2')),
   enum_ws varchar(6) check (enum_ws in ('list 1', 'list 2')),
-  enum_special_chars varchar(6) check (enum_special_chars in ('''apos', '"dquote'))
+  enum_special_chars varchar(6) check (enum_special_chars in ('''apos', '"dquote')),
+  constraint ck_test_table5_enum_for_int_lt_5 check (enum_for_int < 5),
+  constraint ck_test_table5_enum_for_int_lt_7 check (enum_for_int < 7)
 );
 comment on table test_table5 is 'Alternative multiline comments
 with line 2';

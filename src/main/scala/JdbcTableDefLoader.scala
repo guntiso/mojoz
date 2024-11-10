@@ -51,7 +51,10 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         .map(cce => (cce._1, cce._2.get, cce._3))
       // FIXME if multiple matching checks on the same column
       val enumCk = checkColEnum.map(_._1).toSet
-      val unmappedCk = ck.filterNot(enumCk.contains)
+      val unmappedCk = ck.filterNot(enumCk.contains).sortBy { ck => (
+        if (ck.name       == null) "" else ck.name,
+        if (ck.expression == null) "" else ck.expression
+      )}
       val colToEnum = checkColEnum.map(cce => (cce._2, cce._3)).toMap
       val mappedCols = cols map {c =>
         val enm = colToEnum.get(c)
