@@ -68,6 +68,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       tableDefs += JdbcTableDef(db, tableFullName, comments, mappedCols,
           pk, uk, unmappedCk, idx, refs, extras)
     }
+    rs.close()
 
     // work around oracle bugs
     if (conn.getClass.getName.startsWith("oracle")) {
