@@ -76,14 +76,14 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           "select comments from all_tab_comments" +
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        tableDefs map { td =>
+        try tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
           val comments = if (rs.next) rs.getString(1) else null
           rs.close()
           st.clearParameters()
           if (comments == null) td else td.copy(comments = comments)
-        }
+        } finally st.close()
       } else tableDefs
 
       def oraFix2(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
@@ -92,7 +92,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           "select column_name, comments from all_col_comments" +
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        tableDefs map { td =>
+        try tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
           var cList: List[(String, String)] = Nil
@@ -104,7 +104,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           if (!cMap.values.exists(c => c != null && c != "")) td
           else td.copy(cols = td.cols.map(c =>
             c.copy(comments = cMap.get(c.name).orNull)))
-        }
+        } finally st.close()
       } else tableDefs
 
       // XXX booleans emulated on oracle
@@ -160,12 +160,14 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       |  and table_catalog like ?
       |  and table_schema like ?
       |  and table_name like ?
-      """.stripMargin.trim)
+      """.stripMargin.trim,
+      RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
     ps.setString(1, if (catalog == null) "%" else catalog)
     ps.setString(2, schemaPattern)
     ps.setString(3, tableNamePattern)
     val rs = ps.executeQuery()
     val checks = checkConstraints(rs)
+    ps.close()
     checks
   }
   def colDefs(rs: ResultSet) = {
@@ -362,11 +364,13 @@ object JdbcTableDefLoader {
         |select constraint_name, search_condition check_clause
         |  from all_constraints
         |  where constraint_type = 'C' and owner like ? and table_name like ?
-        """.stripMargin.trim)
+        """.stripMargin.trim,
+        RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
       ps.setString(1, schemaPattern)
       ps.setString(2, tableNamePattern)
       val rs = ps.executeQuery()
       val checks = checkConstraints(rs)
+      ps.close()
       checks
     }
   }
