@@ -310,7 +310,7 @@ object JdbcTableDefLoader {
         val st = conn.prepareStatement(
           "select comments from all_tab_comments" +
             " where owner || '.' || table_name = ?",
-          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
+          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
         try tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
@@ -326,7 +326,7 @@ object JdbcTableDefLoader {
         val st = conn.prepareStatement(
           "select column_name, comments from all_col_comments" +
             " where owner || '.' || table_name = ?",
-          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
+          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
         try tableDefs map { td =>
           st.setString(1, td.name)
           val rs = st.executeQuery()
@@ -376,7 +376,7 @@ object JdbcTableDefLoader {
         "select constraint_name, search_condition check_clause" +
         "  from all_constraints" +
         "  where constraint_type = 'C' and owner like ? and table_name like ?",
-        RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
+        RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
       ps.setString(1, schemaPattern)
       ps.setString(2, tableNamePattern)
       val rs = ps.executeQuery()
