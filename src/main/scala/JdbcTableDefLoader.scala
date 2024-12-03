@@ -338,6 +338,14 @@ object JdbcTableDefLoader {
     override val jdbcLoadInfoKey = "oracle jdbc"
 
     // work around oracle bugs
+    override protected def dmd_getIndexInfo(
+      dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) = {
+      s"$tableType $schema.$tableName" match {
+        case x if x.startsWith("VIEW SYS._") => null
+        case _ => super.dmd_getIndexInfo(dmd, catalog, schema, tableName, tableType)
+      }
+    }
+
     protected def oraFixTableComments(
         conn: Connection, tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       if (!tableDefs.exists(_.comments != null)) {
