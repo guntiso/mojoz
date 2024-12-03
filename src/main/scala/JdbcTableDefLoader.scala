@@ -21,6 +21,7 @@ import org.mojoz.metadata.TypeMetadata
 
 abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   import JdbcTableDefLoader._
+  protected def log(msg: => String): Unit = {}
   protected def jdbcTableDefsBuf(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
     types: String*): ListBuffer[TableDef[ColumnDef[JdbcColumnType]]] = {
@@ -33,6 +34,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val schema = rs.getString("TABLE_SCHEM")
       val tableName = rs.getString("TABLE_NAME")
       val tableType = rs.getString("TABLE_TYPE")
+      log(s"Processing jdbc metadata for $tableType, catalog $catalog, schema $schema, table $tableName")
       val comments = rs.getString("REMARKS")
       val colsRs    = dmd_getColumns     (dmd, catalog, schema, tableName, tableType)
       val cols      = if (colsRs != null) colDefs(colsRs)   else Nil
@@ -301,8 +303,10 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
-  def toMojozTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef =
+  def toMojozTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef = {
+    log(s"Finalizing tableDef ${tableDef.name}")
     tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
+  }
 }
 
 // java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/GettingStartedTOC.fm.html
@@ -354,6 +358,7 @@ object JdbcTableDefLoader {
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
         try tableDefs map { td =>
+          log(s"Loading table comments for ${td.name}")
           st.setString(1, td.name)
           val rs = st.executeQuery()
           val comments = if (rs.next) rs.getString(1) else null
@@ -371,6 +376,7 @@ object JdbcTableDefLoader {
             " where owner || '.' || table_name = ?",
           RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
         try tableDefs map { td =>
+          log(s"Loading column comments for ${td.name}")
           st.setString(1, td.name)
           val rs = st.executeQuery()
           var cList: List[(String, String)] = Nil
@@ -504,6 +510,7 @@ object JdbcTableDefLoader {
     "VARBINARY" -> Types.VARBINARY,
     "VARCHAR" -> Types.VARCHAR
   )
+
   private[in] val jdbcCodeToTypeName: Map[Int, String] =
     jdbcTypeNameToCode.map(_.swap)
 }
