@@ -337,11 +337,9 @@ object JdbcTableDefLoader {
   class Oracle(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override val jdbcLoadInfoKey = "oracle jdbc"
 
-    override def jdbcTableDefs(conn: Connection,
-      catalog: String, schemaPattern: String, tableNamePattern: String,
-      types: String*): List[TableDef[ColumnDef[JdbcColumnType]]] = {
-      // work around oracle bugs
-      def oraFix1(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+    // work around oracle bugs
+    protected def oraFixTableComments(
+        conn: Connection, tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       if (!tableDefs.exists(_.comments != null)) {
         val st = conn.prepareStatement(
           "select comments from all_tab_comments" +
@@ -357,7 +355,8 @@ object JdbcTableDefLoader {
         } finally st.close()
       } else tableDefs
 
-      def oraFix2(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+    protected def oraFixColumnComments(
+        conn: Connection, tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
         val st = conn.prepareStatement(
           "select column_name, comments from all_col_comments" +
@@ -378,14 +377,14 @@ object JdbcTableDefLoader {
         } finally st.close()
       } else tableDefs
 
-      // XXX booleans emulated on oracle
-      val emulatedBooleanEnums = Set(
+    // XXX booleans emulated on oracle
+    protected val emulatedBooleanEnums = Set(
         List("N", "Y"), List("Y", "N"))
-      def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
+    protected def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
         c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
           emulatedBooleanEnums.contains(c.enum_.toList)
 
-      def oraFix3(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
+    protected def oraFixEmulatedBooleans(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
       tableDefs map { td =>
         if (td.cols.exists(isEmulatedBoolean))
           td.copy(cols = td.cols.map { c =>
@@ -402,8 +401,12 @@ object JdbcTableDefLoader {
         else td
       }
 
+    override def jdbcTableDefs(conn: Connection,
+      catalog: String, schemaPattern: String, tableNamePattern: String,
+      types: String*): List[TableDef[ColumnDef[JdbcColumnType]]] = {
+
       val tableDefs = jdbcTableDefsBuf(conn, catalog, schemaPattern, tableNamePattern, types: _*)
-      oraFix3(oraFix2(oraFix1(tableDefs))).toList
+      oraFixEmulatedBooleans(oraFixColumnComments(conn, oraFixTableComments(conn, tableDefs))).toList
     }
 
     override def checkConstraints(conn: Connection,
