@@ -381,7 +381,7 @@ object JdbcTableDefLoader {
     protected val emulatedBooleanEnums = Set(
         List("N", "Y"), List("Y", "N"))
     protected def isEmulatedBoolean(c: ColumnDef[JdbcColumnType]) =
-        c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
+        c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 && c.enum_ != null &&
           emulatedBooleanEnums.contains(c.enum_.toList)
 
     protected def oraFixEmulatedBooleans(tableDefs: ListBuffer[TableDef[ColumnDef[JdbcColumnType]]]) =
