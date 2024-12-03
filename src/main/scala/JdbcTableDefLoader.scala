@@ -32,12 +32,16 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val catalog = rs.getString("TABLE_CAT")
       val schema = rs.getString("TABLE_SCHEM")
       val tableName = rs.getString("TABLE_NAME")
+      val tableType = rs.getString("TABLE_TYPE")
       val comments = rs.getString("REMARKS")
-      val cols = colDefs(dmd.getColumns(catalog, schema, tableName, null))
-      val pk = this.pk(dmd.getPrimaryKeys(catalog, schema, tableName))
-      val (uk, idx) =
-        ukAndIdx(dmd.getIndexInfo(catalog, schema, tableName, false, true))
-      val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
+      val colsRs    = dmd_getColumns     (dmd, catalog, schema, tableName, tableType)
+      val cols      = if (colsRs != null) colDefs(colsRs)   else Nil
+      val pkRs      = dmd_getPrimaryKeys (dmd, catalog, schema, tableName, tableType)
+      val pk        = if (pkRs   != null) this.pk(pkRs)     else None
+      val idxRs     = dmd_getIndexInfo   (dmd, catalog, schema, tableName, tableType)
+      val (uk, idx) = if (idxRs  != null) ukAndIdx(idxRs)   else (Nil, Nil)
+      val refsRs    = dmd_getImportedKeys(dmd, catalog, schema, tableName, tableType)
+      val refs      = if (refsRs != null) this.refs(refsRs) else Nil
       val ck = this.checkConstraints(conn, catalog, schema, tableName)
         .filterNot(c => CkParser.isNotNullCheck(c.expression))
       def findCol(name: String) =
@@ -69,6 +73,38 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     rs.close()
     tableDefs
   }
+
+  protected def dmd_getColumns(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getColumns(catalog, schema, tableName, null) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get columns" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getPrimaryKeys(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getPrimaryKeys(catalog, schema, tableName) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get primary keys" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getIndexInfo(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getIndexInfo(catalog, schema, tableName, false, true) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get index info" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getImportedKeys(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getImportedKeys(catalog, schema, tableName) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get imported keys" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
 
   def jdbcTableDefs(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
