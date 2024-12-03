@@ -301,11 +301,21 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
         s"Failed to convert jdbc type (code: $jdbcTypeCode, name: $jdbcTypeName, size: $size, fractionDigits: $frac)" +
           " to mojoz type - mo match found")
     }
+  protected def fallbackType(jdbcColumnType: JdbcColumnType): Type = null
   def toMojozType(jdbcColumnType: JdbcColumnType): Type =
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
   def toMojozTableDef(tableDef: TableDef[ColumnDef[JdbcColumnType]]): MojozTableDef = {
     log(s"Finalizing tableDef ${tableDef.name}")
-    tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
+    tableDef.copy(cols = tableDef.cols.map(c => try c.copy(type_ = toMojozType(c.type_)) catch {
+      case util.control.NonFatal(ex) =>
+        fallbackType(c.type_) match {
+          case null =>
+            throw new RuntimeException(s"Failed to process column ${tableDef.name}.${c.name} and no fallback type provided", ex)
+          case x =>
+            log(s"Fallback to type $x for column ${tableDef.name}.${c.name} caused by: ${ex.toString}")
+            c.copy(type_ = x)
+        }
+    }))
   }
 }
 
