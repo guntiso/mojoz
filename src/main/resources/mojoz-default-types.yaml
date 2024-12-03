@@ -170,6 +170,7 @@ scala name: scala.math.BigDecimal
 jdbc:
 - DECIMAL * 1..*    -> size, frac
 - NUMERIC * 1..*    -> size, frac
+- NUMERIC 0 -127    -> size, frac # TODO? strange ora type
 yaml:
 - decimal
 - decimal *         -> size, 0
