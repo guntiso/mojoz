@@ -182,6 +182,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
           (v match {
             case null => Nil
             case a: java.util.ArrayList[_] => a.asScala.toList
+            case i: java.lang.Integer      => Seq(i.toString)
             case x => sys.error("Unexpected class: " + x.getClass)
           })
             .map(toString(_, s"Failed to load jdbc load definition for $k"))

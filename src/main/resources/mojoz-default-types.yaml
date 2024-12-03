@@ -225,3 +225,11 @@ xsd name:   anyType
 scala name: Any
 yaml:
 - anyType
+
+
+type: ora_TIMESTAMPTZ
+jdbc: -101
+
+
+type: ora_INTERVALDS
+jdbc: -104
