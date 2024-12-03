@@ -20,9 +20,10 @@ import org.mojoz.metadata.TypeMetadata
 
 abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   import JdbcTableDefLoader._
-  def jdbcTableDefs(conn: Connection,
+  protected def log(msg: => String): Unit = {}
+  protected def jdbcTableDefsBuf(conn: Connection,
     catalog: String, schemaPattern: String, tableNamePattern: String,
-    types: String*) = {
+    types: String*): ListBuffer[JdbcTableDef] = {
     val tableDefs = ListBuffer[JdbcTableDef]()
     val dmd = conn.getMetaData
     val rs = dmd.getTables(catalog, schemaPattern, tableNamePattern,
@@ -31,12 +32,17 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       val catalog = rs.getString("TABLE_CAT")
       val schema = rs.getString("TABLE_SCHEM")
       val tableName = rs.getString("TABLE_NAME")
+      val tableType = rs.getString("TABLE_TYPE")
+      log(s"Processing jdbc metadata for $tableType, catalog $catalog, schema $schema, table $tableName")
       val comments = rs.getString("REMARKS")
-      val cols = colDefs(dmd.getColumns(catalog, schema, tableName, null))
-      val pk = this.pk(dmd.getPrimaryKeys(catalog, schema, tableName))
-      val (uk, idx) =
-        ukAndIdx(dmd.getIndexInfo(catalog, schema, tableName, false, true))
-      val refs = this.refs(dmd.getImportedKeys(catalog, schema, tableName))
+      val colsRs    = dmd_getColumns     (dmd, catalog, schema, tableName, tableType)
+      val cols      = if (colsRs != null) colDefs(colsRs)   else Nil
+      val pkRs      = dmd_getPrimaryKeys (dmd, catalog, schema, tableName, tableType)
+      val pk        = if (pkRs   != null) this.pk(pkRs)     else None
+      val idxRs     = dmd_getIndexInfo   (dmd, catalog, schema, tableName, tableType)
+      val (uk, idx) = if (idxRs  != null) ukAndIdx(idxRs)   else (Nil, Nil)
+      val refsRs    = dmd_getImportedKeys(dmd, catalog, schema, tableName, tableType)
+      val refs      = if (refsRs != null) this.refs(refsRs) else Nil
       val ck = this.checkConstraints(conn, catalog, schema, tableName)
         .filterNot(c => CkParser.isNotNullCheck(c.expression))
       def findCol(name: String) =
@@ -69,73 +75,47 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
           pk, uk, unmappedCk, idx, refs, extras)
     }
     rs.close()
-
-    // work around oracle bugs
-    if (conn.getClass.getName.startsWith("oracle")) {
-      def oraFix1(tableDefs: ListBuffer[JdbcTableDef]) =
-      if (!tableDefs.exists(_.comments != null)) {
-        val st = conn.prepareStatement(
-          "select comments from all_tab_comments" +
-            " where owner || '.' || table_name = ?",
-          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        try tableDefs map { td =>
-          st.setString(1, td.name)
-          val rs = st.executeQuery()
-          val comments = if (rs.next) rs.getString(1) else null
-          rs.close()
-          st.clearParameters()
-          if (comments == null) td else td.copy(comments = comments)
-        } finally st.close()
-      } else tableDefs
-
-      def oraFix2(tableDefs: ListBuffer[JdbcTableDef]) =
-      if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
-        val st = conn.prepareStatement(
-          "select column_name, comments from all_col_comments" +
-            " where owner || '.' || table_name = ?",
-          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
-        try tableDefs map { td =>
-          st.setString(1, td.name)
-          val rs = st.executeQuery()
-          var cList: List[(String, String)] = Nil
-          while (rs.next)
-            cList = (rs.getString(1), rs.getString(2)) :: cList
-          rs.close()
-          st.clearParameters()
-          val cMap = cList.toMap
-          if (!cMap.values.exists(c => c != null && c != "")) td
-          else td.copy(cols = td.cols.map(c =>
-            c.copy(comments = cMap.get(c.name).orNull)))
-        } finally st.close()
-      } else tableDefs
-
-      // XXX booleans emulated on oracle
-      val emulatedBooleanEnums = Set(
-        List("N", "Y"), List("Y", "N"))
-      def isEmulatedBoolean(c: JdbcColumnDef) =
-        c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 &&
-          emulatedBooleanEnums.contains(c.enum_.toList)
-
-      def oraFix3(tableDefs: ListBuffer[JdbcTableDef]) =
-      tableDefs map { td =>
-        if (td.cols.exists(isEmulatedBoolean))
-          td.copy(cols = td.cols.map { c =>
-            if (isEmulatedBoolean(c)) c.copy(
-              type_ = c.type_.copy(jdbcTypeCode = Types.BOOLEAN),
-              enum_ = null,
-              dbDefault =
-                if (c.dbDefault == null) null
-                else c.dbDefault.trim match {
-                  case "'N'" => "false" case "'Y'" => "true" case d => d
-                })
-            else c
-          })
-        else td
-      }
-      oraFix3(oraFix2(oraFix1(tableDefs))).toList
-    } else
-      tableDefs.toList
+    tableDefs
   }
+
+  protected def dmd_getColumns(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getColumns(catalog, schema, tableName, null) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get columns" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getPrimaryKeys(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getPrimaryKeys(catalog, schema, tableName) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get primary keys" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getIndexInfo(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getIndexInfo(catalog, schema, tableName, false, true) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get index info" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  protected def dmd_getImportedKeys(
+    dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) =
+    try dmd.getImportedKeys(catalog, schema, tableName) catch {
+      case util.control.NonFatal(ex) =>
+        throw new RuntimeException("Failed to get imported keys" +
+          s" for catalog $catalog, schema $schema, table $tableName of type $tableType", ex)
+      }
+
+  def jdbcTableDefs(conn: Connection,
+    catalog: String, schemaPattern: String, tableNamePattern: String,
+    types: String*): List[JdbcTableDef] = {
+    jdbcTableDefsBuf(conn, catalog, schemaPattern, tableNamePattern, types: _*).toList
+  }
+
   def checkConstraints(conn: Connection, catalog: String,
     schemaPattern: String, tableNamePattern: String): Seq[CheckConstraint]
   def checkConstraints(rs: ResultSet) = {
@@ -356,6 +336,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
   private val PlainTypeName = s"^($ident|$ident +$ident) ARRAY$$".r
   private val SizedTypeName = s"^($ident|$ident +$ident)\\((\\d+)\\) ARRAY$$".r
   private val FracTypeName  = s"^($ident|$ident +$ident)\\((\\d+), *(\\d+)\\) ARRAY$$".r
+  protected def fallbackType(jdbcColumnType: JdbcColumnType): Type = null
   def toMojozElementType(jdbcColumnType: JdbcColumnType): Type = jdbcColumnType.dbTypeName match {
     case PlainTypeName(dbTypeName)             => dbTypeNameToMojozType(dbTypeName, 0, 0)
     case SizedTypeName(dbTypeName, size)       => dbTypeNameToMojozType(dbTypeName, size.toInt, 0)
@@ -368,8 +349,19 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
    case _ =>
     jdbcTypeToMojozType(jdbcColumnType.jdbcTypeCode, jdbcColumnType.size, jdbcColumnType.fractionDigits)
   }
-  def toMojozTableDef(tableDef: JdbcTableDef): TableDef =
-    tableDef.copy(cols = tableDef.cols.map(c => c.copy(type_ = toMojozType(c.type_))))
+  def toMojozTableDef(tableDef: JdbcTableDef): TableDef = {
+    log(s"Finalizing tableDef ${tableDef.name}")
+    tableDef.copy(cols = tableDef.cols.map(c => try c.copy(type_ = toMojozType(c.type_)) catch {
+      case util.control.NonFatal(ex) =>
+        fallbackType(c.type_) match {
+          case null =>
+            throw new RuntimeException(s"Failed to process column ${tableDef.name}.${c.name} and no fallback type provided", ex)
+          case x =>
+            log(s"Fallback to type $x for column ${tableDef.name}.${c.name} caused by: ${ex.toString}")
+            c.copy(type_ = x)
+        }
+    }))
+  }
 }
 
 // java.sun.com/j2se/1.5.0/docs/guide/jdbc/getstart/GettingStartedTOC.fm.html
@@ -403,14 +395,96 @@ object JdbcTableDefLoader {
   }
   class Oracle(typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) extends JdbcTableDefLoader(typeDefs) {
     override val jdbcLoadInfoKey = "oracle jdbc"
+
+    // work around oracle bugs
+    override protected def dmd_getIndexInfo(
+      dmd: DM, catalog: String, schema: String, tableName: String, tableType: String) = {
+      s"$tableType $schema.$tableName" match {
+        case x if x.startsWith("VIEW SYS._") => null
+        case _ => super.dmd_getIndexInfo(dmd, catalog, schema, tableName, tableType)
+      }
+    }
+
+    protected def oraFixTableComments(
+        conn: Connection, tableDefs: ListBuffer[JdbcTableDef]) =
+      if (!tableDefs.exists(_.comments != null)) {
+        val st = conn.prepareStatement(
+          "select comments from all_tab_comments" +
+            " where owner || '.' || table_name = ?",
+          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
+        try tableDefs map { td =>
+          log(s"Loading table comments for ${td.name}")
+          st.setString(1, td.name)
+          val rs = st.executeQuery()
+          val comments = if (rs.next) rs.getString(1) else null
+          rs.close()
+          st.clearParameters()
+          if (comments == null) td else td.copy(comments = comments)
+        } finally st.close()
+      } else tableDefs
+
+    protected def oraFixColumnComments(
+        conn: Connection, tableDefs: ListBuffer[JdbcTableDef]) =
+      if (!tableDefs.exists(_.cols.exists(_.comments != null))) {
+        val st = conn.prepareStatement(
+          "select column_name, comments from all_col_comments" +
+            " where owner || '.' || table_name = ?",
+          RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
+        try tableDefs map { td =>
+          log(s"Loading column comments for ${td.name}")
+          st.setString(1, td.name)
+          val rs = st.executeQuery()
+          var cList: List[(String, String)] = Nil
+          while (rs.next)
+            cList = (rs.getString(1), rs.getString(2)) :: cList
+          rs.close()
+          st.clearParameters()
+          val cMap = cList.toMap
+          if (!cMap.values.exists(c => c != null && c != "")) td
+          else td.copy(cols = td.cols.map(c =>
+            c.copy(comments = cMap.get(c.name).orNull)))
+        } finally st.close()
+      } else tableDefs
+
+    // XXX booleans emulated on oracle
+    protected val emulatedBooleanEnums = Set(
+        List("N", "Y"), List("Y", "N"))
+    protected def isEmulatedBoolean(c: JdbcColumnDef) =
+        c.type_.jdbcTypeCode == Types.CHAR && c.type_.size == 1 && c.enum_ != null &&
+          emulatedBooleanEnums.contains(c.enum_.toList)
+
+    protected def oraFixEmulatedBooleans(tableDefs: ListBuffer[JdbcTableDef]) =
+      tableDefs map { td =>
+        if (td.cols.exists(isEmulatedBoolean))
+          td.copy(cols = td.cols.map { c =>
+            if (isEmulatedBoolean(c)) c.copy(
+              type_ = c.type_.copy(jdbcTypeCode = Types.BOOLEAN),
+              enum_ = null,
+              dbDefault =
+                if (c.dbDefault == null) null
+                else c.dbDefault.trim match {
+                  case "'N'" => "false" case "'Y'" => "true" case d => d
+                })
+            else c
+          })
+        else td
+      }
+
+    override def jdbcTableDefs(conn: Connection,
+      catalog: String, schemaPattern: String, tableNamePattern: String,
+      types: String*): List[JdbcTableDef] = {
+
+      val tableDefs = jdbcTableDefsBuf(conn, catalog, schemaPattern, tableNamePattern, types: _*)
+      oraFixEmulatedBooleans(oraFixColumnComments(conn, oraFixTableComments(conn, tableDefs))).toList
+    }
+
     override def checkConstraints(conn: Connection,
         catalog: String, schemaPattern: String, tableNamePattern: String) = {
-      val ps = conn.prepareStatement("""
-        |select constraint_name, search_condition check_clause
-        |  from all_constraints
-        |  where constraint_type = 'C' and owner like ? and table_name like ?
-        """.stripMargin.trim,
-        RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY, RS.CLOSE_CURSORS_AT_COMMIT)
+      val ps = conn.prepareStatement(
+        "select constraint_name, search_condition check_clause" +
+        "  from all_constraints" +
+        "  where constraint_type = 'C' and owner like ? and table_name like ?",
+        RS.TYPE_FORWARD_ONLY, RS.CONCUR_READ_ONLY) // RS.CLOSE_CURSORS_AT_COMMIT fails with ORA-17162
       ps.setString(1, schemaPattern)
       ps.setString(2, tableNamePattern)
       val rs = ps.executeQuery()
@@ -496,6 +570,7 @@ object JdbcTableDefLoader {
     "VARBINARY" -> Types.VARBINARY,
     "VARCHAR" -> Types.VARCHAR
   )
+
   private[in] val jdbcCodeToTypeName: Map[Int, String] =
     jdbcTypeNameToCode.map(_.swap)
 }

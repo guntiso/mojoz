@@ -10,7 +10,7 @@ import java.sql.Types
 class TypeMetadataTests extends FlatSpec with Matchers {
 
   "type metadata" should "return custom types last" in {
-    TypeMetadata.customizedTypeDefs.map(_.name) shouldBe Seq(
+    TypeMetadata.customizedTypeDefs.map(_.name).filterNot(_.startsWith("ora_")) shouldBe Seq(
       "string",
       "date",
       "time",

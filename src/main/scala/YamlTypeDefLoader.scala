@@ -52,7 +52,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   private lazy val ident         =  "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   private lazy val PlainTypeDesc = s"^(\\d+|$ident|$ident +$ident)$$".r
   private lazy val SizedTypeDesc = s"^(\\d+|$ident|$ident +$ident) +([*\\.\\d]+)$$".r
-  private lazy val FracTypeDesc  = s"^(\\d+|$ident|$ident +$ident) +([*\\.\\d]+) +([*\\.\\d]+)$$".r
+  private lazy val FracTypeDesc  = s"^(\\d+|$ident|$ident +$ident) +([*\\.\\d]+) +(-?[*\\.\\d]+)$$".r
   private def toJdbcLoadInfo(str: String) = {
     val isJdbcType = !str.startsWith("(")
     val s = str.stripPrefix("(").stripSuffix(")").trim
@@ -183,6 +183,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
             (v match {
               case null => Nil
               case a: java.util.ArrayList[_] => a.asScala.toList
+              case i: java.lang.Integer      => Seq(i.toString)
               case x => sys.error("Unexpected class: " + x.getClass)
             })
               .map(toString(_, s"Failed to load jdbc load definition for $k"))
