@@ -96,7 +96,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       }
       .map(td =>
         if (td.name contains Schema1)
-          td
+          td.unprefixTableNames("mojoz.")
         else
           td.toSimpleNames
       )
