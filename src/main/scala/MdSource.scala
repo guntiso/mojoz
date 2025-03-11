@@ -4,6 +4,8 @@ import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 
 import java.io.File
+import java.nio.file.{Files, Paths}
+import java.util.jar.JarFile
 import scala.collection.immutable.{Map, Seq}
 import scala.collection.mutable.Buffer
 import scala.io.Codec
@@ -139,6 +141,51 @@ private[in] class ResourceMdSource(val resourcePath: String,
     }))
 }
 
+private[in] class ResourcePathsMdSource(
+    val resourcePaths: Seq[String],
+    val nameFilter: (String) => Boolean) extends MdSource {
+  val classLoader = Thread.currentThread().getContextClassLoader
+  override def defSets = resourcePaths.flatMap { path =>
+    val normalizedPath = if (path.startsWith("/")) path.drop(1) else path
+    val resourceUrl = classLoader.getResource(normalizedPath)
+      if  (resourceUrl == null) Nil
+      else resourceUrl.getProtocol match {
+        case "file" =>
+          val filePath = resourceUrl.getPath
+          if (Files.isDirectory(Paths.get(filePath)))
+            new FilesMdSource(filePath, f => nameFilter(f.getName)).defSets
+          else if (nameFilter(filePath))
+            new FileMdSource(new File(filePath)).defSets
+          else Nil
+
+        case "jar" =>
+          val jarPath = resourceUrl.getPath.substring(5, resourceUrl.getPath.indexOf("!"))
+          val entryPath = resourceUrl.getPath.substring(resourceUrl.getPath.indexOf("!") + 2)
+          val jarFile = new JarFile(jarPath)
+          try {
+            val entries = jarFile.entries().asScala
+              .filter(entry => entry.getName.startsWith(entryPath) && !entry.isDirectory)
+              .toSeq
+            if (entries.isEmpty) {
+              val entry = jarFile.getJarEntry(entryPath)
+              if (entry != null && !entry.isDirectory)
+                Seq(YamlMd(entryPath, 0, Source.fromInputStream(jarFile.getInputStream(entry))("UTF-8").mkString))
+              else Nil
+            } else {
+              entries.map { entry =>
+                YamlMd(entry.getName, 0, Source.fromInputStream(jarFile.getInputStream(entry))("UTF-8").mkString)
+              }
+            }
+          } finally {
+            jarFile.close()
+          }
+
+        case protocol =>
+          throw new IllegalArgumentException(s"Unsupported protocol: $protocol for $normalizedPath")
+      }
+  }
+}
+
 private[in] class StringMdSource(defStrings: String*) extends MdSource {
   override def defSets = defStrings.zipWithIndex.map {
     case (s, i) => YamlMd(s"string_$i", 0, s)
@@ -161,6 +208,10 @@ object YamlMd {
     path: String,
     filter: (File) => Boolean = _.getName endsWith ".yaml") =
     new FilesMdSource(path, filter).defs
+  def fromPaths(
+    resourcePaths: Seq[String] = Seq("tables", "views"),
+    nameFilter: (String) => Boolean = _ endsWith ".yaml") =
+    new ResourcePathsMdSource(resourcePaths, nameFilter).defs
   def fromResource(resourcePath: String, requireResource: Boolean = true) =
     new ResourceMdSource(resourcePath, requireResource).defs
   def fromResources(
