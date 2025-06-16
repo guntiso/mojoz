@@ -15,13 +15,15 @@ object TableMetadata {
     def cols: Seq[String]
     def mapName(f: String => String): this.type
     def mapCols(f: String => String): this.type
+    def parameters: String
   }
   object DbIndex {
-    def apply(name: String, cols: Seq[String]) = Index(name, cols)
+    def apply(name: String, cols: Seq[String], parameters : String) = Index(name, cols, parameters)
   }
   case class Index(
     name: String,
     cols: Seq[String],
+    parameters : String,
   ) extends DbIndex {
     require(validCols(cols),
       "Invalid columns for index: " + cols)
@@ -34,6 +36,7 @@ object TableMetadata {
     name: String,
     cols: Seq[String],
     part: Int = 0, // for cassandra - partition key column count
+    parameters : String,
   ) extends DbIndex {
     require(validCols(cols),
       "Invalid columns for index: " + cols)

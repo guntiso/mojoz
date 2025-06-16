@@ -96,6 +96,13 @@ create table cassandra_pk_test_table9b(
   primary key ((id, name, surname))
 );
 
+create table table_i1(
+  id bigint,
+  code text,
+  name text,
+  primary key (id)
+);
+
 create table account(
   id bigint,
   bank_id bigint,
@@ -297,6 +304,8 @@ create table test_schema_1.ts_table1(
   name text,
   primary key (id)
 );
+
+-- create index idx_table_i1_code_name on table_i1(code, name desc) where code is not null;
 
 create index uk_test_table1_code on test_table1(code);
 -- create index uk_test_table1_code_col1 on test_table1(code, col1);

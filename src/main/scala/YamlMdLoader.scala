@@ -49,10 +49,11 @@ private[in] object YamlTableDefLoader {
   val constraintName = qualifiedIdent
   val col = s"$ident(\\s+[aA][sS][cC]|\\s+[dD][eE][sS][cC])?"
   val cols = s"$col($s\\,$s$col)*"
-  val colsIdxDef = s"$s($s$cols)$s"
-  val namedIdxDef = s"$s($idxName)$s\\($s($cols)$s\\)$s"
+  val idxParams = "\\s+\\w+[\\s\\(][^;]*"
+  val colsIdxDef = s"$s($s$cols)($idxParams)?$s"
+  val namedIdxDef = s"$s($idxName)$s\\($s($cols)$s\\)($idxParams)?$s"
   val namedCkDef = s"$s($constraintName)$s\\($s(.*)$s\\)$s"
-  val complexKeyDef = s"$s\\($s($cols)\\)(($s\\,$s$col)*)$s"
+  val complexKeyDef = s"$s\\($s($cols)\\)(($s\\,$s$col)*)($idxParams)?$s"
   val onDelete = "on delete (restrict|set null|cascade|no action)".replace(" ", "\\s+")
   val onUpdate = "on update (restrict|set null|cascade|no action)".replace(" ", "\\s+")
 
@@ -235,21 +236,29 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
   }
   private def loadYamlIndexDef(src: Any) = {
     val ThisFail = "Failed to load index definition"
-    def dbIndex(name: String, cols: String) = DbIndex(name,
-      Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil)
-    def complexKey(partitionCols: String, allCols: String) = {
+    def dbIndex(name: String, cols: String, parameters: String) = DbIndex(name,
+      Option(cols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil, parameters)
+    def complexKey(partitionCols: String, allCols: String, parameters: String) = {
       ComplexKey(
         name = null,
         cols = Option(allCols).map(_.split("\\,").toList.map(_.trim)) getOrElse Nil,
         part = Option(partitionCols).map(_.split("\\,").toList).getOrElse(Nil).size,
+        parameters = parameters,
       )
+    }
+    def clean(s: String) = s match {
+      case null => null
+      case _    => s.trim match {
+        case "" => null
+        case x  => x
+      }
     }
     def extractIndex(src: Any): DbIndex = src match {
       case idx: java.lang.String => idx match {
-        case NamedIdxDef(name, _, cols, _, _, _) => dbIndex(name, cols)
-        case ColsIdxDef(cols, _, _, _) => dbIndex(null, cols)
-        case ComplexKeyDef(partitionCols, _, _, _, clusteringCols, _, _) =>
-          complexKey(partitionCols, s"$partitionCols$clusteringCols")
+        case NamedIdxDef(name, _, cols, _, _, _, parameters) => dbIndex(name, cols, clean(parameters))
+        case ColsIdxDef(cols, _, _, _, parameters) => dbIndex(null, cols, clean(parameters))
+        case ComplexKeyDef(partitionCols, _, _, _, clusteringCols, _, _, parameters) =>
+          complexKey(partitionCols, s"$partitionCols$clusteringCols", clean(parameters))
         case _ => sys.error(ThisFail +
           " - unexpected format: " + idx.trim)
       }

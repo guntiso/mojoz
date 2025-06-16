@@ -42,6 +42,13 @@ class TableDefTests extends FlatSpec with Matchers {
       toFile(path + "/" + "tables-out-from-array-produced.yaml", produced)
     expected should be(produced)
   }
+  "generated yaml file for index with parameters" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-with-idx-params.yaml")
+    val produced = YamlTableDefWriter.toYaml(idxParamsTableDefs)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-with-idx-params-produced.yaml", produced)
+    expected should be(produced)
+  }
   "generated cassandra cql file" should "equal sample file" in {
     val expected = fileToString(path + "/" + "tables-out-cassandra.cql")
     val produced = DdlGenerator.cassandra().schema(allTableDefs.filter(_.db == null))
@@ -61,6 +68,13 @@ class TableDefTests extends FlatSpec with Matchers {
     val produced = DdlGenerator.postgresql().schema(tableDefs)
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-produced.sql", produced)
+    expected should be(produced)
+  }
+  "generated postgresql file with index params" should "equal sample file" in {
+    val expected = fileToString(path + "/" + "tables-out-with-idx-params.sql")
+    val produced = DdlGenerator.postgresql().schema(idxParamsTableDefs)
+    if (expected != produced)
+      toFile(path + "/" + "tables-out-with-idx-params-produced.sql", produced)
     expected should be(produced)
   }
   "generated h2 file" should "equal sample file" in {
@@ -206,6 +220,9 @@ object TableDefTests {
   val arrayMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-as-array.yaml")
   val arrayTableDefs = new YamlTableDefLoader(arrayMdDefs).tableDefs
+  val idxParamsMdDefs = YamlMd.fromFiles(
+    path = path, filter = _.getName == "tables-in-with-idx-params.yaml")
+  val idxParamsTableDefs = new YamlTableDefLoader(idxParamsMdDefs).tableDefs
   val allMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName startsWith "tables-in")
   val allTableDefs = new YamlTableDefLoader(allMdDefs).tableDefs

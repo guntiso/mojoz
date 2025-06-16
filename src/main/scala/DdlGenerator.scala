@@ -149,19 +149,22 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
     // pk separated from table definition to fit large data imports etc.
     (t.cols.map(column(t)) ++ tableChecks(t)) // ++ primaryKey(t))
       .mkString("create table " + t.name + "(\n  ", ",\n  ", "\n);")
+  private def indexParams(idx: DbIndex) =
+    if (idx.parameters == null || idx.parameters == "") "" else s" ${idx.parameters}"
   def primaryKey(t: TableDef) = t.pk map { pk =>
     "alter table " + t.name + " add " +
     "constraint " + Option(pk.name).getOrElse(pkName(t.name)) +
       " primary key (" + idxCols(pk.cols).mkString(", ") + ");"
   }
+
   def uniqueIndex(t: TableDef)(uk: DbIndex) =
     s"create unique index ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
-    } on ${t.name}(${idxCols(uk.cols).mkString(", ")});"
+    } on ${t.name}(${idxCols(uk.cols).mkString(", ")})${indexParams(uk)};"
   def uniqueKey(t: TableDef)(uk: DbIndex) =
     s"alter table ${t.name} add constraint ${
       Option(uk.name).getOrElse(ukName(t.name, uk))
-    } unique(${idxCols(uk.cols).mkString(", ")});"
+    } unique(${idxCols(uk.cols).mkString(", ")})${indexParams(uk)};"
   def uniqueIndexes(t: TableDef) = t.uk map { uk =>
     if (uk.cols.exists(_.toLowerCase endsWith " desc")) uniqueIndex(t)(uk)
     // on some dbs, unique constraint (not index) is required to add fk
@@ -169,7 +172,7 @@ abstract class DdlGenerator(typeDefs: Seq[TypeDef]) { this: ConstraintNamingRule
   }
   def index(t: TableDef)(idx: DbIndex) =
     "create index " + Option(idx.name).getOrElse(idxName(t.name, idx)) +
-      s" on ${t.name}(${idxCols(idx.cols).mkString(", ")});"
+      s" on ${t.name}(${idxCols(idx.cols).mkString(", ")})${indexParams(idx)};"
   def indexes(t: TableDef) = t.idx map index(t)
   def dbDefault(c: ColumnDef) = c.dbDefault
   private def column(t: TableDef)(c: ColumnDef) = {
@@ -383,7 +386,7 @@ private[out] class CassandraDdlGenerator(
            (if (part < cols.length) cols.drop(part).mkString(", ", ", ", "") else "")
     else cols.mkString(", ")
   def pk(t: TableDef): Option[DbIndex] =
-    t.pk.orElse(t.uk.headOption).orElse(Some(Index(null, Seq(t.cols.head.name))))
+    t.pk.orElse(t.uk.headOption).orElse(Some(Index(null, Seq(t.cols.head.name), null)))
   def partitionCols(cols: Seq[String], part: Int): Seq[String] =
     if (part > 0 && part <= cols.length) cols.take(part) else cols.take(1)
   def partitionCols(t: TableDef): Seq[String] = pk(t).map {

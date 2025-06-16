@@ -89,26 +89,29 @@ class YamlTableDefWriter {
       wrapped(escapeYamlValue(comments), defString + " :", indent)
     }
   }
-  private def toYaml(cols: Seq[String], part: Int): String =
+  private def toYaml(cols: Seq[String], part: Int, parameters: String): String =
+    (
     if  (part > 0 && part <= cols.length)
          cols.take(part).mkString("(", ", ", ")") +
            (if (part < cols.length) cols.drop(part).mkString(", ", ", ", "") else "")
     else cols.mkString(", ")
-  private def toYaml(name: String, cols: Seq[String], part: Int = 0): String =
+    ) +
+    (if (parameters == null || parameters == "") "" else s" $parameters")
+  private def toYaml(name: String, cols: Seq[String], part: Int, parameters: String): String =
     Option(name).filter(_ != "")
-      .map(_ => s"$name(${toYaml(cols, part)})")
-      .getOrElse(toYaml(cols, part))
+      .map(_ => s"$name(${toYaml(cols, part, parameters)})")
+      .getOrElse(toYaml(cols, part, parameters))
   private def toYaml(ck: TableMetadata.CheckConstraint): String =
     Option(ck.name).map(n => s"$n (${ck.expression})") getOrElse ck.expression
   private def toYaml(index: TableMetadata.DbIndex): String = index match {
-    case index: Index   => toYaml(index.name, index.cols)
-    case pk: ComplexKey => toYaml(pk.name, pk.cols, pk.part)
+    case index: Index   => toYaml(index.name, index.cols, 0, index.parameters)
+    case pk: ComplexKey => toYaml(pk.name, pk.cols, pk.part, pk.parameters)
   }
   private def toYaml(ref: TableMetadata.Ref): String =
     List(
-      Some(toYaml(ref.name, ref.cols)),
+      Some(toYaml(ref.name, ref.cols, 0, null)),
       Some("->"),
-      Some(toYaml(ref.refTable, ref.refCols)),
+      Some(toYaml(ref.refTable, ref.refCols, 0, null)),
       Option(ref.onDeleteAction).map("on delete " + _),
       Option(ref.onUpdateAction).map("on update " + _))
       .flatMap(x => x).mkString(" ")

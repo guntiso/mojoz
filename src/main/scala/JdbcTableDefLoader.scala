@@ -190,7 +190,7 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
     rs.close
     val pkName = cols.map(_._3).headOption.orNull
-    if (cols.size == 0) None else Some(DbIndex(pkName, cols.sorted.map(_._2)))
+    if (cols.size == 0) None else Some(DbIndex(pkName, cols.sorted.map(_._2), null))
   }
   def ukAndIdx(rs: ResultSet) = {
     var uk: List[(Short, String, String)] = Nil
@@ -218,8 +218,8 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
       }
     }
     rs.close
-    val uks = uk.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2)))
-    val idxs = idx.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2)))
+    val uks = uk.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2), null))
+    val idxs = idx.groupBy(_._3).map(t => DbIndex(t._1, t._2.sorted.map(_._2), null))
     (uks.toList.sortBy(_.name), idxs.toList.sortBy(_.name))
   }
   def refs(rs: ResultSet) = {

@@ -1,0 +1,7 @@
+table:    table_i1
+columns:
+- id
+- code
+- name
+idx:
+- code, name desc where code is not null

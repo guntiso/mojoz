@@ -36,15 +36,15 @@ class MdConventions(naming: DdlGenerator.ConstraintNamingRules = new DdlGenerato
       tableDef.pk
         .filter(_ != null)
         .map {
-          case pk: ComplexKey if pk.part == 1 => DbIndex(pk.name, pk.cols)
+          case pk: ComplexKey if pk.part == 1 => DbIndex(pk.name, pk.cols, pk.parameters)
           case idx => idx
         }
     else if (cols.filter(isIdName).size == 1)
-      Some(DbIndex(null, cols.filter(isIdName)))
+      Some(DbIndex(null, cols.filter(isIdName), null))
     else if (cols.filter(isCodeName).size == 1)
-      Some(DbIndex(null, cols.filter(isCodeName)))
+      Some(DbIndex(null, cols.filter(isCodeName), null))
     else if (cols.size == 2 && cols.filter(isIdRefName).size == 2)
-      Some(DbIndex(null, cols))
+      Some(DbIndex(null, cols, null))
     else None
   }
   def fromExternal(col: IoColumnDef, pk: Option[DbIndex]): ColumnDef = {
