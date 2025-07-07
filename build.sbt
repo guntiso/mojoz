@@ -30,9 +30,6 @@ lazy val commonSettings = Seq(
     "2.12.20",
   ),
   scalacOptions ++= Seq("-deprecation", "-feature"),
-  resolvers ++= Seq(
-    "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-  ),
   libraryDependencies ++= dependencies,
 )
 
@@ -70,8 +67,9 @@ Compile / doc / scalacOptions ++= (LocalProject("mojoz") / baseDirectory).map {
 publishTo := {
   val v: String = version.value
   val nexus = "https://oss.sonatype.org/"
+  val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
   if (v.trim.endsWith("SNAPSHOT"))
-    Some("snapshots" at nexus + "content/repositories/snapshots")
+    Some("central-snapshots" at centralSnapshots)
   else
     Some("releases" at nexus + "service/local/staging/deploy/maven2")
 }
