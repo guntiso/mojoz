@@ -232,12 +232,12 @@ table:
 fields:
 - some_id
 - some_name
-- some_children *:
-    name: named_inline_view
-    table:
-    fields:
-    - child_id
-    - child_name
+- some_children *: Children
+  name: named_inline_view
+  table:
+  fields:
+  - child_id
+  - child_name
 
 name: with_named_inline_view2
 table:

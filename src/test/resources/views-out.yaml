@@ -514,7 +514,7 @@ table:
 fields:
 - some_id
 - some_name
-- some_children         * named_inline_view
+- some_children         * named_inline_view : Children
 
 name:     with_named_inline_view2
 table:

@@ -1372,6 +1372,9 @@
       <xs:element name="SomeName" nillable="true" minOccurs="0" type="xs:string">
       </xs:element>
       <xs:element name="SomeChildren" minOccurs="0" maxOccurs="unbounded" type="tns:NamedInlineViewType">
+        <xs:annotation>
+          <xs:documentation>Children</xs:documentation>
+        </xs:annotation>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
