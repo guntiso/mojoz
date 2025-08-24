@@ -130,7 +130,6 @@ class TableMetadata(
   val dbName: String => String = identity,
   val aliasToDb: Map[String, String] = Map.empty,
 ) {
-  def this(tableDefs: Seq[TableDef], dbName: String => String) = this(tableDefs, dbName, Map.empty)
   val dbToTableDefs: Map[String, Seq[TableDef]] = Map[String, Seq[TableDef]]((null, Nil)) ++ tableDefs.groupBy(_.db)
   private val dbToAlias: Map[String, Set[String]] =
     (dbToTableDefs.keySet.map(db => (db, db)) ++ aliasToDb)
