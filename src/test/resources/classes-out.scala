@@ -35,6 +35,19 @@ class CardinalityOverideTest extends Dto {
   var name: String = null
   var surname: String = null
 }
+class DistinctEmpty extends Dto {
+  var surname: String = null
+}
+class DistinctFalse extends Dto {
+  var surname: String = null
+}
+class DistinctSurenameId extends DtoWithId {
+  var id: java.lang.Long = null
+  var surname: String = null
+}
+class DistinctTrue extends Dto {
+  var surname: String = null
+}
 class ExpressionTest1 extends DtoWithId {
   var id: java.lang.Long = null
   var bank: String = null

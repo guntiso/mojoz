@@ -507,3 +507,30 @@ fields:
     fields:
     - id
     - full_name
+
+name:  distinct_empty
+table:  person
+fields:
+- surname
+distinct:
+
+name:  distinct_true
+table:  person
+fields:
+- surname
+distinct: true
+
+name:  distinct_false
+table:  person
+fields:
+- surname
+distinct: false
+
+name:  distinct_surename_id
+table:  person
+fields:
+- id
+- surname
+distinct:
+- id
+- surename

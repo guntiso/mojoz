@@ -142,6 +142,14 @@ class YamlViewDefWriter {
       Option(comments).map(c =>
         wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Option(extends_).map(escapeYamlValue).map("extends:  " + _),
+      Option(distinct)
+        .map {
+          case "false" => "false"
+          case "true"  => "true"
+          case ""      => ""
+          case on      => escapeYamlValue(on)
+        }
+        .map(d => s"distinct: $d".trim),
       Option(joins).filter(_.size > 0).map(x => "joins:"),
       Option(joins).filter(_.size > 0)
         .map(_.map("- " + escapeYamlValue(_)).mkString("\n")),

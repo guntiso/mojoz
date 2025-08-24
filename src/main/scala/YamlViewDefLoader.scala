@@ -225,6 +225,11 @@ class YamlViewDefLoader(
       case  x => x
     }
     val rawTable = get(k.table)
+    val distinct = tdMap.get(k.distinct.toString) match {
+      case None => null
+      case Some(null) => ""
+      case _ => Option(getStringSeq(k.distinct)).filter(_.nonEmpty).map(_.mkString(", ")).orNull
+    }
     val joins = getStringSeq(k.joins)
     val filter = getStringSeq(k.filter)
     val group = getStringSeq(k.group)
@@ -333,7 +338,7 @@ class YamlViewDefLoader(
             .filterNot(_.isEmpty).orNull)
       )}
       .map{ case (yfd, f) => transformRawFieldDef(yfd, f) }
-    ViewDef(name, db, table, null, joins, filter, group, having, order,
+    ViewDef(name, db, table, null, distinct, joins, filter, group, having, order,
       xtnds, comments, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
@@ -662,7 +667,7 @@ class YamlViewDefLoader(
 object YamlViewDefLoader {
   private object ViewDefKeys extends Enumeration {
     type ViewDefKeys = Value
-    val name, db, table, joins, filter, group, having, order = Value
+    val name, db, table, distinct, joins, filter, group, having, order = Value
     val extends_ = Value("extends")
     val saveTo = Value("save-to")
     val comments, fields = Value

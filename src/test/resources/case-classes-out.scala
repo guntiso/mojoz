@@ -41,6 +41,19 @@ case class CardinalityOverideTest (
   name: String = null,
   surname: String = null
 )
+case class DistinctEmpty (
+  surname: String = null
+)
+case class DistinctFalse (
+  surname: String = null
+)
+case class DistinctSurenameId (
+  id: java.lang.Long = null,
+  surname: String = null
+)
+case class DistinctTrue (
+  surname: String = null
+)
 case class ExpressionTest1 (
   id: java.lang.Long = null,
   bank: String = null

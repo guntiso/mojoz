@@ -43,6 +43,31 @@ fields:
 - name                  ?
 - surname               !
 
+name:     distinct_empty
+table:    person
+distinct:
+fields:
+- surname
+
+name:     distinct_false
+table:    person
+distinct: false
+fields:
+- surname
+
+name:     distinct_surename_id
+table:    person
+distinct: id, surename
+fields:
+- id
+- surname
+
+name:     distinct_true
+table:    person
+distinct: true
+fields:
+- surname
+
 name:     expression_test_1
 table:    account
 fields:

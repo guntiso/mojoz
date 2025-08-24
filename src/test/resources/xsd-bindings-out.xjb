@@ -20,6 +20,18 @@
     <jaxb:bindings node="//xs:complexType[@name='CardinalityOverideTestType']">
       <jaxb:class name="CardinalityOverideTest"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='DistinctEmptyType']">
+      <jaxb:class name="DistinctEmpty"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='DistinctFalseType']">
+      <jaxb:class name="DistinctFalse"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='DistinctSurenameIdType']">
+      <jaxb:class name="DistinctSurenameId"/>
+    </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='DistinctTrueType']">
+      <jaxb:class name="DistinctTrue"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='ExpressionTest1Type']">
       <jaxb:class name="ExpressionTest1"/>
     </jaxb:bindings>

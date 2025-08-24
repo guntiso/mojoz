@@ -51,6 +51,7 @@ package object metadata {
     db:           String,
     table:        String,
     tableAlias:   String,
+    distinct:     String,
     joins:        Seq[String], // from clause
     filter:       Seq[String], // where clause
     groupBy:      Seq[String],
@@ -62,7 +63,7 @@ package object metadata {
     saveTo:       Seq[String],
     extras:       Map[String, Any],
   ) = ViewDef_(
-    name, db, table, tableAlias, joins, filter, groupBy, having,
+    name, db, table, tableAlias, distinct, joins, filter, groupBy, having,
     orderBy, extends_, comments, fields, saveTo, extras,
   )
 

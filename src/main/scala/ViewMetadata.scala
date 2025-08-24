@@ -8,6 +8,7 @@ case class ViewDef_[+F](
   db: String,
   table: String,
   tableAlias: String,
+  distinct: String,
   joins: Seq[String], // from clause
   filter: Seq[String], // where clause
   groupBy: Seq[String],
