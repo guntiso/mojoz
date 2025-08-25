@@ -204,7 +204,7 @@ class TableMetadata(
       .getOrElse(viewDef.db, throwDbNotFound(viewDef.db))
       .get((fieldDef.table, dbName(fieldDef.name)))
 
-  def col(table: String, column: String, db: String): Option[ColumnDef] =
+  def columnDefOption(table: String, column: String, db: String): Option[ColumnDef] =
     dbToColNameToCol
       .getOrElse(db, throwDbNotFound(db))
       .get((table, column))

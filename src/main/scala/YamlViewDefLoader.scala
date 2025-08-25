@@ -132,7 +132,7 @@ class YamlViewDefLoader(
             f.type_ != null && f.type_.isComplexType)
           f
         else
-          tableMetadata.col(tableName, f.name, t.db).map(c => f.copy(table = dbName(tableName))) getOrElse f
+          tableMetadata.columnDefOption(tableName, f.name, t.db).map(c => f.copy(table = dbName(tableName))) getOrElse f
       }
       @tailrec
       def baseFields(
@@ -515,7 +515,7 @@ class YamlViewDefLoader(
           var isOuterJoined = tableOrAliasToJoin.get(tableOrAlias).map(_.isOuterJoin).getOrElse {
             Option(t.table).flatMap(table => tableMetadata.ref(table, tableOrAlias, t.db)) match {
               case Some(ref) =>
-                !ref.cols.forall(c => !tableMetadata.col(t.table, c, t.db).map(_.nullable).getOrElse(true))
+                !ref.cols.forall(c => !tableMetadata.columnDefOption(t.table, c, t.db).map(_.nullable).getOrElse(true))
               case None => false // ref not found - not outer joined?
             }
           }
@@ -532,7 +532,7 @@ class YamlViewDefLoader(
             tableMetadata.ref(table, step, t.db) match {
               case Some(ref) =>
                 isOuterJoined = isOuterJoined ||
-                  !ref.cols.forall(c => !tableMetadata.col(table, c, t.db).map(_.nullable).getOrElse(true))
+                  !ref.cols.forall(c => !tableMetadata.columnDefOption(table, c, t.db).map(_.nullable).getOrElse(true))
                 table = ref.refTable
               case None =>
                 isOuterJoined = true
