@@ -225,6 +225,7 @@ class YamlViewDefLoader(
       case  x => x
     }
     val rawTable = get(k.table)
+    val column   = get(k.column)
     val distinct = tdMap.get(k.distinct.toString) match {
       case None => null
       case Some(null) => ""
@@ -338,7 +339,7 @@ class YamlViewDefLoader(
             .filterNot(_.isEmpty).orNull)
       )}
       .map{ case (yfd, f) => transformRawFieldDef(yfd, f) }
-    ViewDef(name, db, table, null, distinct, joins, filter, group, having, order,
+    ViewDef(name, db, table, null, column, distinct, joins, filter, group, having, order,
       xtnds, comments, fieldDefs, saveTo, extras) ::
       yamlFieldDefs
       .map(_.extras)
@@ -475,6 +476,10 @@ class YamlViewDefLoader(
        .map { kvv => kvv._1 -> kvv._2.map(_._2).toSet }
       lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
+      lazy val explodeColumn =
+        if  (t.table != null && t.column != null)
+             tableMetadata.columnDef(t)
+        else null
       def reduceExpression[T](f: FieldDef_[T]) =
         if (f.isExpression && f.name.indexOf(".") < 0 && f.expression != null &&
           YamlTableDefLoader.QualifiedIdentDef.pattern.matcher(f.expression).matches &&
@@ -583,7 +588,12 @@ class YamlViewDefLoader(
                  Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
             else f.extras
         )
-        if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType))
+        if (explodeColumn != null && Option(f.type_).map(_.name).orNull == null)
+          f.copy(
+            table = null,
+            type_ = conventions.typeFromExternal(f.name, Option(f.type_)),
+          )
+        else if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType))
           tableMetadata.columnDefOption(t, f) match {
             case Some(col) => f
             case None      =>
@@ -667,7 +677,7 @@ class YamlViewDefLoader(
 object YamlViewDefLoader {
   private object ViewDefKeys extends Enumeration {
     type ViewDefKeys = Value
-    val name, db, table, distinct, joins, filter, group, having, order = Value
+    val name, db, table, column, distinct, joins, filter, group, having, order = Value
     val extends_ = Value("extends")
     val saveTo = Value("save-to")
     val comments, fields = Value

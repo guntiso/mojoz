@@ -43,6 +43,12 @@ fields:
 - name                  ?
 - surname               !
 
+name:     column_test_t3
+table:    test_table3
+column:   string6k_col
+fields:
+- whatever
+
 name:     distinct_empty
 table:    person
 distinct:

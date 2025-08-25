@@ -199,6 +199,26 @@ class TableMetadata(
         }
       })
   }
+  def columnDef(viewDef: ViewDef_[_]): ColumnDef = {
+    val colName = viewDef.column
+    import viewDef.db
+    dbToColNameToCol
+      .getOrElse(db, throwDbNotFound(db))
+      .getOrElse((viewDef.table, colName), {
+        tableDefOption(viewDef.table, db) match {
+          case None =>
+            sys.error(s"Table not found: ${dbAndTable(db, viewDef.table)}" +
+              s" (view: ${viewDef.name}${
+                Option(viewDef.tableAlias).map(alias => s" (table alias $alias") getOrElse ""})${
+                Option(viewDef.joins).map(joins => s", joins: $joins") getOrElse ""}")
+          case Some(tableDef) =>
+            sys.error(s"Column not found: $colName" +
+              s" (table: ${dbAndTable(db, viewDef.table)}, view: ${viewDef.name}${
+                Option(viewDef.tableAlias).map(alias => s" (table alias $alias") getOrElse ""})${
+                Option(viewDef.joins).map(joins => s", joins: $joins") getOrElse ""}")
+        }
+      })
+  }
   def columnDefOption(viewDef: ViewDef_[_], fieldDef: FieldDef_[_]): Option[ColumnDef] =
     dbToColNameToCol
       .getOrElse(viewDef.db, throwDbNotFound(viewDef.db))

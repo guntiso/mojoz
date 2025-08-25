@@ -207,6 +207,15 @@
       </xs:element>
     </xs:sequence>
   </xs:complexType>
+  <xs:complexType name="ColumnTestT3Type">
+    <xs:annotation>
+      <xs:documentation> </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="Whatever" nillable="true" minOccurs="0" type="xs:string">
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
   <xs:complexType name="DistinctEmptyType">
     <xs:sequence>
       <xs:element name="Surname" nillable="true" minOccurs="0">

@@ -534,3 +534,9 @@ fields:
 distinct:
 - id
 - surename
+
+name:   column_test_t3
+table:  test_table3
+column: string6k_col
+fields:
+- whatever

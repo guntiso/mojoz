@@ -41,6 +41,9 @@ case class CardinalityOverideTest (
   name: String = null,
   surname: String = null
 )
+case class ColumnTestT3 (
+  whatever: String = null
+)
 case class DistinctEmpty (
   surname: String = null
 )

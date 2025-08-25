@@ -139,6 +139,7 @@ class YamlViewDefWriter {
       Option(table)
         .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
+      Option(column).map(escapeYamlValue).map("column:   " + _),
       Option(comments).map(c =>
         wrapped(escapeYamlValue(c), "comments:", " " * 10)),
       Option(extends_).map(escapeYamlValue).map("extends:  " + _),

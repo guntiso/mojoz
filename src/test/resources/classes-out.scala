@@ -35,6 +35,9 @@ class CardinalityOverideTest extends Dto {
   var name: String = null
   var surname: String = null
 }
+class ColumnTestT3 extends Dto {
+  var whatever: String = null
+}
 class DistinctEmpty extends Dto {
   var surname: String = null
 }

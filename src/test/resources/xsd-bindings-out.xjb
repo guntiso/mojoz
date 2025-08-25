@@ -20,6 +20,9 @@
     <jaxb:bindings node="//xs:complexType[@name='CardinalityOverideTestType']">
       <jaxb:class name="CardinalityOverideTest"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='ColumnTestT3Type']">
+      <jaxb:class name="ColumnTestT3"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='DistinctEmptyType']">
       <jaxb:class name="DistinctEmpty"/>
     </jaxb:bindings>
