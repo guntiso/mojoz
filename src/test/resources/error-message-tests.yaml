@@ -1,10 +1,10 @@
 expected-error-message: Cyclic extends
 expected-error-message: account -> account
 name:       account
-table:
 extends:    account
 fields:
 - id
+
 
 
 expected-error-message: Failed to parse yaml metadata from error-message-tests.yaml, line 10
@@ -41,7 +41,6 @@ sql:
 
 
 name:       account_1
-table:
 extends:    account_2
 fields:
 - id
@@ -49,13 +48,11 @@ fields:
 
 expected-error-message: Cyclic extends: account_1 -> account_2 -> account_1
 name:       account_2
-table:
 extends:    account_1
 
 
 expected-error-message: Duplicate fields in view test_duplicate_fields: a, b
 name:       test_duplicate_fields
-table:
 fields:
 - a
 - b
@@ -65,7 +62,6 @@ fields:
 
 expected-error-message: Type "unknown_type" referenced from field "test_type_not_found.x" is not found
 name:       test_type_not_found
-table:
 fields:
 - x         unknown_type
 

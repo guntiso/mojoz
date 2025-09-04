@@ -1,10 +1,8 @@
 -
   name:    v_arr1
-  table:
   fields:  &a1_fields
   - id
   - name
 -
   name:    v_arr2
-  table:
   fields:  *a1_fields

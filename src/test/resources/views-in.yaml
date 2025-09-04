@@ -71,7 +71,6 @@ fields:
 - father.father.father.surname
 
 name: no_table
-table:
 fields:
 - some_id   :
 - some_name : ''
@@ -106,12 +105,10 @@ fields:
 - id
 
 name:   one_fielder
-table:
 fields: the_one
 extra: some extra
 
 name:   with_scala_keywords
-table:
 fields:
 - this  =
 - super =
@@ -217,63 +214,51 @@ fields:
 - "code #(major, minor, fix)"
 
 name: with_anonymous_inline_view
-table:
 fields:
 - some_id
 - some_name
 - some_children *:
-    table:
     fields:
     - child_id
     - child_name
 
 name: with_named_inline_view
-table:
 fields:
 - some_id
 - some_name
 - some_children *: Children
   name: named_inline_view
-  table:
   fields:
   - child_id
   - child_name
 
 name: with_named_inline_view2
-table:
 fields:
 - some_children * named_inline_view2:
-    table:
     fields:
     - child_name
 
 name: with_named_inline_view3
-table:
 fields:
 - single_child named_inline_view3:
-    table:
     fields:
     - child_name
 
 name: with_empty_child_save_to
-table:
 save-to:
 - table1
 - table2
 fields:
 - single_child:
-    table:
     save-to:
     fields:
     - child_name
 
 name: with_child_extends
-table:
 fields:
 - code
 - name
 - bank * :
-    table:
     fields:
     - id
     - code
@@ -306,57 +291,47 @@ fields:
 - bank * [true] with_child_extends_bank
 
 name: with_child_no_indent_1
-table:
 fields:
 - code
 - name
 - bank * :
-  table:
   fields:
   - id
   - code
   - name
 
 name: with_child_no_indent_2
-table:
 fields:
 - code
 - name
 - bank *  : My banks
   comments: My banks structure
-  table:
   fields:
   - id
   - code
   - name
 
 name: with_save_options
-table:
 fields:
 - read_only     [!]
 - insert_only   [+]
 - update_only   [=]
 - bank [+-=] * :
-    table:
     fields:
     - id
     - code [+]
 - bank_ro [!] * :
-    table:
     fields:
     - id
     - code
 
 name: with_optional_fields
-table:
 fields:
 - opt              [?]
 - opt_complex      [?]:
-    table:
     fields:
     - name [?]
 - opt_complex_seq  [?] *:
-    table:
     fields:
     - name [?]
 
@@ -459,7 +434,6 @@ fields:
 
 # referenced column types test for view without table
 name:   referenced_column_types_test
-table:
 fields:
 - field_1 = account.bank.country.code
 - field_2 = test_table3.int6_col

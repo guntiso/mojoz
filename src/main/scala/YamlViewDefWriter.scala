@@ -137,6 +137,7 @@ class YamlViewDefWriter {
       Some(name).map("name:     " + _),
       Option(db).map(escapeYamlValue).map("db:       " + _),
       Option(table)
+        .filter(_ != "" || view.extends_ != null)
         .map("table:    " + _ + Option(tableAlias).map(" " + _).getOrElse(""))
         .map(_.trim),
       Option(column).map(escapeYamlValue).map("column:   " + _),

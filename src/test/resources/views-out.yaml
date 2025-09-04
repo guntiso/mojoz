@@ -124,18 +124,15 @@ fields:
 - full_name
 
 name:     named_inline_view
-table:
 fields:
 - child_id
 - child_name
 
 name:     named_inline_view2
-table:
 fields:
 - child_name
 
 name:     named_inline_view3
-table:
 fields:
 - child_name
 
@@ -163,7 +160,6 @@ fields:
 - country.name          ?
 
 name:     no_table
-table:
 fields:
 - some_id
 - some_name                             : ""
@@ -177,7 +173,6 @@ fields:
 - is_not_boolean          date          : should be date
 
 name:     one_fielder
-table:
 fields:
 - the_one
 extra: some extra
@@ -204,7 +199,6 @@ fields:
 - father.father.father.surname
 
 name:     referenced_column_types_test
-table:
 fields:
 - field_1               ?             (LV, TO, LT) = account.bank.country.code
 - field_2                               = test_table3.int6_col
@@ -314,51 +308,43 @@ fields:
 - decimal266_col_mod      decimal 8 2   = decimal266_col8
 
 name:     v_arr1
-table:
 fields:
 - id
 - name
 
 name:     v_arr2
-table:
 fields:
 - id
 - name
 
 name:     v_multidoc1
-table:
 fields:
 - id
 - name
 
 name:     v_multidoc2
-table:
 fields:
 - id
 - name
 
 name:     with_anonymous_inline_view
-table:
 fields:
 - some_id
 - some_name
 - some_children         * with_anonymous_inline_view_some_children
 
 name:     with_anonymous_inline_view_some_children
-table:
 fields:
 - child_id
 - child_name
 
 name:     with_child_extends
-table:
 fields:
 - code
 - name
 - bank                  * with_child_extends_bank
 
 name:     with_child_extends_bank
-table:
 fields:
 - id
 - code
@@ -397,28 +383,24 @@ fields:
 - bank                  * [true] with_child_extends_bank
 
 name:     with_child_no_indent_1
-table:
 fields:
 - code
 - name
 - bank                  * with_child_no_indent_1_bank
 
 name:     with_child_no_indent_1_bank
-table:
 fields:
 - id
 - code
 - name
 
 name:     with_child_no_indent_2
-table:
 fields:
 - code
 - name
 - bank                  * with_child_no_indent_2_bank : My banks
 
 name:     with_child_no_indent_2_bank
-table:
 comments: My banks structure
 fields:
 - id
@@ -462,7 +444,6 @@ fields:
 - name
 
 name:     with_empty_child_save_to
-table:
 save-to:
 - table1
 - table2
@@ -470,7 +451,6 @@ fields:
 - single_child            with_empty_child_save_to_single_child
 
 name:     with_empty_child_save_to_single_child
-table:
 save-to:
 fields:
 - child_name
@@ -541,41 +521,34 @@ filter:
 - code
 
 name:     with_named_inline_view
-table:
 fields:
 - some_id
 - some_name
 - some_children         * named_inline_view : Children
 
 name:     with_named_inline_view2
-table:
 fields:
 - some_children         * named_inline_view2
 
 name:     with_named_inline_view3
-table:
 fields:
 - single_child            named_inline_view3
 
 name:     with_optional_fields
-table:
 fields:
 - opt                   [?]
 - opt_complex           [?] with_optional_fields_opt_complex
 - opt_complex_seq       [?] * with_optional_fields_opt_complex_seq
 
 name:     with_optional_fields_opt_complex
-table:
 fields:
 - name                  [?]
 
 name:     with_optional_fields_opt_complex_seq
-table:
 fields:
 - name                  [?]
 
 name:     with_save_options
-table:
 fields:
 - read_only             [!]
 - insert_only           [+]
@@ -584,19 +557,16 @@ fields:
 - bank_ro               [!] * with_save_options_bank_ro
 
 name:     with_save_options_bank
-table:
 fields:
 - id
 - code                  [+]
 
 name:     with_save_options_bank_ro
-table:
 fields:
 - id
 - code
 
 name:     with_scala_keywords
-table:
 fields:
 - this                                  =
 - super                                 =

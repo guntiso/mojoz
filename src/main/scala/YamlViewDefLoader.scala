@@ -244,7 +244,7 @@ class YamlViewDefLoader(
     val (name, table) = (rawName, rawTable) match {
       case (null, table) => sys.error("Missing view name" +
         List(table, xtnds).filter(_ != null).filter(_ != "").mkString(" (view is based on ", ", ", ")"))
-      case (name, null) => (name, null)
+      case (name, null) => (name, if (xtnds == null) "" else null)
       case (name, table) => (name, dbName(table))
     }
     val YamlMdLoader = new YamlMdLoader(typeDefs)
@@ -318,7 +318,7 @@ class YamlViewDefLoader(
       val mojozTypeFe =
         if (yfd.typeName == null && isViewDef(yfd.extras))
           new Type(typeName(yfd.extras, name), true)
-        else if (isExpression || rawTable == "")
+        else if (isExpression || viewTable == "")
           conventions.typeFromExternal(name, rawMojozType)
         else null
       val mojozType =

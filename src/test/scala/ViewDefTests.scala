@@ -138,13 +138,11 @@ class ViewDefTests extends FlatSpec with Matchers {
       new TableMetadata(Nil),
       YamlMd.fromString("""
 name: test1
-table:
 fields:
 - id
 - name *
 ---
 name: test2
-table:
 fields:
 - id
 - name =
