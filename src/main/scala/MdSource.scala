@@ -199,9 +199,6 @@ private[in] class NamedStringMdSource(nameAndMdStringPairs: (String, String)*) e
 }
 
 object YamlMd {
-  private[in] def isCustomTypeDef(d: YamlMd): Boolean = ??? // XXX for binary compatibility TODO remove   
-  private[in] def isTableDef(d: YamlMd): Boolean      = ??? // XXX for binary compatibility TODO remove   
-  private[in] def isViewDef(d: YamlMd): Boolean       = ??? // XXX for binary compatibility TODO remove   
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(
