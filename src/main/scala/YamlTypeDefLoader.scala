@@ -7,9 +7,8 @@ import scala.util.Try
 
 class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(_.parsed.exists(_ contains "type")) // XXX for binary compatibility TODO remove   
   val typeDefs = {
-    val rawTypeDefs = sources flatMap { td =>
+    val rawTypeDefs = yamlMd flatMap { td =>
       try loadYamlTypeDefs(td) catch {
         case e: Exception => throw new RuntimeException(
           s"Failed to load type definitions from ${td.filename}, line ${td.line}", e)

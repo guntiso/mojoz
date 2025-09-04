@@ -25,8 +25,7 @@ class YamlViewDefLoader(
   private val MojozExplicitType        = "mojoz.explicit.type"
   private val MojozIsOuterJoined       = "mojoz.internal.is-outer-joined"
   private val parseJoins = joinsParser
-  val sources = yamlMd.filter(_.parsed.exists(isViewDef)) // XXX for binary compatibility TODO remove   
-  private val rawViewDefs = transformRawViewDefs(sources.map { md =>
+  private val rawViewDefs = transformRawViewDefs(yamlMd.map { md =>
     try loadRawViewDefs(md.body, md.filename, md.line) catch {
       case e: Exception => throw new RuntimeException(
         s"Failed to load view definition from ${md.filename}, line ${md.line}", e)
@@ -187,8 +186,8 @@ class YamlViewDefLoader(
      m.contains("name") &&
      m.contains("table"))
   }
-  private lazy val mdBodyToMd = // XXX for binary compatibility TODO remove   
-    sources.map(s => s.body -> s).toMap
+  private lazy val mdBodyToMd =
+    yamlMd.map(s => s.body -> s).toMap
   protected def loadRawViewDefs(defs: String, labelOrFilename: String = null, lineNumber: Int = 0): List[ViewDef] =
     loadRawViewDefs(mdBodyToMd.getOrElse(defs, YamlMd(labelOrFilename, lineNumber, defs)))
   protected def loadRawViewDefs(md: YamlMd): List[ViewDef] =

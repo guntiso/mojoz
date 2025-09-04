@@ -81,7 +81,6 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
 
   // TODO load check constraints!
   import YamlTableDefLoader._
-  val sources = yamlMd.filter(_.parsed.exists(_ contains "columns"))
   private def checkRawTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
     val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
     if (m.size < td.size) sys.error("Duplicate table definitions: " +
@@ -126,7 +125,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     td foreach checkIndices
   }
   val tableDefs: Seq[TableDef] = {
-    val rawTableDefs = sources.flatMap { md =>
+    val rawTableDefs = yamlMd.flatMap { md =>
       try loadYamlTableDefs(md).map(md -> _) catch {
         case e: Exception => throw new RuntimeException(
           s"Failed to load table definitions from ${md.filename}, line ${md.line}", e)
