@@ -179,7 +179,7 @@ class YamlViewDefLoader(
   val nameToViewDef: Map[String, ViewDef] =
     plainViewDefs.map(plainViewDefToViewDef(_, Nil))
       .map(t => (t.name, t)).toMap
-  private[in] def isViewDef(m: Map[String, _]) = { // TODO contains "view" instead?
+  protected def isViewDef(m: Map[String, _]) = { // TODO contains "view" instead?
     !m.contains("columns") && !m.contains("type") &&
     (m.contains("extends") ||
      m.contains("fields")  ||
