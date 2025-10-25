@@ -221,3 +221,7 @@ class YamlTypeDefLoader(yamlMd: Seq[YamlMd]) {
     }
   }
 }
+
+object YamlTypeDefLoader {
+  def apply(yamlMd: Seq[YamlMd]): YamlTypeDefLoader = new YamlTypeDefLoader(yamlMd)
+}

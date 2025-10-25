@@ -88,7 +88,7 @@ object TypeMetadata {
       if (fallbackTypeDefOpt.isDefined) td.withFallback(fallbackTypeDefOpt.get) else td
     }
   }
-  lazy val defaultTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-default-types.yaml")).typeDefs
-  lazy val customTypeDefs = new YamlTypeDefLoader(YamlMd.fromResource("/mojoz-custom-types.yaml", false)).typeDefs
+  lazy val defaultTypeDefs = YamlTypeDefLoader(YamlMd.fromResource("/mojoz-default-types.yaml")).typeDefs
+  lazy val customTypeDefs = YamlTypeDefLoader(YamlMd.fromResource("/mojoz-custom-types.yaml", false)).typeDefs
   lazy val customizedTypeDefs = mergeTypeDefs(customTypeDefs, defaultTypeDefs)
 }
