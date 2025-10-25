@@ -19,6 +19,7 @@ private[in] case class YamlTableDef(
   columns: Seq[YamlFieldDef],
   pk: Option[DbIndex],
   uk: Seq[DbIndex],
+  ck: Seq[CheckConstraint],
   idx: Seq[DbIndex],
   refs: Seq[Ref],
   extras: Map[String, Any])
@@ -71,7 +72,7 @@ private[in] object YamlTableDefLoader {
   val OnDeleteOnUpdateDef = regex(s"$s($onDelete\\s+)?$onUpdate$s")
   object TableDefKeys extends Enumeration {
     type TableDefKeys = Value
-    val db, table, comments, columns, pk, uk, idx, refs = Value
+    val db, table, comments, columns, pk, uk, ck, idx, refs = Value
   }
   private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
@@ -334,7 +335,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
       if (pk_list.size > 1)
         sys.error(
           "Multiple primary keys are not allowed, composite key columns should be comma-separated")
-      val cks = toList(tdMap.get("ck"))
+      val ck = toList(tdMap.get("ck"))
         .map(loadYamlCheckConstraint)
       val pk = pk_list.headOption
       val uk = toList(tdMap.get("uk"))
@@ -343,8 +344,8 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
         .map(loadYamlIndexDef)
       val refs = toList(tdMap.get("refs"))
         .map(loadYamlRefDef)
-      val extras = tdMap + ("ck" -> cks) -- TableDefKeyStrings  // TODO refactor ck load!
-      YamlTableDef(db, table, comments, colDefs, pk, uk, idx, refs, extras)
+      val extras = tdMap -- TableDefKeyStrings
+      YamlTableDef(db, table, comments, colDefs, pk, uk, ck, idx, refs, extras)
     }
   }
   private def yamlTypeDefToTableDef(y: YamlTableDef) = {
@@ -355,10 +356,10 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val cols = y.columns.map(yamlFieldDefToExFieldDef)
     val pk = y.pk
     val uk = y.uk
-    val ck = y.extras.get("ck").map(_.asInstanceOf[List[CheckConstraint @ unchecked]]).getOrElse(Nil) // TODO refactor ck load!
+    val ck = y.ck
     val idx = y.idx
     val refs = y.refs
-    val extras = y.extras - "ck" // TODO refactor ck load!
+    val extras = y.extras
     val exTypeDef = IoTableDef(db, name, comments, cols, pk, uk, ck, idx, refs, extras)
     conventions.fromExternal(exTypeDef)
   }
