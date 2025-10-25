@@ -481,7 +481,7 @@ class YamlViewDefLoader(
         else null
       def reduceExpression[T](f: FieldDef_[T]) =
         if (f.isExpression && f.name.indexOf(".") < 0 && f.expression != null &&
-          YamlTableDefLoader.QualifiedIdentDef.pattern.matcher(f.expression).matches &&
+          YamlTableDefLoaderConstants.QualifiedIdentDef.pattern.matcher(f.expression).matches &&
           !Set("true", "false").contains(f.expression))
           f.copy(isExpression = false, expression = null,
             name = f.expression, alias = f.name)

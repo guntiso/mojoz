@@ -21,7 +21,7 @@ class ErrorMessageTests extends FlatSpec with Matchers {
     path = path, filter = _.getName endsWith "-in.yaml")
   val yamlMd = new FilesLazyMdSource(
     path = path, filter = _.getName endsWith "error-message-tests.yaml").defs
-  val tableDefs = new YamlTableDefLoader(tableMd).tableDefs
+  val tableDefs = YamlTableDefLoader(tableMd).tableDefs
   val tableMetadata = new TableMetadata(tableDefs)
   val nl = System.getProperty("line.separator")
 
@@ -43,7 +43,7 @@ class ErrorMessageTests extends FlatSpec with Matchers {
         val exception = intercept[RuntimeException] {
           mdBuffer.toList.foreach(_.parsed)
           val ct = YamlTypeDefLoader(mdBuffer.toList).typeDefs
-          val td = new YamlTableDefLoader(mdBuffer.toList).tableDefs
+          val td = YamlTableDefLoader(mdBuffer.toList).tableDefs
           val vd = YamlViewDefLoader(tableMetadata, mdBuffer.toList).plainViewDefs
         }
         val messages = messageStack(exception)

@@ -42,7 +42,7 @@ private[in] case class YamlFieldDef(
   comments: String,
   extras: Map[String, Any])
 
-private[in] object YamlTableDefLoader {
+private[in] object YamlTableDefLoaderConstants {
   val ident = "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
   val qualifiedIdent = s"$ident(\\.$ident)*"
   val s = "\\s*"
@@ -74,14 +74,13 @@ private[in] object YamlTableDefLoader {
     type TableDefKeys = Value
     val db, table, comments, columns, pk, uk, ck, idx, refs = Value
   }
-  private val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
+  val TableDefKeyStrings = TableDefKeys.values.map(_.toString)
 }
 class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     conventions: MdConventions = new SimplePatternMdConventions,
     typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs) {
 
-  // TODO load check constraints!
-  import YamlTableDefLoader._
+  import YamlTableDefLoaderConstants._
   private def checkRawTableDefs(td: Seq[TableDef_[ColumnDef_[_]]]) = {
     val m: Map[(String, String), _] = td.map(t => (t.db, t.name) -> t).toMap
     if (m.size < td.size) sys.error("Duplicate table definitions: " +
@@ -389,6 +388,14 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     IoColumnDef(name, IoColumnType(nullable, rawMojozType),
       nullable getOrElse true, dbDefault, enm, comments, extras)
   }
+}
+
+object YamlTableDefLoader {
+  def apply(
+    yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
+    conventions: MdConventions = new SimplePatternMdConventions,
+    typeDefs: Seq[TypeDef] = TypeMetadata.customizedTypeDefs
+  ) = new YamlTableDefLoader(yamlMd, conventions, typeDefs)
 }
 
 private[in] object YamlMdLoader {

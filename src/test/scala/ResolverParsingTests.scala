@@ -12,7 +12,7 @@ class ResolverParsingTests extends FlatSpec with Matchers {
   val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName endsWith "-in.yaml")
-  val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
+  val tableDefs = YamlTableDefLoader(mdDefs).tableDefs
   val tableMd = new TableMetadata(tableDefs)
   val xViewDefs = YamlViewDefLoader(tableMd, mdDefs).nameToViewDef
 

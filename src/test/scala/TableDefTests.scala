@@ -210,22 +210,22 @@ object TableDefTests {
   val path = "src/test/resources"
   val mdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in.yaml")
-  val tableDefs = new YamlTableDefLoader(mdDefs).tableDefs
+  val tableDefs = YamlTableDefLoader(mdDefs).tableDefs
   val cassandraMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-cassandra.yaml")
-  val cassandraTableDefs = new YamlTableDefLoader(cassandraMdDefs).tableDefs
+  val cassandraTableDefs = YamlTableDefLoader(cassandraMdDefs).tableDefs
   val multidocMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-as-multidoc.yaml")
-  val multidocTableDefs = new YamlTableDefLoader(multidocMdDefs).tableDefs
+  val multidocTableDefs = YamlTableDefLoader(multidocMdDefs).tableDefs
   val arrayMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-as-array.yaml")
-  val arrayTableDefs = new YamlTableDefLoader(arrayMdDefs).tableDefs
+  val arrayTableDefs = YamlTableDefLoader(arrayMdDefs).tableDefs
   val idxParamsMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName == "tables-in-with-idx-params.yaml")
-  val idxParamsTableDefs = new YamlTableDefLoader(idxParamsMdDefs).tableDefs
+  val idxParamsTableDefs = YamlTableDefLoader(idxParamsMdDefs).tableDefs
   val allMdDefs = YamlMd.fromFiles(
     path = path, filter = _.getName startsWith "tables-in")
-  val allTableDefs = new YamlTableDefLoader(allMdDefs).tableDefs
+  val allTableDefs = YamlTableDefLoader(allMdDefs).tableDefs
   def skipSome(s: String) = {
     // h2 and hsqldb ignores 'desc' on index cols, do not compare these lines
     s.split("\\r?\\n")

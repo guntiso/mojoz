@@ -136,7 +136,7 @@ case class ColumnDef_[+T](
 }
 
 class TableMetadata(
-  val tableDefs: Seq[TableDef] = (new YamlTableDefLoader()).tableDefs,
+  val tableDefs: Seq[TableDef] = YamlTableDefLoader().tableDefs,
   val dbName: String => String = identity,
   val aliasToDb: Map[String, String] = Map.empty,
 ) {
