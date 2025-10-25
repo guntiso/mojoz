@@ -114,11 +114,9 @@ case class TableDef_[+C <: ColumnDef_[_]](
       refs = refs.map(r => r.copy(name = safeTransform(r.name)))).asInstanceOf[this.type]
   }
   private val nameToColumn: Map[String, C] =
-    cols.map {
+    cols.collect {
       case c: ColumnDef_[_] => c.name -> c.asInstanceOf[C]
-      case c                => (null, c)
-    } .filter(_._1 != null)
-      .toMap
+    }.toMap
   def column(columnName: String): C = columnOpt(columnName).getOrElse(
     sys.error(s"Column $columnName is not found in table ${name}${Option(db).map(db => s" db $db").getOrElse("")}")
   )
