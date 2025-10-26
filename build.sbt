@@ -65,13 +65,9 @@ Compile / doc / scalacOptions ++= (LocalProject("mojoz") / baseDirectory).map {
 }.value
 
 publishTo := {
-  val v: String = version.value
-  val nexus = "https://oss.sonatype.org/"
   val centralSnapshots = "https://central.sonatype.com/repository/maven-snapshots/"
-  if (v.trim.endsWith("SNAPSHOT"))
-    Some("central-snapshots" at centralSnapshots)
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  if (isSnapshot.value) Some("central-snapshots" at centralSnapshots)
+  else localStaging.value
 }
 
 publishMavenStyle := true
