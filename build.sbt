@@ -8,7 +8,7 @@ lazy val dependencies = Seq(
 
 lazy val integrationTestDependencies = Seq(
   "com.typesafe"   % "config"     % "1.4.3"  %      Test,
-  "org.postgresql" % "postgresql" % "42.7.8" %      Test,
+  "org.postgresql" % "postgresql" % "42.7.10" %     Test,
 )
 
 javacOptions ++= Seq("-source", "11", "-target", "11", "-Xlint")
