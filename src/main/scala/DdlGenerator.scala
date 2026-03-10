@@ -242,6 +242,14 @@ private[out] class HsqldbDdlGenerator(
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "hsqldb sql"
+  private def arrayElementType(c: ColumnDef) = {
+    dbElementType(c) match {
+      case "clob" => "varchar(1073741823)" // BLOB and CLOB ARRAY-s are not supported by HSQLDB
+      case x => x
+    }
+  }
+  override def dbAraryType(c: ColumnDef) =
+    c.type_.arrayLengthString.map(len => s"${arrayElementType(c)} array[$len]").getOrElse(s"${arrayElementType(c)} array")
 }
 
 private[out] class H2DdlGenerator(

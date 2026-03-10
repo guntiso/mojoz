@@ -202,6 +202,8 @@ class TableDefTests extends FlatSpec with Matchers {
         // hsqldb ignores 'desc' on index cols, do not compare these lines
         .filterNot(_.contains("- code, col2"))
         .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
+        // BLOB and CLOB ARRAY-s are not supported by HSQLDB
+        .filterNot(_ startsWith "- string_nolen_col")
         .mkString(nl)
     }
     skipSomeHsqldb(expected) should be(skipSomeHsqldb(produced))

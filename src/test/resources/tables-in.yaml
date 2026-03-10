@@ -24,6 +24,7 @@ columns:
 - datetime_col       *   dateTime
 - string60_col       *   60
 - string6k_col       *   6000
+- string_nolen_col   *   # BLOB and CLOB ARRAY-s are not supported by HSQLDB
 - boolean_col        *   boolean
 
 table:    bank

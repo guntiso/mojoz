@@ -29,6 +29,7 @@ create table array_test_table1(
   datetime_col timestamp array,
   string60_col varchar(60) array,
   string6k_col varchar(6000) array,
+  string_nolen_col clob array,
   boolean_col boolean array
 );
 

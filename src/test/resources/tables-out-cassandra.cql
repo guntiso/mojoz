@@ -134,6 +134,7 @@ create table array_test_table1(
   datetime_col list<timestamp>,
   string60_col list<text>,
   string6k_col list<text>,
+  string_nolen_col list<text>,
   boolean_col list<boolean>,
   primary key (int_col)
 );

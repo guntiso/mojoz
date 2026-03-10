@@ -333,9 +333,9 @@ abstract class JdbcTableDefLoader(typeDefs: Seq[TypeDef]) {
     }
 
   private val ident         =  "[_\\p{IsLatin}][_\\p{IsLatin}0-9]*"
-  private val PlainTypeName = s"^($ident|$ident +$ident) ARRAY$$".r
-  private val SizedTypeName = s"^($ident|$ident +$ident)\\((\\d+)\\) ARRAY$$".r
-  private val FracTypeName  = s"^($ident|$ident +$ident)\\((\\d+), *(\\d+)\\) ARRAY$$".r
+  private val PlainTypeName = s"^($ident|$ident +$ident|$ident +$ident +$ident) +ARRAY$$".r
+  private val SizedTypeName = s"^($ident|$ident +$ident|$ident +$ident +$ident)\\((\\d+)\\) *ARRAY$$".r
+  private val FracTypeName  = s"^($ident|$ident +$ident|$ident +$ident +$ident)\\((\\d+), *(\\d+)\\) *ARRAY$$".r
   protected def fallbackType(jdbcColumnType: JdbcColumnType): Type = null
   def toMojozElementType(jdbcColumnType: JdbcColumnType): Type = jdbcColumnType.dbTypeName match {
     case PlainTypeName(dbTypeName)             => dbTypeNameToMojozType(dbTypeName, 0, 0)

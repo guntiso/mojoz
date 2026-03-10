@@ -384,6 +384,7 @@ class YamlTableDefLoader(yamlMd: Seq[YamlMd] = YamlMd.fromResources(),
     val rawMojozType =
       Option(YamlMdLoader.yamlTypeToMojozType(yfd, conventions))
         .map(t => if (isArray) t.copy(name = s"${Option(t.name).filter(_ != null).getOrElse("")}[]") else t)
+        .orElse(if (isArray) Some(new Type("[]")) else None)
     val extras = yfd.extras
     IoColumnDef(name, IoColumnType(nullable, rawMojozType),
       nullable getOrElse true, dbDefault, enm, comments, extras)

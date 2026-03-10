@@ -24,6 +24,7 @@ columns:
 - datetime_col          * dateTime
 - string60_col          * 60
 - string6k_col          * 6000
+- string_nolen_col      *
 - boolean_col           * boolean
 
 table:    bank
