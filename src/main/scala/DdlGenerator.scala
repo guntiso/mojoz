@@ -242,15 +242,12 @@ private[out] class HsqldbDdlGenerator(
     typeDefs: Seq[TypeDef])
   extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "hsqldb sql"
-  // drop "desc" keyword - hsqldb ignores it, fails metadata roundtrip test
-  override def idxCols(cols: Seq[String]) = super.idxCols(cols.map(c =>
-    if (c.toLowerCase endsWith " desc") c.substring(0, c.length - 5) else c))
 }
 
 private[out] class H2DdlGenerator(
     constraintNamingRules: ConstraintNamingRules,
     typeDefs: Seq[TypeDef])
-  extends HsqldbDdlGenerator(constraintNamingRules, typeDefs) {
+  extends StandardSqlDdlGenerator(constraintNamingRules, typeDefs) {
   override val ddlWriteInfoKey = "h2 sql"
   override def explicitNotNullForColumn(t: TableDef, c: ColumnDef) =
     !c.nullable || t.pk.exists(_.cols.contains(c.name))

@@ -197,7 +197,14 @@ class TableDefTests extends FlatSpec with Matchers {
     }.mkString("\n")
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
-    skipSome(expected) should be(skipSome(produced))
+    def skipSomeHsqldb(s: String) = {
+      skipSome(s).split("\\r?\\n")
+        // hsqldb ignores 'desc' on index cols, do not compare these lines
+        .filterNot(_.contains("- code, col2"))
+        .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
+        .mkString(nl)
+    }
+    skipSomeHsqldb(expected) should be(skipSomeHsqldb(produced))
   }
 }
 
@@ -227,10 +234,7 @@ object TableDefTests {
     path = path, filter = _.getName startsWith "tables-in")
   val allTableDefs = YamlTableDefLoader(allMdDefs).tableDefs
   def skipSome(s: String) = {
-    // h2 and hsqldb ignores 'desc' on index cols, do not compare these lines
     s.split("\\r?\\n")
-      .filterNot(_.contains("- code, col2"))
-      .filterNot(_.contains("idx_tt1_spec_col3_col5d"))
       // do not compare extras-dependent lines
       .filterNot(_ == "- code                  ! 16            :")
       .filterNot(_ contains "SWIFT")

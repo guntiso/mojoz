@@ -210,7 +210,7 @@ alter table person add constraint pk_person primary key (id);
 alter table test_table1 add constraint pk_tt1_spec_id_code primary key (id, code);
 alter table test_table1 add constraint uk_test_table1_code unique(code);
 alter table test_table1 add constraint uk_test_table1_code_col1 unique(code, col1);
-create unique index uk_test_table1_code_col2 on test_table1(code, col2);
+create unique index uk_test_table1_code_col2 on test_table1(code, col2 desc);
 alter table test_table1 add constraint uk_test_table1_col1_col2_col3 unique(col1, col2, col3);
 alter table test_table1 add constraint uk_tt1_spec_col2 unique(col2);
 alter table test_table1 add constraint uk_tt2_spec_code_col2 unique(code, col2);
@@ -219,7 +219,7 @@ create index idx_test_table1_id_col1 on test_table1(id, col1);
 create index idx_tt1_spec_col3 on test_table1(col3);
 create index idx_tt1_spec_col3_col4 on test_table1(col3, col4);
 create index idx_tt1_spec_col3_col5a on test_table1(col3, col5);
-create index idx_tt1_spec_col3_col5d on test_table1(col3, col5);
+create index idx_tt1_spec_col3_col5d on test_table1(col3, col5 desc);
 
 alter table test_table2 add constraint pk_test_table2 primary key (name);
 
