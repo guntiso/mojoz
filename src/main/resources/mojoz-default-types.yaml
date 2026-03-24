@@ -115,7 +115,7 @@ yaml:
 sql:
 - smallint
 cql:
-- tinyint
+- smallint
 
 
 type:       int
