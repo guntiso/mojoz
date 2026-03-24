@@ -16,6 +16,7 @@ class ArrayTestView1 extends Dto {
   var int6Col: List[java.lang.Integer] = Nil
   var integer36Col: List[scala.math.BigInt] = Nil
   var longCol: List[java.lang.Long] = Nil
+  var shortCol: List[java.lang.Short] = Nil
   var long16Col: List[java.lang.Long] = Nil
   var decimal266Col: List[scala.math.BigDecimal] = Nil
   var dateCol: List[java.time.LocalDate] = Nil
@@ -205,6 +206,21 @@ class TypeOverrideTest extends Dto {
 class TypeOverrideTest2 extends Dto {
   var intColAsString: String = null
   var decimal266ColMod: scala.math.BigDecimal = null
+}
+class TypesTestView1 extends Dto {
+  var intCol: java.lang.Integer = null
+  var int6Col: java.lang.Integer = null
+  var integer36Col: scala.math.BigInt = null
+  var longCol: java.lang.Long = null
+  var shortCol: java.lang.Short = null
+  var long16Col: java.lang.Long = null
+  var decimal266Col: scala.math.BigDecimal = null
+  var dateCol: java.time.LocalDate = null
+  var datetimeCol: java.time.LocalDateTime = null
+  var string60Col: String = null
+  var string6kCol: String = null
+  var booleanCol: java.lang.Boolean = null
+  var bytesCol: Array[Byte] = null
 }
 class VArr1 extends DtoWithId {
   var id: java.lang.Long = null

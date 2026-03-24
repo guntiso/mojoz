@@ -20,6 +20,7 @@ fields:
 - int6_col
 - integer36_col
 - long_col
+- short_col
 - long16_col
 - decimal266_col
 - date_col
@@ -27,6 +28,23 @@ fields:
 - string60_col
 - string6k_col
 - boolean_col
+
+name:     types_test_view1
+table:    test_table3
+fields:
+- int_col
+- int6_col
+- integer36_col
+- long_col
+- short_col
+- long16_col
+- decimal266_col
+- date_col
+- datetime_col
+- string60_col
+- string6k_col
+- boolean_col
+- bytes_col
 
 name:    type_override_test
 table:   account

@@ -140,6 +140,9 @@
     <jaxb:bindings node="//xs:complexType[@name='TypeOverrideTest2Type']">
       <jaxb:class name="TypeOverrideTest2"/>
     </jaxb:bindings>
+    <jaxb:bindings node="//xs:complexType[@name='TypesTestView1Type']">
+      <jaxb:class name="TypesTestView1"/>
+    </jaxb:bindings>
     <jaxb:bindings node="//xs:complexType[@name='VArr1Type']">
       <jaxb:class name="VArr1"/>
     </jaxb:bindings>

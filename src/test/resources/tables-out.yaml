@@ -18,6 +18,7 @@ columns:
 - int6_col              * int 6
 - integer36_col         * integer 36
 - long_col              * long
+- short_col             * short
 - long16_col            * long 16
 - decimal266_col        * decimal 26 6
 - date_col              * date
@@ -116,6 +117,7 @@ columns:
 - int6_col                int 6
 - integer36_col           integer 36
 - long_col                long
+- short_col               short
 - long16_col              long 16
 - decimal266_col          decimal 26 6
 - date_col                date
@@ -144,6 +146,7 @@ columns:
 - bank.id
 - enum_for_int            int         (-1, 0, 1)
 - enum_for_long           long        (-99, 0, 99)
+- enum_for_short          short       (-1, 0, 1)
 - enum_for_decimal        decimal 3 1 (-9.9, 0, 9.9)
 - enum_with_diacritics    6           (rūķīši, darbā, vai, mājās)
 - enum_spešal_diacritics  6           (bladāc)

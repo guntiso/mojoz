@@ -20,6 +20,7 @@ fields:
 - int6_col              * int 6
 - integer36_col         * integer 36
 - long_col              * long
+- short_col             * short
 - long16_col            * long 16
 - decimal266_col        * decimal 26 6
 - date_col              * date
@@ -306,6 +307,23 @@ comments: ""
 fields:
 - int_col_as_string       string 10     = int_col
 - decimal266_col_mod      decimal 8 2   = decimal266_col8
+
+name:     types_test_view1
+table:    test_table3
+fields:
+- int_col
+- int6_col
+- integer36_col
+- long_col
+- short_col
+- long16_col
+- decimal266_col
+- date_col
+- datetime_col
+- string60_col
+- string6k_col
+- boolean_col
+- bytes_col
 
 name:     v_arr1
 fields:

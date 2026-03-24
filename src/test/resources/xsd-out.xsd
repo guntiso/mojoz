@@ -92,6 +92,8 @@
       </xs:element>
       <xs:element name="LongCol" minOccurs="0" maxOccurs="unbounded" type="xs:long">
       </xs:element>
+      <xs:element name="ShortCol" minOccurs="0" maxOccurs="unbounded" type="xs:short">
+      </xs:element>
       <xs:element name="Long16Col" minOccurs="0" maxOccurs="unbounded">
         <xs:simpleType>
           <xs:restriction base="xs:long">
@@ -917,6 +919,74 @@
             <xs:fractionDigits value="2"/>
           </xs:restriction>
         </xs:simpleType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="TypesTestView1Type">
+    <xs:annotation>
+      <xs:documentation> </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="IntCol" nillable="true" minOccurs="0" type="xs:int">
+      </xs:element>
+      <xs:element name="Int6Col" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:int">
+            <xs:totalDigits value="6"/>
+            <xs:maxExclusive value="1000000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Integer36Col" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:integer">
+            <xs:totalDigits value="36"/>
+            <xs:maxExclusive value="1000000000000000000000000000000000000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="LongCol" nillable="true" minOccurs="0" type="xs:long">
+      </xs:element>
+      <xs:element name="ShortCol" nillable="true" minOccurs="0" type="xs:short">
+      </xs:element>
+      <xs:element name="Long16Col" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:long">
+            <xs:totalDigits value="16"/>
+            <xs:maxExclusive value="10000000000000000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Decimal266Col" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:decimal">
+            <xs:totalDigits value="26"/>
+            <xs:maxExclusive value="100000000000000000000"/>
+            <xs:fractionDigits value="6"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="DateCol" nillable="true" minOccurs="0" type="xs:date">
+      </xs:element>
+      <xs:element name="DatetimeCol" nillable="true" minOccurs="0" type="xs:dateTime">
+      </xs:element>
+      <xs:element name="String60Col" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="60"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="String6kCol" nillable="true" minOccurs="0">
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="6000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="BooleanCol" nillable="true" minOccurs="0" type="xs:boolean">
+      </xs:element>
+      <xs:element name="BytesCol" nillable="true" minOccurs="0" type="xs:base64Binary">
       </xs:element>
     </xs:sequence>
   </xs:complexType>

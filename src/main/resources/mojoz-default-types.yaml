@@ -109,6 +109,8 @@ scala name: java.lang.Short
 jdbc:
 - SMALLINT
 - TINYINT # TODO? signed/unsigned byte?
+postgresql jdbc:
+- (INT2      5 0    -> none)
 yaml:
 - short
 - short *           -> size, none

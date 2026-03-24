@@ -22,6 +22,7 @@ case class ArrayTestView1 (
   int6Col: List[java.lang.Integer] = Nil,
   integer36Col: List[scala.math.BigInt] = Nil,
   longCol: List[java.lang.Long] = Nil,
+  shortCol: List[java.lang.Short] = Nil,
   long16Col: List[java.lang.Long] = Nil,
   decimal266Col: List[scala.math.BigDecimal] = Nil,
   dateCol: List[java.time.LocalDate] = Nil,
@@ -215,6 +216,21 @@ case class TypeOverrideTest (
 case class TypeOverrideTest2 (
   intColAsString: String = null,
   decimal266ColMod: scala.math.BigDecimal = null
+)
+case class TypesTestView1 (
+  intCol: java.lang.Integer = null,
+  int6Col: java.lang.Integer = null,
+  integer36Col: scala.math.BigInt = null,
+  longCol: java.lang.Long = null,
+  shortCol: java.lang.Short = null,
+  long16Col: java.lang.Long = null,
+  decimal266Col: scala.math.BigDecimal = null,
+  dateCol: java.time.LocalDate = null,
+  datetimeCol: java.time.LocalDateTime = null,
+  string60Col: String = null,
+  string6kCol: String = null,
+  booleanCol: java.lang.Boolean = null,
+  bytesCol: Array[Byte] = null
 )
 case class VArr1 (
   id: java.lang.Long = null,
