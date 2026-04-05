@@ -4,6 +4,7 @@ import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
 
 import java.io.File
+import java.net.JarURLConnection
 import java.nio.file.{Files, Paths}
 import java.util.jar.JarFile
 import scala.collection.immutable.{Map, Seq}
@@ -159,9 +160,14 @@ private[in] class ResourcePathsMdSource(
           else Nil
 
         case "jar" =>
-          val jarPath = resourceUrl.getPath.substring(5, resourceUrl.getPath.indexOf("!"))
           val entryPath = resourceUrl.getPath.substring(resourceUrl.getPath.indexOf("!") + 2)
-          val jarFile = new JarFile(jarPath)
+          val jarFile = {
+            val jarUrlConnection = resourceUrl.openConnection() match {
+              case jarUrlConnection : JarURLConnection => jarUrlConnection
+              case x => sys.error(s"Unexpected class (expecting java.net.JarURLConnection): ${Option(x).map(_.getClass.getName).orNull}")
+            }
+            new JarFile(new File(jarUrlConnection.getJarFileURL.toURI))
+          }
           try {
             val entries = jarFile.entries().asScala
               .filter(entry => entry.getName.startsWith(entryPath) && !entry.isDirectory)
