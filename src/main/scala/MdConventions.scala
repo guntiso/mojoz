@@ -246,9 +246,17 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
   private def splitNamePatternString(patternString: String): Seq[String] =
     patternString.trim.split("[,\\s]+").toList.map(_.trim)
 
+  private def asResourceLoader(resourceClassLoader: ClassLoader): String => InputStream = name =>
+    Option(resourceClassLoader).getOrElse(getClass.getClassLoader)
+      .getResourceAsStream(name.stripPrefix("/"))
+
   /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
   def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String]): Seq[String] = {
-    namePatternsFromResource(resourceName, defaultPatterns, getClass.getResourceAsStream _)
+    namePatternsFromResource(resourceName, defaultPatterns, asResourceLoader(null)(_))
+  }
+  /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
+  def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String], resourceClassLoader: ClassLoader): Seq[String] = {
+    namePatternsFromResource(resourceName, defaultPatterns, asResourceLoader(resourceClassLoader)(_))
   }
   /** loads and returns name patterns from resource, returns defaultPatterns if resource is not found */
   def namePatternsFromResource(resourceName: String, defaultPatterns: Seq[String], resourceLoader: String => InputStream): Seq[String] = {
@@ -263,6 +271,9 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
   }
   def namePatternsFromResource(patternSource: PatternSource): Seq[String] =
     namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns)
+
+  def namePatternsFromResource(patternSource: PatternSource, resourceClassLoader: ClassLoader): Seq[String] =
+    namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns, resourceClassLoader)
 
   def namePatternsFromResource(patternSource: PatternSource, resourceLoader: String => InputStream): Seq[String] =
     namePatternsFromResource(patternSource.filename, patternSource.defaultPatterns, resourceLoader)
@@ -297,6 +308,7 @@ object MdConventions extends MdConventions(new DdlGenerator.SimpleConstraintNami
       dateNamePatternStrings     = namePatternsFromResource(defaultDateNamePatternSource,     resourceLoader),
       dateTimeNamePatternStrings = namePatternsFromResource(defaultDateTimeNamePatternSource, resourceLoader),
     )
+    def this(resourceClassLoader: ClassLoader) = this(asResourceLoader(resourceClassLoader))
 
     val booleanNamePatterns = booleanNamePatternStrings.map(pattern).toSeq
     val dateNamePatterns = dateNamePatternStrings.map(pattern).toSeq
