@@ -7,7 +7,7 @@ lazy val dependencies = Seq(
 )
 
 lazy val integrationTestDependencies = Seq(
-  "com.typesafe"   % "config"     % "1.4.6"   %     Test,
+  "com.typesafe"   % "config"     % "1.4.8"   %     Test,
   "org.postgresql" % "postgresql" % "42.7.10" %     Test,
 )
 
