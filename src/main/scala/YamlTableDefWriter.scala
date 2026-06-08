@@ -140,7 +140,7 @@ class YamlTableDefWriter {
         .map(_.map(e => e._1 + ": " + e._2.toString).mkString("\n")))
       .flatMap(x => x).mkString("\n")
   def toYaml(tableDefs: Seq[IoTableDef]): String =
-    tableDefs.map(toYaml).mkString("\n\n") +
+    tableDefs.map(toYaml).mkString("\n\n\n---\n") +
       (if (tableDefs.size > 0) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec

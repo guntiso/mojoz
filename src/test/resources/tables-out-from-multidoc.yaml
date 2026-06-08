@@ -3,6 +3,8 @@ columns:
 - id
 - name
 
+
+---
 table:    multidoc2
 columns:
 - id

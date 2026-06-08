@@ -29,6 +29,9 @@ case class YamlMd(
     } else false
   }
 
+  private[in] lazy val hasDocumentSeparators =
+    YamlMd.documentSeparatorsR.findFirstIn(body).isDefined
+
   lazy val parsed: Seq[Map[String, Any]] = try {
     val loaderSettings = LoadSettings.builder()
       .setLabel(Option(filename) getOrElse "mojoz metadata")
@@ -55,17 +58,18 @@ private[in] trait MdSource {
   def noSplit(mdDef: YamlMd) = // do not split if not bare documents
     mdDef.startsWithDirectiveOrDash
   def split(mdDefs: Seq[YamlMd]) = {
-    def shouldSplitAt(line: String) =
-      (line == "")         ||  // empty line or
-      (line startsWith "...")  // yaml end-of-document marker
     mdDefs.flatMap { d =>
+      def shouldSplitAt(line: String) =
+        (line == "" && !d.hasDocumentSeparators)  ||  // split on empty line if there are no document separators and
+        (line startsWith "---")                   ||  // split on yaml start-of-document marker and
+        (line startsWith "...")                       // split on yaml end-of-document marker
       val linesBuffer = Buffer[String]()
       val mdBuffer    = Buffer[YamlMd]()
       var lineNr = 0
       if (noSplit(d))
         mdBuffer += d
       else
-      (d.body + "\n\n").linesIterator foreach { line =>
+      (d.body + "\n...").linesIterator foreach { line =>
         lineNr += 1
         if (shouldSplitAt(line)) {
           if (linesBuffer.nonEmpty) {
@@ -205,6 +209,7 @@ private[in] class NamedStringMdSource(nameAndMdStringPairs: (String, String)*) e
 }
 
 object YamlMd {
+  private[in] val documentSeparatorsR = """(?m)^(?:---|\.\.\.)""".r
   def fromFile(file: File) =
     new FileMdSource(file).defs
   def fromFiles(

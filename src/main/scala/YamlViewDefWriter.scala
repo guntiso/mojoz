@@ -177,7 +177,7 @@ class YamlViewDefWriter {
     ).flatMap(x => x).mkString("\n")
   }
   def toYaml(views: Seq[IoViewDef]): String =
-    views.map(toYaml).mkString("\n\n") +
+    views.map(toYaml).mkString("\n\n\n---\n") +
       (if (!views.isEmpty) "\n" else "")
   private def wrapped(words: String, prefix: String, indent: String) = {
     @tailrec

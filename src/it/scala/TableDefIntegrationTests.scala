@@ -80,7 +80,7 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
         .mkString(nl)
     }
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val produced = dbAndCfgList.map { case (db, cfg) =>
+    val produced = YamlTableDefWriter.toYaml(dbAndCfgList.flatMap { case (db, cfg) =>
       clearPostgresqlDbSchema(cfg)
       val statements = DdlGenerator.postgresql().schema(tableDefs.filter(_.db == db))
         .split(";").toList.map(_.trim).filter(_ != "")
@@ -102,8 +102,8 @@ class TableDefIntegrationTests extends FlatSpec with Matchers {
       )
       .map(_.toLowerCase)
       .map(_.copy(db = db))
-      YamlTableDefWriter.toYaml(jdbcTableDefs)
-    }.mkString("\n")
+      jdbcTableDefs
+    })
     if (expected != produced)
       toFile(path + "/" + "tables-out-postgresql-jdbc-produced.yaml", produced)
     skipSome(expected) should be(skipSome(produced))

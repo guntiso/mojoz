@@ -3,6 +3,8 @@ columns:
 - id
 - name
 
+
+---
 table:    table_a2
 columns:
 - id

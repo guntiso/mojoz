@@ -6,12 +6,16 @@ columns:
 - billing_account       ! 64            : Norēķinu konts.
 - last_modified         ! dateTime      : Pēdējo izmaiņu datums un laiks.
 
+
+---
 table:    account_currency
 comments: Kontam pieejamās norēķinu valūtas - sistēmā konfigurētās valūtas pret kontu
 columns:
 - account.id            !               : Konta identifikators.
 - currency.code         !               : Valūtas kods.
 
+
+---
 table:    array_test_table1
 columns:
 - int_col               * int
@@ -28,6 +32,8 @@ columns:
 - string_nolen_col      *
 - boolean_col           * boolean
 
+
+---
 table:    bank
 columns:
 - id                                    : Ieraksta identifikators.
@@ -40,6 +46,8 @@ columns:
 - name_rus                240           : Bankas pilnais nosaukums, transliterēts krieviski.
 extra-for-bank: extra for bank
 
+
+---
 table:    country
 comments: Valstu klasifikators
 columns:
@@ -52,6 +60,8 @@ columns:
 - is_active             !
 - is_eu                 !               : Vai valsts ir Eiropas Savienības dalībvalsts
 
+
+---
 table:    currency
 comments: Sistēmā uzturēto valūtu klasifikators.
 columns:
@@ -61,6 +71,8 @@ columns:
 - name_eng              ! 100           : Valūtas nosaukums angliski.
 - name_rus              ! 100           : Valūtas nosaukums krieviski.
 
+
+---
 table:    person
 columns:
 - id
@@ -69,6 +81,8 @@ columns:
 - mother.id               person.id
 - father.id               person.id
 
+
+---
 table:    test_table1
 comments: Test comment for table - to be escape'd
 columns:
@@ -98,6 +112,8 @@ idx:
 - idx_tt1_spec_col3_col5a(col3, col5)
 - idx_tt1_spec_col3_col5d(col3, col5 desc)
 
+
+---
 table:    test_table2
 comments: ""
 columns:
@@ -110,6 +126,8 @@ refs:
 - code, name -> test_table1(code, col1) on delete cascade
 - fk_tt2_spec_code_name(code, name) -> test_table1(code, col2)
 
+
+---
 table:    test_table3
 comments: " "
 columns:
@@ -127,6 +145,8 @@ columns:
 - boolean_col             boolean
 - bytes_col               bytes
 
+
+---
 table:    test_table4
 comments: "Multiline comments with\nline 2\nand line 3\n"
 columns:
@@ -140,6 +160,8 @@ columns:
 - boolean_col_f           boolean       = false
 - boolean_col_t           boolean       = true
 
+
+---
 table:    test_table5
 comments: "Alternative multiline comments\nwith line 2"
 columns:
@@ -159,23 +181,31 @@ ck:
 refs:
 - bank_id -> bank(id) on delete cascade
 
+
+---
 table:    test_table6
 columns:
 - id
 - name                    50
 
+
+---
 table:    test_table7
 columns:
 - key1                    20
 - key2                    20
 pk: key1, key2
 
+
+---
 table:    test_table8
 columns:
 - id
 - name                    50
 pk:
 
+
+---
 table:    test_schema_1.test_table1
 columns:
 - id                    !
@@ -184,21 +214,29 @@ pk:
 uk:
 - id
 
+
+---
 table:    test_schema_1.test_table2
 columns:
 - t1.id                   test_schema_1.test_table1.id
 
+
+---
 table:    test_schema_1.test_table3
 columns:
 - t1.id                   test_schema_1.ts_table1.id
 refs:
 - t1_id -> test_schema_1.ts_table1(id) on delete cascade
 
+
+---
 table:    test_schema_1.ts_table1
 columns:
 - id
 - name                    50
 
+
+---
 db:       other_db
 table:    person
 columns:

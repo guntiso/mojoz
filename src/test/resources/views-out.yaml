@@ -6,6 +6,8 @@ fields:
 - billing_account
 - currency              * 3             =
 
+
+---
 name:     account_details
 extends:  account
 fields:
@@ -13,6 +15,8 @@ fields:
 - bank.name
 - billing_account         64            = 'Account = ' || billing_account
 
+
+---
 name:     array_test_view1
 table:    array_test_table1
 fields:
@@ -29,6 +33,8 @@ fields:
 - string6k_col          * string 6000
 - boolean_col           * boolean
 
+
+---
 name:     bank_list_row
 table:    bank
 fields:
@@ -38,30 +44,40 @@ fields:
 - country.name          ?
 - name                                  : <p>special xml 'chars' & "strings" test</p>
 
+
+---
 name:     cardinality_overide_test
 table:    person
 fields:
 - name                  ?
 - surname               !
 
+
+---
 name:     column_test_t3
 table:    test_table3
 column:   string6k_col
 fields:
 - whatever
 
+
+---
 name:     distinct_empty
 table:    person
 distinct:
 fields:
 - surname
 
+
+---
 name:     distinct_false
 table:    person
 distinct: false
 fields:
 - surname
 
+
+---
 name:     distinct_surename_id
 table:    person
 distinct: id, surename
@@ -69,18 +85,24 @@ fields:
 - id
 - surname
 
+
+---
 name:     distinct_true
 table:    person
 distinct: true
 fields:
 - surname
 
+
+---
 name:     expression_test_1
 table:    account
 fields:
 - id
 - bank                                  = `(bank.name ->> 'subject')`::text
 
+
+---
 name:     multi_db_test_1
 db:       other_db
 table:    person
@@ -89,6 +111,8 @@ fields:
 - full_name
 - children                multi_db_test_1_children
 
+
+---
 name:     multi_db_test_1_children
 db:       other_db
 table:    person
@@ -96,6 +120,8 @@ fields:
 - id
 - full_name
 
+
+---
 name:     multi_db_test_2
 db:       other_db
 table:    person
@@ -104,12 +130,16 @@ fields:
 - full_name
 - children                multi_db_test_2_children
 
+
+---
 name:     multi_db_test_2_children
 table:    person
 fields:
 - id
 - surname
 
+
+---
 name:     multi_db_test_3
 table:    person
 fields:
@@ -117,6 +147,8 @@ fields:
 - surname
 - children                multi_db_test_3_children
 
+
+---
 name:     multi_db_test_3_children
 db:       other_db
 table:    person
@@ -124,34 +156,48 @@ fields:
 - id
 - full_name
 
+
+---
 name:     named_inline_view
 fields:
 - child_id
 - child_name
 
+
+---
 name:     named_inline_view2
 fields:
 - child_name
 
+
+---
 name:     named_inline_view3
 fields:
 - child_name
 
+
+---
 name:     no_fields
 table:    bank
 fields:
 
 
+
+---
 name:     no_fields_b
 table:    bank
 fields:
 
 
+
+---
 name:     no_fields_extended_b
 extends:  no_fields_b
 fields:
 - id
 
+
+---
 name:     no_fields_extended_with_fields
 extends:  no_fields
 fields:
@@ -160,6 +206,8 @@ fields:
 - name
 - country.name          ?
 
+
+---
 name:     no_table
 fields:
 - some_id
@@ -173,11 +221,15 @@ fields:
 - is_boolean_expr                       =
 - is_not_boolean          date          : should be date
 
+
+---
 name:     one_fielder
 fields:
 - the_one
 extra: some extra
 
+
+---
 name:     other_db_person_view
 db:       other_db
 table:    person
@@ -185,6 +237,8 @@ fields:
 - id
 - full_name
 
+
+---
 name:     person
 table:    person
 fields:
@@ -199,11 +253,15 @@ fields:
 - father.father.name    ?
 - father.father.father.surname
 
+
+---
 name:     referenced_column_types_test
 fields:
 - field_1               ?             (LV, TO, LT) = account.bank.country.code
 - field_2                               = test_table3.int6_col
 
+
+---
 name:     resolver_test_1
 table:    person
 fields:
@@ -211,6 +269,8 @@ fields:
 - mother                                = mother.name || mother.surname -> mother_id
 - father                                = father.name || father.surname -> father_id = person[name || surname = _]{id}
 
+
+---
 name:     resolver_test_2
 table:    account_currency
 comments: ""
@@ -220,6 +280,8 @@ fields:
 - account.bank.code
 - account.bank.name_eng
 
+
+---
 name:     resolver_test_3
 table:    account
 comments: " "
@@ -227,24 +289,32 @@ fields:
 - id
 - code                                  = -> bank_id
 
+
+---
 name:     resolver_test_4
 table:    bank
 fields:
 - id
 - name                                  -> = 'My bank'
 
+
+---
 name:     resolver_test_5
 table:    bank
 fields:
 - id
 - name                                  -> = _ || ' saved'
 
+
+---
 name:     resolver_test_6
 table:    bank
 fields:
 - id
 - name                                  = name || '.' ->
 
+
+---
 name:     resolver_test_7
 table:    bank b
 fields:
@@ -252,24 +322,32 @@ fields:
 - name
 - country               ?               = country.name -> country_code
 
+
+---
 name:     resolver_test_7b
 table:    bank b
 fields:
 - id
 - country               ?               = country.name -> country_code = to_country_code(_)
 
+
+---
 name:     resolver_test_8
 table:    account
 fields:
 - id
 - bank                                  = bank.name -> bank_id
 
+
+---
 name:     resolver_test_8b
 table:    account a_
 fields:
 - id
 - bank_id                               -> = 33
 
+
+---
 name:     resolver_test_9
 table:    person
 fields:
@@ -277,30 +355,40 @@ fields:
 - mother                                = mother.name || mother.surname -> mother_id
 - father                                = father.name || ' ' || father.surname -> father_id
 
+
+---
 name:     schema_test_1
 table:    test_schema_1.test_table2
 fields:
 - t1_id
 - t1.name
 
+
+---
 name:     schema_test_2
 table:    test_schema_1.test_table2
 fields:
 - id                                    = t1_id
 - test_schema_1.test_table1.name
 
+
+---
 name:     schema_test_3
 table:    test_schema_1.test_table2
 fields:
 - id                                    = test_schema_1.test_table1.id
 - name                                  = test_schema_1.test_table1.name
 
+
+---
 name:     type_override_test
 table:    account
 fields:
 - bank                                  = bank_id
 - last_modified           date          : Last modified
 
+
+---
 name:     type_override_test_2
 table:    test_table4
 comments: ""
@@ -308,6 +396,8 @@ fields:
 - int_col_as_string       string 10     = int_col
 - decimal266_col_mod      decimal 8 2   = decimal266_col8
 
+
+---
 name:     types_test_view1
 table:    test_table3
 fields:
@@ -325,61 +415,83 @@ fields:
 - boolean_col
 - bytes_col
 
+
+---
 name:     v_arr1
 fields:
 - id
 - name
 
+
+---
 name:     v_arr2
 fields:
 - id
 - name
 
+
+---
 name:     v_multidoc1
 fields:
 - id
 - name
 
+
+---
 name:     v_multidoc2
 fields:
 - id
 - name
 
+
+---
 name:     with_anonymous_inline_view
 fields:
 - some_id
 - some_name
 - some_children         * with_anonymous_inline_view_some_children
 
+
+---
 name:     with_anonymous_inline_view_some_children
 fields:
 - child_id
 - child_name
 
+
+---
 name:     with_child_extends
 fields:
 - code
 - name
 - bank                  * with_child_extends_bank
 
+
+---
 name:     with_child_extends_bank
 fields:
 - id
 - code
 - name
 
+
+---
 name:     with_child_extends_crud1
 table:    country
 extends:  with_child_extends
 fields:
 - bank                  * with_child_extends_crud1_bank
 
+
+---
 name:     with_child_extends_crud1_bank
 table:    bank
 extends:  with_child_extends_bank
 fields:
 - extra                                 =
 
+
+---
 name:     with_child_extends_crud2
 table:    country
 extends:  with_child_extends
@@ -387,12 +499,16 @@ fields:
 - extra                                 =
 - bank                  * with_child_extends_crud2_bank
 
+
+---
 name:     with_child_extends_crud2_bank
 table:    bank
 extends:  with_child_extends_bank
 fields:
 
 
+
+---
 name:     with_child_extends_crud3
 table:    country
 extends:  with_child_extends
@@ -400,24 +516,32 @@ fields:
 - extra                                 =
 - bank                  * [true] with_child_extends_bank
 
+
+---
 name:     with_child_no_indent_1
 fields:
 - code
 - name
 - bank                  * with_child_no_indent_1_bank
 
+
+---
 name:     with_child_no_indent_1_bank
 fields:
 - id
 - code
 - name
 
+
+---
 name:     with_child_no_indent_2
 fields:
 - code
 - name
 - bank                  * with_child_no_indent_2_bank : My banks
 
+
+---
 name:     with_child_no_indent_2_bank
 comments: My banks structure
 fields:
@@ -425,28 +549,38 @@ fields:
 - code
 - name
 
+
+---
 name:     with_child_order_by_asc
 table:    country
 fields:
 - code                                (LV, TO, LT)
 - "bank                  * with_child_order_by_asc_bank #(name)"
 
+
+---
 name:     with_child_order_by_asc_bank
 table:    bank
 fields:
 - name
 
+
+---
 name:     with_child_order_by_desc
 table:    country
 fields:
 - code                                (LV, TO, LT)
 - "bank                  * with_child_order_by_desc_bank #(~name)"
 
+
+---
 name:     with_child_order_by_desc_bank
 table:    bank
 fields:
 - name
 
+
+---
 name:     with_child_save_options
 table:    country
 fields:
@@ -454,6 +588,8 @@ fields:
 - name
 - bank                  [+-=] * with_child_save_options_bank
 
+
+---
 name:     with_child_save_options_bank
 table:    bank
 fields:
@@ -461,6 +597,8 @@ fields:
 - code
 - name
 
+
+---
 name:     with_empty_child_save_to
 save-to:
 - table1
@@ -468,26 +606,36 @@ save-to:
 fields:
 - single_child            with_empty_child_save_to_single_child
 
+
+---
 name:     with_empty_child_save_to_single_child
 save-to:
 fields:
 - child_name
 
+
+---
 name:     with_field_order_by_empty
 table:    country
 fields:
 - "code                                #() (LV, TO, LT)"
 
+
+---
 name:     with_field_order_by_expr
 table:    country
 fields:
 - "code                                #(trim(split_part(code, '-', (((1)))))::int) (LV, TO, LT)"
 
+
+---
 name:     with_field_order_by_multi
 table:    country
 fields:
 - "code                                #(major, minor, fix) (LV, TO, LT)"
 
+
+---
 name:     with_join_to_parent
 table:    person c
 fields:
@@ -495,12 +643,16 @@ fields:
 - name
 - parents               * [p.id in (c.mother_id, c.father_id)] with_join_to_parent_parents
 
+
+---
 name:     with_join_to_parent_parents
 table:    person p
 fields:
 - id
 - name
 
+
+---
 name:     with_join_to_parent_plus
 table:    person c
 fields:
@@ -508,12 +660,16 @@ fields:
 - name
 - parents               + [p.id in (c.mother_id, c.father_id)] with_join_to_parent_plus_parents
 
+
+---
 name:     with_join_to_parent_plus_parents
 table:    person p
 fields:
 - id
 - name
 
+
+---
 name:     with_many_known_keys
 table:    bank b
 comments: some comments
@@ -538,34 +694,48 @@ filter:
 - name
 - code
 
+
+---
 name:     with_named_inline_view
 fields:
 - some_id
 - some_name
 - some_children         * named_inline_view : Children
 
+
+---
 name:     with_named_inline_view2
 fields:
 - some_children         * named_inline_view2
 
+
+---
 name:     with_named_inline_view3
 fields:
 - single_child            named_inline_view3
 
+
+---
 name:     with_optional_fields
 fields:
 - opt                   [?]
 - opt_complex           [?] with_optional_fields_opt_complex
 - opt_complex_seq       [?] * with_optional_fields_opt_complex_seq
 
+
+---
 name:     with_optional_fields_opt_complex
 fields:
 - name                  [?]
 
+
+---
 name:     with_optional_fields_opt_complex_seq
 fields:
 - name                  [?]
 
+
+---
 name:     with_save_options
 fields:
 - read_only             [!]
@@ -574,16 +744,22 @@ fields:
 - bank                  [+-=] * with_save_options_bank
 - bank_ro               [!] * with_save_options_bank_ro
 
+
+---
 name:     with_save_options_bank
 fields:
 - id
 - code                  [+]
 
+
+---
 name:     with_save_options_bank_ro
 fields:
 - id
 - code
 
+
+---
 name:     with_scala_keywords
 fields:
 - this                                  =

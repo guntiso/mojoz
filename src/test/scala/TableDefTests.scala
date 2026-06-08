@@ -98,7 +98,7 @@ class TableDefTests extends FlatSpec with Matchers {
       ("other_db", h2Ci2),
     )
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val produced = dbAndConnectionInfoList.map { case (db, connectionInfo) =>
+    val produced = YamlTableDefWriter.toYaml(dbAndConnectionInfoList.flatMap { case (db, connectionInfo) =>
       implicit val ci = connectionInfo
       val statements =
        "create schema test_schema_1" ::
@@ -133,8 +133,8 @@ class TableDefTests extends FlatSpec with Matchers {
           )
           .map(_.toLowerCase)
           .map(_.copy(db = db))
-      YamlTableDefWriter.toYaml(jdbcTableDefs)
-    }.mkString("\n")
+      jdbcTableDefs
+    })
     if (expected != produced)
       toFile(path + "/" + "tables-out-h2-jdbc-produced.yaml", produced)
     def skipSomeH2(s: String) = {
@@ -152,7 +152,7 @@ class TableDefTests extends FlatSpec with Matchers {
       ("other_db", hsqldbCi2),
     )
     val expected = fileToString(path + "/" + "tables-out.yaml")
-    val produced = dbAndConnectionInfoList.map { case (db, connectionInfo) =>
+    val produced = YamlTableDefWriter.toYaml(dbAndConnectionInfoList.flatMap { case (db, connectionInfo) =>
       implicit val ci = connectionInfo
       val statements =
        "create schema test_schema_1" ::
@@ -193,8 +193,8 @@ class TableDefTests extends FlatSpec with Matchers {
           )
           .map(_.toLowerCase)
           .map(_.copy(db = db))
-      YamlTableDefWriter.toYaml(jdbcTableDefs)
-    }.mkString("\n")
+      jdbcTableDefs
+    })
     if (expected != produced)
       toFile(path + "/" + "tables-out-hsqldb-jdbc-produced.yaml", produced)
     def skipSomeHsqldb(s: String) = {
