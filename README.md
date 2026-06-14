@@ -19,8 +19,8 @@ using JDBC connection and saved to yaml files for later use
 [Yaml 1.2](https://yaml.org/spec/1.2/) syntax is used for table metadata, but some keys and values are further parsed by mojoz.
 
 If file does not start with '%' (yaml [directives](https://yaml.org/spec/1.2.2/#68-directives))
-or '-' (yaml [collections](https://yaml.org/spec/1.2.2/#21-collections)
-or yaml [directives end marker](https://yaml.org/spec/1.2.2/#912-document-markers)) then empty lines are used as delimiters
+or '-' (yaml [collections](https://yaml.org/spec/1.2.2/#21-collections))
+and does not contain [document markers](https://yaml.org/spec/1.2.2/#912-document-markers) `---` or `...` then empty lines are used as delimiters
 and resulting parts are parsed separately. Otherwise file, which can contain multiple definitions, is parsed as a whole -
 see [tables-in-as-multidoc.yaml](src/test/resources/tables-in-as-multidoc.yaml).
 To share nodes between definitions using yaml [anchors](https://yaml.org/spec/1.2.2/#692-node-anchors)
