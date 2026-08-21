@@ -1,5 +1,6 @@
 # mojoz
 
+[![Latest version](https://img.shields.io/maven-central/v/org.mojoz/mojoz_3)](https://central.sonatype.com/artifact/org.mojoz/mojoz_3)
 ![Build Status](https://github.com/guntiso/mojoz/actions/workflows/ci.yaml/badge.svg)
 
 Manages relational database table metadata and query definitions.
