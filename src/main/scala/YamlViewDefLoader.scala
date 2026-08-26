@@ -476,7 +476,7 @@ class YamlViewDefLoader(
       lazy val tableOrAliasToJoin =
         joins.map(j => Option(j.alias).getOrElse(j.table) -> j).toMap
       lazy val explodeColumn =
-        if  (t.table != null && t.column != null)
+        if  (t.table != null && t.table.nonEmpty && t.column != null)
              tableMetadata.columnDef(t)
         else null
       def reduceExpression[T](f: FieldDef_[T]) =
@@ -587,10 +587,14 @@ class YamlViewDefLoader(
                  Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
             else f.extras
         )
-        if (explodeColumn != null && Option(f.type_).map(_.name).orNull == null)
+        if (explodeColumn != null)
           f.copy(
             table = null,
-            type_ = conventions.typeFromExternal(f.name, Option(f.type_)),
+            tableAlias = null,
+            type_ =
+              if (Option(f.type_).map(_.name).orNull == null)
+                conventions.typeFromExternal(f.name, Option(f.type_))
+              else f.type_,
           )
         else if (f.isExpression || f.isCollection || (f.type_ != null && f.type_.isComplexType))
           tableMetadata.columnDefOption(t, f) match {
