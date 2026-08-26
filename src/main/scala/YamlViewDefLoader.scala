@@ -587,7 +587,8 @@ class YamlViewDefLoader(
                  Option(f.extras).getOrElse(Map.empty) ++ Map(MojozExplicitComments -> true)
             else f.extras
         )
-        if (explodeColumn != null)
+        if (explodeColumn != null &&
+            (f.name == t.column || tableMetadata.columnDefOption(t.table, f.name, t.db).isEmpty))
           f.copy(
             table = null,
             tableAlias = null,
