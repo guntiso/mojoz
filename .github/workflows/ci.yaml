@@ -40,7 +40,7 @@ jobs:
     - name: Set up sbt
       uses: sbt/setup-sbt@v1
       with:
-        sbt-runner-version: 1.13.0
+        sbt-runner-version: 1.13.1
     - name: Configure integration tests
       run:  cp src/it/resources/application.conf.ci src/it/resources/application.conf
     - name: Compile and test and check version policy
